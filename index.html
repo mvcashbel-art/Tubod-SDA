@@ -257,6 +257,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 .tabs{display:none}
 @media (max-width:900px){
   .ann-strip .t{-webkit-line-clamp:1}
+  .ann-strip .wr .cd{display:none}
+  .ann-strip{padding-top:8px}
+  .ann-strip .rows{gap:6px}
+  .ann-strip .wr{padding:6px 12px}
+  .ann-strip a{padding:7px 12px}
+  .ann-strip .iw{width:28px;height:28px}
   .chat{height:calc(100dvh - 250px)}
   .shell{grid-template-columns:minmax(0,1fr);padding-bottom:96px}
   .side{position:static;order:-1}
@@ -276,6 +282,36 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
+/* nearest worship bar */
+.ann-strip .rows{display:flex;flex-direction:column;gap:8px}
+.ann-strip .wr{display:flex;gap:10px;align-items:center;background:var(--accent);color:#fff;border-radius:12px;padding:8px 14px;box-shadow:0 2px 8px rgba(23,50,77,.12);font-size:.93rem;min-width:0}
+.ann-strip .wr .iw{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none;color:#fff}
+.ann-strip .wr .iw .ic{width:16px;height:16px}
+.ann-strip .wr b{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#fff;opacity:.85;margin-right:8px}
+.ann-strip .wr .line{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ann-strip .wr .cd{margin-left:auto;font-weight:600;white-space:nowrap;padding-left:8px}
+.wlist{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:6px}
+.wlist li{display:flex;justify-content:space-between;gap:10px;font-size:.92rem}
+.wlist li span:last-child{color:var(--muted);white-space:nowrap}
+.wlist li.next span{font-weight:600;color:var(--ink)}
+.svc{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;margin:0}
+.svc legend{font-weight:600;font-size:.88rem;padding:0 6px}
+.svcrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.svcrow input,.svcrow select{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#F7FAFB;font-weight:400}
+.svcrow .sv-name{flex:1 1 150px;min-width:0}
+/* who is coming */
+.rsvp{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.rsvp .when{font-size:.86rem;color:var(--muted)}
+.rsvp .when b{color:var(--ink)}
+.faces{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.faces .av{margin-right:-8px;border:2px solid #fff}
+.faces .more-n{margin-left:14px;font-size:.82rem;color:var(--muted)}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent-dark);font-weight:600;font-size:.88rem;cursor:pointer;text-align:left;text-decoration:underline}
+.who{display:flex;flex-direction:column;gap:6px}
+.who h3{font-size:1.1rem}
+.plist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.plist li{display:flex;align-items:center;gap:8px;font-size:.92rem;min-width:0}
+.plist li span{overflow-wrap:anywhere}
 /* text alerts */
 .chat-in.wrap{flex-wrap:wrap}
 .sms-opt{flex-basis:100%;display:flex;gap:6px;align-items:flex-start;font-size:.82rem;color:var(--muted);padding:0 6px;cursor:pointer}
@@ -372,7 +408,7 @@ const MAX_FILE_MB = 15;
 const S = {
   route:'home', profileId:null, filter:'all', libCat:'all', libQ:'', memQ:'', limit:30,
   token:'', uid:null, isAdmin:false, offline:false, rev:'',
-  posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{},
+  posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{}, attending:[],
   loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false}, posting:false, chatInit:false
 };
 
@@ -427,6 +463,7 @@ async function api(action, data = {}){
   return j;
 }
 function applySync(j){
+  S.attending = j.attending || [];
   S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin';
   S.settings = j.settings || {}; S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.profiles = Object.fromEntries(j.members.map(m => [m.id, m]));
@@ -654,8 +691,7 @@ function renderChrome(){
 }
 function renderSide(){
   const st = S.settings, n = Object.keys(S.profiles).length;
-  const sched = st.schedule ? `<div class="card"><h3>Worship schedule</h3><p class="sched">${esc(st.schedule)}</p></div>`
-    : S.isAdmin ? `<div class="card"><h3>Worship schedule</h3><p class="muted">Add your worship times in church settings.</p><p style="margin-top:8px"><button class="btn sm" data-act="settings">Open settings</button></p></div>` : '';
+  const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
   $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${sched}${verse}
     <div class="card more"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
@@ -665,13 +701,92 @@ function renderBanner(){
   const b = $('#banner'); if (!b) return;
   b.innerHTML = S.offline ? `<div class="note warn">Cannot reach the church server right now. You are seeing the last posts that loaded.</div>` : '';
 }
+/* worship times (weekly, Philippine time) */
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function services(){
+  let a = S.settings.services;
+  if (typeof a === 'string'){ try { a = JSON.parse(a || '[]'); } catch (e) { a = []; } }
+  return (Array.isArray(a) ? a : []).filter(x => x && x.day >= 0 && x.day <= 6 && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x.time)));
+}
+function time12(t){ const [h, m] = String(t).split(':').map(Number); return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h >= 12 ? 'PM' : 'AM'); }
+function nextStartMs(sv, now){
+  const ph = new Date(now + TZ * 36e5), [h, m] = String(sv.time).split(':').map(Number);
+  for (let off = 0; off <= 7; off++){
+    const t = new Date(Date.UTC(ph.getUTCFullYear(), ph.getUTCMonth(), ph.getUTCDate() + off));
+    if (t.getUTCDay() !== Number(sv.day)) continue;
+    const start = Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate(), h, m) - TZ * 36e5;
+    if (start > now) return start;
+  }
+  return 0;
+}
+/* nearest first; a worship that began less than 90 minutes ago counts as happening now */
+function nextWorships(now = Date.now()){
+  return services().map(sv => {
+    const nx = nextStartMs(sv, now); if (!nx) return null;
+    const prev = nx - 7 * 864e5, on = now - prev < 90 * 60000;
+    return {sv, start: on ? prev : nx, on};
+  }).filter(Boolean).sort((a, b) => a.start - b.start);
+}
+function whenText(w, now = Date.now()){
+  const d = ms => new Date(ms + TZ * 36e5).toISOString().slice(0, 10);
+  const day = d(w.start) === d(now) ? 'today' : d(w.start) === d(now + 864e5) ? 'tomorrow' : DAYS[w.sv.day];
+  return day + ' ' + time12(w.sv.time);
+}
+function countdown(w, now = Date.now()){
+  if (w.on) return 'Happening now';
+  const mins = Math.max(1, Math.round((w.start - now) / 60000));
+  if (mins < 60) return `in ${mins} min`;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  if (h < 24) return `in ${h} hr${m ? ' ' + m + ' min' : ''}`;
+  const dd = Math.floor(h / 24); return `in ${dd} day${dd > 1 ? 's' : ''}`;
+}
+const dateOf = w => new Date(w.start + TZ * 36e5).toISOString().slice(0, 10);
+const comingList = w => S.attending.filter(a => a.svcId === w.sv.id && a.date === dateOf(w));
+function rsvpBlock(w){
+  if (!w.sv.id) return '';
+  const people = comingList(w), mineIn = !!S.uid && people.some(a => a.uid === S.uid);
+  const faces = people.slice(0, 6).map(a => av(a.uid, 'sm')).join('');
+  return `<div class="rsvp"><div class="when"><b>${esc(w.sv.name)}</b> \u00b7 ${esc(whenText(w))}</div>
+    <div><button class="btn ${mineIn ? '' : 'primary'} sm" data-act="attend" data-svc="${esc(w.sv.id)}" data-date="${dateOf(w)}" aria-pressed="${mineIn}">${mineIn ? 'You are coming. Tap to cancel' : 'I am coming'}</button></div>
+    ${people.length ? `<div class="faces">${faces}${people.length > 6 ? `<span class="more-n">+${people.length - 6}</span>` : ''}</div>` : ''}
+    <button class="linkbtn" data-act="whocoming">${people.length ? `${people.length} coming. See everyone` : 'No one yet. See all worships'}</button></div>`;
+}
+function openComingModal(){
+  const body = nextWorships().map(w => {
+    const people = comingList(w);
+    return `<section class="who"><h3>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</h3><p class="muted">${people.length} coming</p>${people.length ? `<ul class="plist">${people.map(a => `<li>${av(a.uid, 'sm')}<span>${esc(nameOf(a.uid))}</span></li>`).join('')}</ul>` : '<p class="muted">No one has signed up yet.</p>'}</section>`;
+  }).join('') || '<p class="muted">No worship times have been added yet.</p>';
+  openModal('Who is coming', body + `<div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
+}
+async function toggleAttend(svc, date){
+  if (!guard()) return;
+  const id = svc + '_' + date + '_' + S.uid;
+  S.attending = S.attending.some(a => a.id === id) ? S.attending.filter(a => a.id !== id) : [...S.attending, {id, svcId:svc, date, uid:S.uid}];
+  refresh();
+  try { await api('attend', {svcId:svc, date}); await sync(); }
+  catch (e){ toast(errMsg(e)); sync().catch(() => {}); }
+}
+function scheduleCard(){
+  const nw = nextWorships(), note = S.settings.schedule;
+  if (!nw.length && !note){
+    return S.isAdmin ? `<div class="card"><h3>Worship schedule</h3><p class="muted">Add your worship times in church settings.</p><p style="margin-top:8px"><button class="btn sm" data-act="settings">Open settings</button></p></div>` : '';
+  }
+  return `<div class="card"><h3>Worship schedule</h3>${nw.length ? `<ul class="wlist">${nw.map((w, i) => `<li class="${i === 0 ? 'next' : ''}"><span>${esc(w.sv.name)}</span><span>${DAYS[w.sv.day]}s ${time12(w.sv.time)}</span></li>`).join('')}</ul>` : ''}${note ? `<p class="sched">${esc(note)}</p>` : ''}${nw.length ? rsvpBlock(nw[0]) : ''}</div>`;
+}
+
+/* top of every page: the nearest worship, then the newest announcement */
 function renderStrip(){
   const el = $('#annStrip'); if (!el) return;
   const list = S.posts.filter(p => p.cat === 'announcement').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  if (!list.length || S.route === 'news'){ el.innerHTML = ''; document.documentElement.style.setProperty('--stripH', '0px'); return; }
-  const p = list[0];
-  el.innerHTML = `<a href="#news" data-route="news" aria-label="Open announcements"><span class="iw">${icon('bell')}</span><span class="bd"><b>Announcement · ${ago(p.createdAt)}</b><span class="t">${esc(p.text || 'Photo announcement')}</span></span>${list.length > 1 ? `<span class="more">+${list.length - 1} more</span>` : ''}</a>`;
-  document.documentElement.style.setProperty('--stripH', el.offsetHeight + 'px');
+  const nw = nextWorships(), w = nw[0];
+  let rows = '';
+  if (w) rows += `<div class="wr" role="status"><span class="iw">${icon('church')}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
+  if (list.length && S.route !== 'news'){
+    const p = list[0];
+    rows += `<a href="#news" data-route="news" aria-label="Open announcements"><span class="iw">${icon('bell')}</span><span class="bd"><b>Announcement \u00b7 ${ago(p.createdAt)}</b><span class="t">${esc(p.text || 'Photo announcement')}</span></span>${list.length > 1 ? `<span class="more">+${list.length - 1} more</span>` : ''}</a>`;
+  }
+  el.innerHTML = rows ? `<div class="rows">${rows}</div>` : '';
+  document.documentElement.style.setProperty('--stripH', rows ? el.offsetHeight + 'px' : '0px');
 }
 
 /* ---------- views ---------- */
@@ -1108,7 +1223,14 @@ function openSettingsModal(){
     <form id="sForm" class="m-body" style="padding:0">
       <label class="fld" for="sName">Church name<input id="sName" maxlength="60" value="${esc(st.churchName || 'Tubod SDA Church')}"></label>
       <label class="fld" for="sTag">Tagline or location<input id="sTag" maxlength="80" value="${esc(st.tagline || '')}"></label>
-      <label class="fld" for="sSched">Worship schedule<textarea id="sSched" maxlength="400" placeholder="Wednesday evening worship 7:00 PM&#10;Friday evening worship 7:00 PM&#10;Sabbath School and Divine Service times">${esc(st.schedule || '')}</textarea></label>
+      <fieldset class="svc"><legend>Worship times</legend>
+        <div id="svcList">${svcRows(services())}</div>
+        <div><button type="button" class="btn sm" data-act="addsvc">Add a worship time</button></div>
+      </fieldset>
+      <label class="pin-opt"><input type="checkbox" id="sAuto" ${st.autoRemind === '1' ? 'checked' : ''}> Announce each worship automatically</label>
+      <label class="fld" for="sHours">Post the announcement<select id="sHours">${[1, 2, 3, 6, 12, 24].map(h => `<option value="${h}" ${String(st.remindHours || 3) === String(h) ? 'selected' : ''}>${h} hour${h === 1 ? '' : 's'} before</option>`).join('')}</select><small>The page checks every hour, so it can be up to an hour later. This needs the hourly check turned on once (see SETUP.md).</small></label>
+      <label class="pin-opt"><input type="checkbox" id="sAutoSms" ${st.autoSms === '1' ? 'checked' : ''}> Also text members when it is posted (automatic text mode only)</label>
+      <label class="fld" for="sSched">More about worship (optional)<textarea id="sSched" maxlength="400" placeholder="Sabbath School and Divine Service times, place, or anything else">${esc(st.schedule || '')}</textarea></label>
       <label class="fld" for="sVerse">Verse of the week<textarea id="sVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(st.verse || '')}</textarea></label>
       <label class="fld" for="sCode">Church join code<input id="sCode" maxlength="30" value="${esc(st.joinCode || '')}"><small>New members type this code to join. Change it any time. Share it only with your church family.</small></label>
       <p class="muted">Text alerts: ${S.sms && S.sms.provider === 'SEMAPHORE' ? 'automatic through Semaphore.' : 'free manual mode. You get the numbers and your phone sends the texts. For automatic texts, see SETUP.md.'} ${S.sms ? S.sms.count : 0} member${S.sms && S.sms.count === 1 ? ' has' : 's have'} turned them on.</p>
@@ -1121,7 +1243,7 @@ function openSettingsModal(){
     e.preventDefault();
     const btn = $('#sSave', m); btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const body = {churchName:$('#sName', m).value, tagline:$('#sTag', m).value, schedule:$('#sSched', m).value, verse:$('#sVerse', m).value, joinCode:$('#sCode', m).value};
+      const body = {churchName:$('#sName', m).value, tagline:$('#sTag', m).value, schedule:$('#sSched', m).value, verse:$('#sVerse', m).value, joinCode:$('#sCode', m).value, services:svcRead(m).filter(x => x.time), autoRemind:$('#sAuto', m).checked, remindHours:$('#sHours', m).value, autoSms:$('#sAutoSms', m).checked};
       const f = $('#sBg', m).files[0];
       if (f) body.bg = await shrink(f, {w:1920, q:.8, maxChars:2800000});
       else if ($('#sBgReset', m) && $('#sBgReset', m).checked) body.resetBg = true;
@@ -1130,6 +1252,17 @@ function openSettingsModal(){
     } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save settings'; }
   });
 }
+function svcRows(list){
+  return list.map((x, i) => `<div class="svcrow" data-id="${esc(x.id || '')}">
+    <input class="sv-name" id="svn${i}" maxlength="60" value="${esc(x.name || '')}" placeholder="Name, such as Wednesday worship" aria-label="Worship name">
+    <select class="sv-day" id="svd${i}" aria-label="Day">${DAYS.map((d, k) => `<option value="${k}" ${Number(x.day) === k ? 'selected' : ''}>${d}</option>`).join('')}</select>
+    <input class="sv-time" id="svt${i}" type="time" value="${esc(x.time || '')}" aria-label="Start time">
+    <button type="button" class="icon-btn" data-act="rmsvc" data-i="${i}" aria-label="Remove this worship time">${icon('x')}</button></div>`).join('') || '<p class="muted">No worship times yet.</p>';
+}
+function svcRead(root = document){
+  return $$('.svcrow', root).map(r => ({id:r.dataset.id || '', name:$('.sv-name', r).value, day:Number($('.sv-day', r).value), time:$('.sv-time', r).value}));
+}
+function svcWrite(list){ const box = $('#svcList'); if (box) box.innerHTML = svcRows(list); }
 function openMembersModal(){
   const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => `
     <div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${p.access === 'admin' ? 'Church admin' : 'Member'}${p.role ? ' · ' + esc(p.role) : ''}</span></div>
@@ -1221,6 +1354,10 @@ document.addEventListener('click', e => {
     case 'invite': shareInvite(); break;
     case 'authtab': showAuth(el.dataset.t); break;
     case 'retry': bootSession(); break;
+    case 'addsvc': svcWrite([...svcRead(), {id:'', name:'', day:3, time:'19:00'}]); break;
+    case 'rmsvc': { const l = svcRead(); l.splice(Number(el.dataset.i), 1); svcWrite(l); break; }
+    case 'attend': toggleAttend(el.dataset.svc, el.dataset.date); break;
+    case 'whocoming': openComingModal(); break;
     case 'closemodal': closeModal(); break;
   }
 });
@@ -1260,7 +1397,7 @@ function boot(){
   if (['home','news','library','members'].includes(h)) S.route = h;
   S.token = loadToken();
   mount();
-  setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard(); }, 60000);
+  setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard(); if (S.uid) renderStrip(); }, 60000);
   bootSession();
 }
 boot();
