@@ -276,6 +276,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
+/* text alerts */
+.chat-in.wrap{flex-wrap:wrap}
+.sms-opt{flex-basis:100%;display:flex;gap:6px;align-items:flex-start;font-size:.82rem;color:var(--muted);padding:0 6px;cursor:pointer}
+.sms-opt input{margin-top:3px}
 /* sign in and join */
 body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth) .ann-strip{visibility:hidden}
 .auth{position:fixed;inset:0;z-index:40;display:grid;place-items:start center;padding:24px 16px;overflow-y:auto;background:rgba(238,244,247,.7);backdrop-filter:blur(8px)}
@@ -423,7 +427,7 @@ async function api(action, data = {}){
   return j;
 }
 function applySync(j){
-  S.rev = j.rev; S.uid = j.me.id; S.isAdmin = j.me.access === 'admin';
+  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin';
   S.settings = j.settings || {}; S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.profiles = Object.fromEntries(j.members.map(m => [m.id, m]));
   S.loaded = {posts:true, files:true, profiles:true}; S.offline = false;
@@ -682,11 +686,12 @@ function mount(){
     v.innerHTML = `${bannerHTML}<section class="card chat" aria-label="Church announcements">
       <div class="chat-head">${av('system', 'md')}<div><b>Church announcements</b><small>Messages from the church leaders</small></div></div>
       <div class="msgs" id="msgs" tabindex="0" aria-label="Announcements"></div>
-      ${S.isAdmin ? `<form class="chat-in" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button></form>`
+      ${S.isAdmin ? `<form class="chat-in wrap" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button>
+          <label class="sms-opt" for="aSms"><input type="checkbox" id="aSms"><span>Also text members <span id="aSmsNote"></span></span></label></form>`
         : `<div class="chat-in"><p class="muted">Only church leaders can send announcements. You can say Amen and reply to any message.</p></div>`}</section>`;
     const ta = $('#aText');
     if (ta){
-      ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; });
+      ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; smsNote(); });
       ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches){ e.preventDefault(); sendAnn(); } });
     }
   } else if (S.route === 'library'){
@@ -741,6 +746,7 @@ function msgHTML(p){
         <button data-act="react" data-id="${esc(p.id)}" class="${iReact ? 'on' : ''}" aria-pressed="${!!iReact}">${icon('heart')}Amen${rx.length ? ' · ' + rx.length : ''}</button>
         <button data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}Reply${cms.length ? ' · ' + cms.length : ''}</button>
         <button data-act="shareann" data-id="${esc(p.id)}">Share</button><button data-act="copyann" data-id="${esc(p.id)}">Copy</button>
+        ${smsPart(p)}
         ${mine(p.authorId) ? `<button data-act="delpost" data-id="${esc(p.id)}">Delete</button>` : ''}</div>
       ${open ? `<div class="reps">${cms.map(c => `<div class="rep">${av(c.authorId, 'sm')}<div class="rb"><b>${esc(nameOf(c.authorId))}</b>${esc(c.text)}</div>${mine(c.authorId) ? `<button class="x" data-act="delcm" data-id="${esc(c.id)}" aria-label="Delete reply">${icon('x')}</button>` : ''}</div>`).join('')}
         <form class="c-form" data-comment="${esc(p.id)}"><input id="cin-${esc(p.id)}" type="text" maxlength="500" placeholder="Write a reply" aria-label="Write a reply" autocomplete="off"><button class="btn primary sm" type="submit">Send</button></form></div>` : ''}
@@ -757,13 +763,71 @@ function renderChat(){
   });
   el.scrollTop = atBottom ? el.scrollHeight : st;
   S.chatInit = true;
+  smsNote();
 }
+/* text alerts (admins) */
+const smsParts = text => {
+  const sm = S.sms; if (!sm) return 1;
+  const len = Math.min(sm.max, sm.prefix.length + 3 + String(text || '').replace(/\s+/g, ' ').trim().length);
+  return Math.max(1, Math.ceil(len / 160));
+};
+function smsNote(){
+  const el = $('#aSmsNote'); if (!el) return;
+  const sm = S.sms; if (!sm){ el.textContent = ''; return; }
+  const n = sm.count, plural = n === 1 ? '' : 's';
+  if (!n){ el.textContent = '(no one has turned on text alerts yet)'; return; }
+  const credits = n * smsParts($('#aText') ? $('#aText').value : '');
+  el.textContent = sm.provider === 'SEMAPHORE'
+    ? `(${n} member${plural}, about ${credits} text credit${credits === 1 ? '' : 's'})`
+    : `(${n} member${plural}. You will get their numbers to text yourself.)`;
+}
+function smsPart(p){
+  if (!S.isAdmin || !S.sms) return '';
+  const st = String(p.sms || '');
+  if (/^(SENT|QUEUED)/.test(st)) return `<span>Texted \u00b7 ${esc(st.split(':')[1] || '')}</span>${/^QUEUED/.test(st) ? `<button data-act="smsinfo" data-id="${esc(p.id)}">Show numbers</button>` : ''}`;
+  return `<button data-act="smsann" data-id="${esc(p.id)}">Text members</button>${/^FAILED/.test(st) ? '<span>Last text failed</span>' : ''}`;
+}
+function showSmsResult(j){
+  if (j.mode === 'SEMAPHORE'){ toast(`Text sent to ${j.recipients} member${j.recipients === 1 ? '' : 's'}.`); return; }
+  const href = 'sms:' + j.numbers + '?body=' + encodeURIComponent(j.text);
+  openModal('Text these members', `<p class="muted">Free mode: your phone sends the texts. Copy the message and the numbers, or open your text app with everything filled in.</p>
+    <label class="fld" for="smsMsg">Message<textarea id="smsMsg" readonly rows="4">${esc(j.text)}</textarea></label>
+    <div><button class="btn sm" type="button" data-act="copytext" data-target="smsMsg">Copy message</button></div>
+    <label class="fld" for="smsNums">${j.recipients} number${j.recipients === 1 ? '' : 's'}<textarea id="smsNums" readonly rows="3">${esc(j.numbers)}</textarea></label>
+    <div><button class="btn sm" type="button" data-act="copytext" data-target="smsNums">Copy numbers</button></div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Done</button><a class="btn primary" href="${esc(href)}">Open text app</a></div>`, true);
+}
+async function textMembers(postId, fresh){
+  try { const j = await api('sendSms', {postId}); await sync(); showSmsResult(j); }
+  catch (e){ toast((fresh ? 'The announcement was posted, but the text was not sent. ' : '') + errMsg(e)); sync().catch(() => {}); }
+}
+async function smsAnn(id){
+  const p = S.posts.find(x => x.id === id), sm = S.sms; if (!p || !sm) return;
+  if (sm.provider === 'SEMAPHORE'){
+    const credits = sm.count * smsParts(p.text);
+    if (!await confirmBox('Text this announcement?', `This sends a text to ${sm.count} member${sm.count === 1 ? '' : 's'} and uses about ${credits} text credit${credits === 1 ? '' : 's'}.`, 'Send texts')) return;
+  }
+  textMembers(id, false);
+}
+async function smsInfo(id){
+  try { showSmsResult(await api('smsInfo', {postId:id})); } catch (e){ toast(errMsg(e)); }
+}
+async function copyFrom(id){
+  const t = document.getElementById(id); if (!t) return;
+  try { await navigator.clipboard.writeText(t.value); toast('Copied.'); }
+  catch (e){ t.focus(); t.select(); toast('Select the text and copy it.'); }
+}
+
 async function sendAnn(){
   const ta = $('#aText'); if (!ta || S.annSending || !guard()) return;
   const text = ta.value.trim(); if (!text) return;
+  const wantSms = !!($('#aSms') && $('#aSms').checked);
+  if ($('#aSms')) $('#aSms').checked = false;
   S.annSending = true; const btn = $('#aSend'); if (btn) btn.disabled = true;
-  try { await act('post', {cat:'announcement', text}); ta.value = ''; ta.style.height = 'auto'; S.chatInit = false; renderChat(); }
+  let postId = '';
+  try { const j = await act('post', {cat:'announcement', text}); postId = j.id; ta.value = ''; ta.style.height = 'auto'; S.chatInit = false; renderChat(); }
   catch (e) {}
+  if (postId && wantSms) await textMembers(postId, true);
   S.annSending = false; if (btn) btn.disabled = false; ta.focus();
 }
 async function copyAnn(id){
@@ -974,6 +1038,8 @@ function openProfileModal(){
       <label class="fld" for="pSince">Member since<input id="pSince" maxlength="4" inputmode="numeric" value="${esc(p.since || '')}" placeholder="Year"></label>
       <label class="fld" for="pBio">About you<textarea id="pBio" maxlength="500" placeholder="A few words about you and your family">${esc(p.bio || '')}</textarea></label>
       <label class="fld" for="pVerse">Favorite verse<textarea id="pVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(p.verse || '')}</textarea></label>
+      <label class="fld" for="pPhone">Mobile number for text alerts<input id="pPhone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" value="${esc((S.me && S.me.phone) || '')}" placeholder="09171234567"><small>Only church leaders can see this. It is never shown to other members.</small></label>
+      <label class="pin-opt"><input type="checkbox" id="pSms" ${S.me && S.me.sms ? 'checked' : ''}> Text me church announcements</label>
       <label class="fld" for="pAv">Profile photo<input id="pAv" type="file" accept="image/*"><small>Optional. A face photo works best.</small></label>
       <label class="fld" for="pCover">Cover photo<input id="pCover" type="file" accept="image/*"><small>Optional. A wide photo, such as your family or a church event.</small></label>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="pSave">Save profile</button></div>
@@ -982,7 +1048,7 @@ function openProfileModal(){
     e.preventDefault();
     const btn = $('#pSave', m); btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value};
+      const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value, phone:$('#pPhone', m).value, sms:$('#pSms', m).checked};
       const af = $('#pAv', m).files[0], cf = $('#pCover', m).files[0];
       if (af) body.avatar = await shrink(af, {w:240, h:240, crop:true, q:.82, maxChars:300000});
       if (cf) body.cover = await shrink(cf, {w:1200, h:400, crop:true, q:.78, maxChars:900000});
@@ -1045,6 +1111,7 @@ function openSettingsModal(){
       <label class="fld" for="sSched">Sabbath schedule<textarea id="sSched" maxlength="400" placeholder="Sabbath School 9:00 AM&#10;Divine Service 10:30 AM&#10;Prayer Meeting Wednesday 7:00 PM">${esc(st.schedule || '')}</textarea></label>
       <label class="fld" for="sVerse">Verse of the week<textarea id="sVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(st.verse || '')}</textarea></label>
       <label class="fld" for="sCode">Church join code<input id="sCode" maxlength="30" value="${esc(st.joinCode || '')}"><small>New members type this code to join. Change it any time. Share it only with your church family.</small></label>
+      <p class="muted">Text alerts: ${S.sms && S.sms.provider === 'SEMAPHORE' ? 'automatic through Semaphore.' : 'free manual mode. You get the numbers and your phone sends the texts. For automatic texts, see SETUP.md.'} ${S.sms ? S.sms.count : 0} member${S.sms && S.sms.count === 1 ? ' has' : 's have'} turned them on.</p>
       <label class="fld" for="sBg">Background photo<input id="sBg" type="file" accept="image/*"><small>Pick a church photo. It sits behind the whole site and you can change it any time.</small></label>
       ${st.bgId ? '<label class="pin-opt"><input type="checkbox" id="sBgReset"> Go back to the default background</label>' : ''}
       <button class="btn" type="button" data-act="members">Manage members</button>
@@ -1147,6 +1214,9 @@ document.addEventListener('click', e => {
     case 'members': if (S.isAdmin) openMembersModal(); break;
     case 'macc': case 'mdel': case 'mpw': memberAction(a, el.dataset.uid, el.dataset.to); break;
     case 'copyann': copyAnn(id); break;
+    case 'smsann': smsAnn(id); break;
+    case 'smsinfo': smsInfo(id); break;
+    case 'copytext': copyFrom(el.dataset.target); break;
     case 'shareann': shareAnn(id); break;
     case 'invite': shareInvite(); break;
     case 'authtab': showAuth(el.dataset.t); break;

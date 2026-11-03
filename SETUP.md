@@ -38,6 +38,30 @@ You need these files. Upload all of them to GitHub except `Code.gs`, which goes 
 - **Keep it like an app:** on the phone, open the browser menu and choose **Add to Home screen**. The church icon then sits with the other apps.
 - Facebook remembers old link pictures. If the picture is missing or old, paste the address into Facebook's Sharing Debugger (developers.facebook.com/tools/debug) and press **Scrape Again**.
 
+## Text alerts (SMS)
+
+**How it works**
+- A member opens **My profile > Edit profile**, types their mobile number, ticks **Text me church announcements**, and saves. Only church leaders can see numbers.
+- When an admin sends an announcement, there is a box **Also text members**. Tick it before pressing **Send**. Under any older announcement, an admin can also tap **Text members**.
+
+**Free mode (this is the default, nothing to set up)**
+After you send, a box shows the message and the numbers. Tap **Open text app** to send from your own phone, or **Copy** the message and numbers. This uses your own load, so it is a good way to try a few texts first. Tap **Show numbers** under the announcement to open the list again.
+
+**Automatic mode with Semaphore (optional, costs money)**
+1. Create an account at semaphore.co and copy your **API key**.
+2. In Apps Script, click the gear icon (**Project Settings**), scroll to **Script properties**, and add:
+   - `SMS_PROVIDER` = `SEMAPHORE`
+   - `SEMAPHORE_API_KEY` = your key
+   - `SEMAPHORE_SENDER` = your approved sender name (optional)
+3. To test, add `TEST_NUMBER` = your own number (like `09171234567`), choose the function **sendTestSms**, and click **Run**. You should get one text.
+4. After that, **Also text members** sends automatically. The box shows about how many text credits it will use. Semaphore charges one credit for each 160 characters per person, and texts here are cut at 320 characters. Check Semaphore's site for the current price.
+
+**Upgrading from the first version**
+1. In Apps Script, replace all of `Code.gs` with the new one and save.
+2. Choose **setup** and click **Run** once (it only adds the new columns and the SmsOutbox tab).
+3. Click **Deploy > Manage deployments**, the pencil icon, **Version: New version**, then **Deploy**. The web app link stays the same.
+4. Upload the new `index.html` to GitHub.
+
 ## Good to know
 
 - **Members** sign in with a username and password they choose when they join. Admins can make other members admins, set a new password for someone, or remove a member (gear icon, Manage members).
