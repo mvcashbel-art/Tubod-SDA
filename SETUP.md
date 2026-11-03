@@ -38,13 +38,14 @@ You need these files. Upload all of them to GitHub except `Code.gs`, which goes 
 - **Keep it like an app:** on the phone, open the browser menu and choose **Add to Home screen**. The church icon then sits with the other apps.
 - Facebook remembers old link pictures. If the picture is missing or old, paste the address into Facebook's Sharing Debugger (developers.facebook.com/tools/debug) and press **Scrape Again**.
 
-## Worship times, reminders and who is coming
+## Worship times, reminders and the worship program
 
 - **Worship times:** click the gear icon. Under **Worship times**, set each worship (name, day, start time). Wednesday and Friday at 7:00 PM are already there. Use **Add a worship time** for more, and the X to remove one. The nearest worship always shows in the blue bar at the very top of every page, and in the sidebar.
 - **Automatic announcements:** tick **Announce each worship automatically** and choose how many hours before. The site then posts an announcement like "Wednesday worship today at 7:00 PM. Everyone is welcome to join us." by itself. Old reminders delete themselves after 3 days.
   - **Turn this on once:** in Apps Script, choose the function **installTriggers** and click **Run**. Allow the permissions. After that it checks every hour.
   - If you have automatic texts (Semaphore) set up, tick **Also text members when it is posted** to text the reminder too. In free mode it only posts the announcement.
-- **Who is coming:** under the nearest worship, members tap **I am coming**. Tap **See everyone** to see the full list of names for each worship. Sign-up closes 90 minutes after the worship starts.
+- **Worship program (roles and participants):** as an admin, tap **Add participants** under the nearest worship in the sidebar, or **Edit participants** next to the announcement box. Choose the worship, then fill in the name next to each role. The roles start in your order: presider or worship leader, opening song, song leader, welcome song for shaking hands, opening prayer, special song, message or speaker, prayer band, closing song, closing prayer. You can change a role, add more rows, remove rows, and move rows up or down. **Copy from last time** brings back the last program for that worship.
+- **Announce it:** tap **Save and announce** to save the program and post the announcement in one step. Members then see the participants inside the announcement and in the sidebar. Only rows with a name are shown to members. The automatic reminders also show the program, and texts and Share include it.
 - If you typed your worship times into the old text box, clear it, because the times now come from the list. That box is now **More about worship (optional)**.
 
 ## Text alerts (SMS)
@@ -71,6 +72,12 @@ After you send, a box shows the message and the numbers. Tap **Open text app** t
    Then choose **installTriggers** and click **Run** once, to turn on the worship announcements.
 3. Click **Deploy > Manage deployments**, the pencil icon, **Version: New version**, then **Deploy**. The web app link stays the same.
 4. Upload the new `index.html` to GitHub.
+
+## Making someone an admin
+
+- **The first person to join is the admin automatically.** If that was you, you already are.
+- **An admin can make others admins:** gear icon, **Manage members**, **Make admin**.
+- **If someone else joined first, or you need to fix it from the sheet:** in Apps Script, open the function **makeAdminFromEditor**, replace `your-username` with your exact username (see the Members tab in the sheet), choose that function and click **Run**. Then sign out and sign in again on the website.
 
 ## Good to know
 

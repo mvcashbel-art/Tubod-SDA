@@ -299,19 +299,25 @@ button,input,select,textarea{font:inherit;color:inherit}
 .svcrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .svcrow input,.svcrow select{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#F7FAFB;font-weight:400}
 .svcrow .sv-name{flex:1 1 150px;min-width:0}
-/* who is coming */
-.rsvp{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:flex;flex-direction:column;gap:8px}
-.rsvp .when{font-size:.86rem;color:var(--muted)}
-.rsvp .when b{color:var(--ink)}
-.faces{display:flex;align-items:center;gap:0;flex-wrap:wrap}
-.faces .av{margin-right:-8px;border:2px solid #fff}
-.faces .more-n{margin-left:14px;font-size:.82rem;color:var(--muted)}
-.linkbtn{border:0;background:none;padding:0;color:var(--accent-dark);font-weight:600;font-size:.88rem;cursor:pointer;text-align:left;text-decoration:underline}
-.who{display:flex;flex-direction:column;gap:6px}
-.who h3{font-size:1.1rem}
-.plist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
-.plist li{display:flex;align-items:center;gap:8px;font-size:.92rem;min-width:0}
-.plist li span{overflow-wrap:anywhere}
+/* worship participants */
+.linkbtn{border:0;background:none;padding:0;color:var(--accent-dark);font-weight:600;font-size:.82rem;cursor:pointer;text-decoration:underline}
+.coming{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.msg.me .bub .coming{border-top-color:rgba(255,255,255,.35)}
+.plist2{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.plist2 li{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
+.plist2 .r{opacity:.75;flex:0 1 55%;min-width:0}
+.plist2 .n{font-weight:600;overflow-wrap:anywhere;text-align:right;flex:1 1 40%}
+.svcrow .mv{display:flex;margin-left:auto}
+.svcrow .mv .icon-btn{width:32px;height:32px}
+.svcrow .mv .icon-btn:disabled{opacity:.3;cursor:default}
+.svcrow .pg-role{flex:1.5 1 170px;min-width:0}
+.svcrow .pg-name{flex:1 1 150px;min-width:0}
+.progside{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.progside .when{font-size:.86rem;color:var(--muted)}
+.progside .when b{color:var(--ink)}
+.progside .plist2{font-size:.9rem}
+.progside .plist2 .r{color:var(--muted);opacity:1}
+.sms-opt select{border:1px solid var(--line);border-radius:8px;padding:2px 6px;background:#fff;font-size:.82rem;color:var(--ink)}
 /* text alerts */
 .chat-in.wrap{flex-wrap:wrap}
 .sms-opt{flex-basis:100%;display:flex;gap:6px;align-items:flex-start;font-size:.82rem;color:var(--muted);padding:0 6px;cursor:pointer}
@@ -389,6 +395,8 @@ const ICONS = {
   file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6',
   music:'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
   x:'M18 6L6 18M6 6l12 12',
+  up:'M12 19V5M5 12l7-7 7 7',
+  down:'M12 5v14M19 12l-7 7-7-7',
   church:'M12 2v4M10 4h4M12 6l5 5v11H7V11zM10 22v-5a2 2 0 0 1 4 0v5'
 };
 const icon = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
@@ -408,7 +416,7 @@ const MAX_FILE_MB = 15;
 const S = {
   route:'home', profileId:null, filter:'all', libCat:'all', libQ:'', memQ:'', limit:30,
   token:'', uid:null, isAdmin:false, offline:false, rev:'',
-  posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{}, attending:[],
+  posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{}, program:[],
   loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false}, posting:false, chatInit:false
 };
 
@@ -463,7 +471,7 @@ async function api(action, data = {}){
   return j;
 }
 function applySync(j){
-  S.attending = j.attending || [];
+  S.program = j.program || [];
   S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin';
   S.settings = j.settings || {}; S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.profiles = Object.fromEntries(j.members.map(m => [m.id, m]));
@@ -741,37 +749,98 @@ function countdown(w, now = Date.now()){
   const dd = Math.floor(h / 24); return `in ${dd} day${dd > 1 ? 's' : ''}`;
 }
 const dateOf = w => new Date(w.start + TZ * 36e5).toISOString().slice(0, 10);
-const comingList = w => S.attending.filter(a => a.svcId === w.sv.id && a.date === dateOf(w));
-function rsvpBlock(w){
+const DEFAULT_ROLES = ['Presider / worship leader','Opening song','Song leader','Welcome song (shaking hands)','Opening prayer','Special song','Message / speaker','Prayer band','Closing song','Closing prayer'];
+const ROLE_SUGGEST = [...DEFAULT_ROLES, 'Scripture reading','Offering','Children\u2019s story','Deacons on duty','Deaconesses on duty'];
+function progItems(svcId, date){
+  const row = S.program.find(x => x.svcId === svcId && x.date === date);
+  return row ? row.items.filter(i => i.role || i.name).map(i => ({role:i.role || '', name:i.name || ''})) : [];
+}
+const named = items => items.filter(i => i.name);
+const partList = items => `<ul class="plist2">${items.map(i => `<li><span class="r">${esc(i.role)}</span><span class="n">${esc(i.name)}</span></li>`).join('')}</ul>`;
+const partText = items => items.filter(i => i.name).map(i => (i.role ? i.role + ': ' : '') + i.name).join(', ');
+/* the participants shown inside a worship announcement */
+function programBlock(p){
+  if (!p.svc) return '';
+  const [svcId, date] = String(p.svc).split('|');
+  const sv = services().find(x => x.id === svcId);
+  if (!sv || !/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return '';
+  const items = named(progItems(svcId, date));
+  const edit = (label) => S.isAdmin ? `<div><button type="button" class="btn sm" data-act="editprog" data-svc="${esc(svcId)}" data-date="${esc(date)}">${label}</button></div>` : '';
+  if (!items.length) return S.isAdmin ? `<div class="coming"><div>No participants listed yet.</div>${edit('Add participants')}</div>` : '';
+  return `<div class="coming"><div><b>${esc(sv.name)} · participants</b></div>${partList(items)}${edit('Edit participants')}</div>`;
+}
+const shareParticipants = p => {
+  if (!p || !p.svc) return '';
+  const [svcId, date] = String(p.svc).split('|'), t = partText(progItems(svcId, date));
+  return t ? '\nParticipants: ' + t : '';
+};
+/* the participants of the nearest worship, in the sidebar */
+function nextProgram(w){
   if (!w.sv.id) return '';
-  const people = comingList(w), mineIn = !!S.uid && people.some(a => a.uid === S.uid);
-  const faces = people.slice(0, 6).map(a => av(a.uid, 'sm')).join('');
-  return `<div class="rsvp"><div class="when"><b>${esc(w.sv.name)}</b> \u00b7 ${esc(whenText(w))}</div>
-    <div><button class="btn ${mineIn ? '' : 'primary'} sm" data-act="attend" data-svc="${esc(w.sv.id)}" data-date="${dateOf(w)}" aria-pressed="${mineIn}">${mineIn ? 'You are coming. Tap to cancel' : 'I am coming'}</button></div>
-    ${people.length ? `<div class="faces">${faces}${people.length > 6 ? `<span class="more-n">+${people.length - 6}</span>` : ''}</div>` : ''}
-    <button class="linkbtn" data-act="whocoming">${people.length ? `${people.length} coming. See everyone` : 'No one yet. See all worships'}</button></div>`;
+  const items = named(progItems(w.sv.id, dateOf(w)));
+  if (!items.length && !S.isAdmin) return '';
+  return `<div class="progside"><div class="when"><b>${esc(w.sv.name)}</b> · ${esc(whenText(w))}</div>
+    ${items.length ? partList(items) : '<div class="when">No participants listed yet.</div>'}
+    ${S.isAdmin ? `<div><button class="btn sm" data-act="editprog" data-svc="${esc(w.sv.id)}" data-date="${dateOf(w)}">${items.length ? 'Edit participants' : 'Add participants'}</button></div>` : ''}</div>`;
 }
-function openComingModal(){
-  const body = nextWorships().map(w => {
-    const people = comingList(w);
-    return `<section class="who"><h3>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</h3><p class="muted">${people.length} coming</p>${people.length ? `<ul class="plist">${people.map(a => `<li>${av(a.uid, 'sm')}<span>${esc(nameOf(a.uid))}</span></li>`).join('')}</ul>` : '<p class="muted">No one has signed up yet.</p>'}</section>`;
-  }).join('') || '<p class="muted">No worship times have been added yet.</p>';
-  openModal('Who is coming', body + `<div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
+/* editor (admins) */
+function lastProgram(svcId, date){
+  const rows = S.program.filter(x => x.svcId === svcId && x.date < date && x.items.some(i => i.role || i.name)).sort((a, b) => b.date.localeCompare(a.date));
+  return rows[0] ? rows[0].items.filter(i => i.role || i.name).map(i => ({role:i.role || '', name:i.name || ''})) : [];
 }
-async function toggleAttend(svc, date){
-  if (!guard()) return;
-  const id = svc + '_' + date + '_' + S.uid;
-  S.attending = S.attending.some(a => a.id === id) ? S.attending.filter(a => a.id !== id) : [...S.attending, {id, svcId:svc, date, uid:S.uid}];
-  refresh();
-  try { await api('attend', {svcId:svc, date}); await sync(); }
-  catch (e){ toast(errMsg(e)); sync().catch(() => {}); }
+function progRows(items){
+  return items.map((x, i) => `<div class="svcrow"><input class="pg-role" id="pgr${i}" list="roleSug" maxlength="40" value="${esc(x.role)}" placeholder="Role, such as Speaker" aria-label="Role">
+    <input class="pg-name" id="pgn${i}" list="nameSug" maxlength="80" value="${esc(x.name)}" placeholder="Name" aria-label="Name">
+    <span class="mv"><button type="button" class="icon-btn" data-act="upart" data-i="${i}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>${icon('up')}</button><button type="button" class="icon-btn" data-act="dpart" data-i="${i}" aria-label="Move down" ${i === items.length - 1 ? 'disabled' : ''}>${icon('down')}</button><button type="button" class="icon-btn" data-act="rmpart" data-i="${i}" aria-label="Remove this row">${icon('x')}</button></span></div>`).join('');
+}
+const progRead = () => $$('#gRows .svcrow').map(r => ({role:$('.pg-role', r).value, name:$('.pg-name', r).value}));
+const progWrite = items => { const b = $('#gRows'); if (b) b.innerHTML = progRows(items); };
+function progFor(key){
+  const [sid, date] = key.split('|');
+  const have = progItems(sid, date);
+  if (have.length) return have;
+  const last = lastProgram(sid, date);
+  return (last.length ? last.map(i => ({role:i.role, name:''})) : DEFAULT_ROLES.map(r => ({role:r, name:''})));
+}
+function openProgModal(svcId, date){
+  const list = nextWorships();
+  if (!list.length){ toast('Add a worship time in church settings first.'); return; }
+  const pick = list.find(w => w.sv.id === svcId && (!date || dateOf(w) === date)) || list[0];
+  const key0 = pick.sv.id + '|' + dateOf(pick);
+  const m = openModal('Worship participants', `<form id="gForm" class="m-body" style="padding:0">
+    <p class="muted">Write who takes part in the worship. Members see this list inside the announcement.</p>
+    <label class="fld" for="gWhich">Worship<select id="gWhich">${list.map(w => `<option value="${esc(w.sv.id + '|' + dateOf(w))}" ${w.sv.id + '|' + dateOf(w) === key0 ? 'selected' : ''}>${esc(w.sv.name)} · ${esc(whenText(w))}</option>`).join('')}</select></label>
+    <datalist id="roleSug">${ROLE_SUGGEST.map(r => `<option value="${esc(r)}">`).join('')}</datalist>
+    <datalist id="nameSug">${Object.values(S.profiles).map(p => `<option value="${esc(p.name)}">`).join('')}</datalist>
+    <div id="gRows">${progRows(progFor(key0))}</div>
+    <div class="m-actions" style="justify-content:flex-start"><button type="button" class="btn sm" data-act="addpart">Add a participant</button><button type="button" class="btn sm" data-act="copyprog">Copy from last time</button></div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn" type="submit" id="gSave">Save</button><button class="btn primary" type="button" id="gAnn" data-act="saveann">Save and announce</button></div>
+  </form>`, true);
+  $('#gWhich', m).addEventListener('change', e => progWrite(progFor(e.target.value)));
+  $('#gForm', m).addEventListener('submit', e => { e.preventDefault(); saveProg(false); });
+}
+async function saveProg(announce){
+  const sel = $('#gWhich'); if (!sel) return;
+  const [sid, date] = sel.value.split('|');
+  const items = progRead().filter(x => x.role.trim() || x.name.trim());
+  const btns = $$('#gForm button[type=submit], #gAnn'); btns.forEach(b => b.disabled = true);
+  try {
+    await api('saveProgram', {svcId:sid, date, items});
+    if (announce){
+      const w = nextWorships().find(x => x.sv.id === sid && dateOf(x) === date);
+      const text = w ? `${w.sv.name}, ${whenText(w)}. Everyone is welcome to join us.` : 'Worship. Everyone is welcome to join us.';
+      await api('post', {cat:'announcement', text, svc:sid, svcDate:date});
+    }
+    await sync(); closeModal();
+    toast(announce ? 'Saved and announced.' : 'Participants saved.');
+  } catch (e){ toast(errMsg(e)); btns.forEach(b => b.disabled = false); }
 }
 function scheduleCard(){
   const nw = nextWorships(), note = S.settings.schedule;
   if (!nw.length && !note){
     return S.isAdmin ? `<div class="card"><h3>Worship schedule</h3><p class="muted">Add your worship times in church settings.</p><p style="margin-top:8px"><button class="btn sm" data-act="settings">Open settings</button></p></div>` : '';
   }
-  return `<div class="card"><h3>Worship schedule</h3>${nw.length ? `<ul class="wlist">${nw.map((w, i) => `<li class="${i === 0 ? 'next' : ''}"><span>${esc(w.sv.name)}</span><span>${DAYS[w.sv.day]}s ${time12(w.sv.time)}</span></li>`).join('')}</ul>` : ''}${note ? `<p class="sched">${esc(note)}</p>` : ''}${nw.length ? rsvpBlock(nw[0]) : ''}</div>`;
+  return `<div class="card"><h3>Worship schedule</h3>${nw.length ? `<ul class="wlist">${nw.map((w, i) => `<li class="${i === 0 ? 'next' : ''}"><span>${esc(w.sv.name)}</span><span>${DAYS[w.sv.day]}s ${time12(w.sv.time)}</span></li>`).join('')}</ul>` : ''}${note ? `<p class="sched">${esc(note)}</p>` : ''}${nw.length ? nextProgram(nw[0]) : ''}</div>`;
 }
 
 /* top of every page: the nearest worship, then the newest announcement */
@@ -802,7 +871,8 @@ function mount(){
       <div class="chat-head">${av('system', 'md')}<div><b>Church announcements</b><small>Messages from the church leaders</small></div></div>
       <div class="msgs" id="msgs" tabindex="0" aria-label="Announcements"></div>
       ${S.isAdmin ? `<form class="chat-in wrap" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button>
-          <label class="sms-opt" for="aSms"><input type="checkbox" id="aSms"><span>Also text members <span id="aSmsNote"></span></span></label></form>`
+          <label class="sms-opt" for="aSms"><input type="checkbox" id="aSms"><span>Also text members <span id="aSmsNote"></span></span></label>
+          ${services().length ? `<label class="sms-opt" for="aSvc"><span>Include participants for: <select id="aSvc"><option value="">No worship</option>${services().map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select> <button type="button" class="linkbtn" data-act="editprog" data-svc="" data-date="">Edit participants</button></span></label>` : ''}</form>`
         : `<div class="chat-in"><p class="muted">Only church leaders can send announcements. You can say Amen and reply to any message.</p></div>`}</section>`;
     const ta = $('#aText');
     if (ta){
@@ -856,7 +926,7 @@ function msgHTML(p){
   const t = new Date(p.createdAt || 0).toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit'});
   return `<div class="msg ${me ? 'me' : ''}" data-id="${esc(p.id)}">${me ? '' : av(p.authorId, 'sm')}
     <div class="mcol">
-      <div class="bub"><div class="who">${esc(nameOf(p.authorId))}</div>${p.text ? `<div class="tx">${esc(p.text)}</div>` : ''}${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}</div>
+      <div class="bub"><div class="who">${esc(nameOf(p.authorId))}</div>${p.text ? `<div class="tx">${esc(p.text)}</div>` : ''}${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}${programBlock(p)}</div>
       <div class="m-info"><span>${t}</span>
         <button data-act="react" data-id="${esc(p.id)}" class="${iReact ? 'on' : ''}" aria-pressed="${!!iReact}">${icon('heart')}Amen${rx.length ? ' · ' + rx.length : ''}</button>
         <button data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}Reply${cms.length ? ' · ' + cms.length : ''}</button>
@@ -940,14 +1010,15 @@ async function sendAnn(){
   if ($('#aSms')) $('#aSms').checked = false;
   S.annSending = true; const btn = $('#aSend'); if (btn) btn.disabled = true;
   let postId = '';
-  try { const j = await act('post', {cat:'announcement', text}); postId = j.id; ta.value = ''; ta.style.height = 'auto'; S.chatInit = false; renderChat(); }
+  try { const svc = $('#aSvc') ? $('#aSvc').value : '';
+    const j = await act('post', {cat:'announcement', text, svc}); postId = j.id; if ($('#aSvc')) $('#aSvc').value = ''; ta.value = ''; ta.style.height = 'auto'; S.chatInit = false; renderChat(); }
   catch (e) {}
   if (postId && wantSms) await textMembers(postId, true);
   S.annSending = false; if (btn) btn.disabled = false; ta.focus();
 }
 async function copyAnn(id){
   const p = S.posts.find(x => x.id === id); if (!p) return;
-  const text = (S.settings.churchName || 'Tubod SDA Church') + ' announcement:\n' + (p.text || '');
+  const text = (S.settings.churchName || 'Tubod SDA Church') + ' announcement:\n' + (p.text || '') + shareParticipants(p);
   try { await navigator.clipboard.writeText(text); toast('Copied. Paste it into Messenger or a text message.'); }
   catch (e){
     const m = openModal('Copy announcement', `<label class="fld" for="cpT">Select this message and copy it<textarea id="cpT" readonly rows="6">${esc(text)}</textarea></label><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`);
@@ -972,7 +1043,7 @@ async function shareOut(title, text, url){
 function shareAnn(id){
   const p = S.posts.find(x => x.id === id); if (!p) return;
   const name = S.settings.churchName || 'Tubod SDA Church';
-  shareOut(name, name + ' announcement:\n' + (p.text || ''), siteUrl() + '#news');
+  shareOut(name, name + ' announcement:\n' + (p.text || '') + shareParticipants(p), siteUrl() + '#news');
 }
 function shareInvite(){
   const name = S.settings.churchName || 'Tubod SDA Church';
@@ -1003,6 +1074,7 @@ function postHTML(p){
     </div>
     ${p.text ? `<p class="p-text">${esc(p.text)}</p>` : ''}
     ${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}
+    ${programBlock(p)}
     <div class="acts">
       <button class="btn quiet ${iReact ? 'on' : ''}" data-act="react" data-id="${esc(p.id)}" aria-pressed="${!!iReact}">${icon('heart')}${CATS[cat].react}${rx.length ? ' · ' + rx.length : ''}</button>
       <button class="btn quiet" data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}${cms.length ? cms.length + (cms.length === 1 ? ' comment' : ' comments') : 'Comment'}</button>
@@ -1356,8 +1428,12 @@ document.addEventListener('click', e => {
     case 'retry': bootSession(); break;
     case 'addsvc': svcWrite([...svcRead(), {id:'', name:'', day:3, time:'19:00'}]); break;
     case 'rmsvc': { const l = svcRead(); l.splice(Number(el.dataset.i), 1); svcWrite(l); break; }
-    case 'attend': toggleAttend(el.dataset.svc, el.dataset.date); break;
-    case 'whocoming': openComingModal(); break;
+    case 'editprog': { const sel = $('#aSvc'); openProgModal(el.dataset.svc || (sel ? sel.value : ''), el.dataset.date || ''); break; }
+    case 'addpart': progWrite([...progRead(), {role:'', name:''}]); break;
+    case 'upart': case 'dpart': { const l = progRead(), i = Number(el.dataset.i), k = a === 'upart' ? i - 1 : i + 1; if (k >= 0 && k < l.length){ [l[i], l[k]] = [l[k], l[i]]; progWrite(l); } break; }
+    case 'rmpart': { const l = progRead(); l.splice(Number(el.dataset.i), 1); progWrite(l); break; }
+    case 'copyprog': { const sel = $('#gWhich'); if (sel){ const [sid, date] = sel.value.split('|'), last = lastProgram(sid, date); if (last.length) progWrite(last); else toast('There is nothing from an earlier worship to copy.'); } break; }
+    case 'saveann': saveProg(true); break;
     case 'closemodal': closeModal(); break;
   }
 });
