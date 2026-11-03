@@ -654,8 +654,8 @@ function renderChrome(){
 }
 function renderSide(){
   const st = S.settings, n = Object.keys(S.profiles).length;
-  const sched = st.schedule ? `<div class="card"><h3>Sabbath schedule</h3><p class="sched">${esc(st.schedule)}</p></div>`
-    : S.isAdmin ? `<div class="card"><h3>Sabbath schedule</h3><p class="muted">Add your Sabbath School and worship times in church settings.</p><p style="margin-top:8px"><button class="btn sm" data-act="settings">Open settings</button></p></div>` : '';
+  const sched = st.schedule ? `<div class="card"><h3>Worship schedule</h3><p class="sched">${esc(st.schedule)}</p></div>`
+    : S.isAdmin ? `<div class="card"><h3>Worship schedule</h3><p class="muted">Add your worship times in church settings.</p><p style="margin-top:8px"><button class="btn sm" data-act="settings">Open settings</button></p></div>` : '';
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
   $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${sched}${verse}
     <div class="card more"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
@@ -1108,7 +1108,7 @@ function openSettingsModal(){
     <form id="sForm" class="m-body" style="padding:0">
       <label class="fld" for="sName">Church name<input id="sName" maxlength="60" value="${esc(st.churchName || 'Tubod SDA Church')}"></label>
       <label class="fld" for="sTag">Tagline or location<input id="sTag" maxlength="80" value="${esc(st.tagline || '')}"></label>
-      <label class="fld" for="sSched">Sabbath schedule<textarea id="sSched" maxlength="400" placeholder="Sabbath School 9:00 AM&#10;Divine Service 10:30 AM&#10;Prayer Meeting Wednesday 7:00 PM">${esc(st.schedule || '')}</textarea></label>
+      <label class="fld" for="sSched">Worship schedule<textarea id="sSched" maxlength="400" placeholder="Wednesday evening worship 7:00 PM&#10;Friday evening worship 7:00 PM&#10;Sabbath School and Divine Service times">${esc(st.schedule || '')}</textarea></label>
       <label class="fld" for="sVerse">Verse of the week<textarea id="sVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(st.verse || '')}</textarea></label>
       <label class="fld" for="sCode">Church join code<input id="sCode" maxlength="30" value="${esc(st.joinCode || '')}"><small>New members type this code to join. Change it any time. Share it only with your church family.</small></label>
       <p class="muted">Text alerts: ${S.sms && S.sms.provider === 'SEMAPHORE' ? 'automatic through Semaphore.' : 'free manual mode. You get the numbers and your phone sends the texts. For automatic texts, see SETUP.md.'} ${S.sms ? S.sms.count : 0} member${S.sms && S.sms.count === 1 ? ' has' : 's have'} turned them on.</p>
