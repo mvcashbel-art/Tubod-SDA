@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tubod SDA Church</title>
+<meta name="description" content="Our church family page: announcements, prayer requests, sermons and members.">
+<meta name="theme-color" content="#1D6A8A">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<!-- Link preview in Messenger and Facebook. If your GitHub name or repository name is different, change the two web addresses below. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tubod SDA Church">
+<meta property="og:title" content="Tubod SDA Church family page">
+<meta property="og:description" content="Announcements, prayer requests, sermons and members of our church family in Tubod, Isabel, Leyte.">
+<meta property="og:url" content="https://mvcashbel-art.github.io/Tubod-SDA/">
+<meta property="og:image" content="https://mvcashbel-art.github.io/Tubod-SDA/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout idea: sticky top bar, one feed column beside a Sabbath sidebar; bottom tabs on phones.
+     Light lake-blue and paper white, Sabbath gold only where the Sabbath is concerned. */
+  --bg:#EEF4F7; --card:#FFFFFF; --ink:#17324D; --muted:#5B7083; --line:#D9E4EA;
+  --accent:#1D6A8A; --accent-dark:#14516B; --gold:#D79A22; --gold-soft:#FBF1D9; --leaf:#3F8060; --danger:#B0433A;
+  --display:'Alegreya',Georgia,serif; --body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --radius:14px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body);-webkit-text-size-adjust:100%}
+.bg{position:fixed;inset:0;z-index:-2;background-color:var(--bg);background-position:center;background-size:cover;background-repeat:no-repeat;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900' preserveAspectRatio='xMidYMid slice'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23BFDDEB'/%3E%3Cstop offset='.72' stop-color='%23F4ECD5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23s)'/%3E%3Cpath d='M0 640C300 560 520 600 800 640S1300 560 1600 620V900H0Z' fill='%23CFE3D6'/%3E%3Cg fill='%238FAEC0'%3E%3Crect x='1180' y='575' width='110' height='80'/%3E%3Cpath d='M1170 575L1235 520L1300 575Z'/%3E%3Crect x='1225' y='440' width='20' height='80'/%3E%3Cpath d='M1222 440L1235 405L1248 440Z'/%3E%3Crect x='1233' y='380' width='4' height='28'/%3E%3Crect x='1226' y='388' width='18' height='4'/%3E%3C/g%3E%3Cpath d='M0 740C260 680 560 720 900 760S1360 700 1600 740V900H0Z' fill='%23B7D5C3'/%3E%3C/svg%3E")}
+.veil{position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(238,244,247,.35),rgba(238,244,247,.82) 45%,rgba(238,244,247,.9))}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.ic{width:20px;height:20px;flex:none}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);min-width:0}
+.mark{width:38px;height:38px;border-radius:11px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.brand b{display:block;font:700 1.25rem/1.1 var(--display);white-space:nowrap}
+.brand small{display:block;color:var(--muted);font-size:.78rem;line-height:1.2}
+.dnav{display:flex;gap:4px;margin-left:12px}
+.dnav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:500;font-size:.95rem}
+.dnav a:hover{background:#EEF4F7;color:var(--ink)}
+.dnav a.on{color:var(--accent-dark);background:#E3F0F5}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.icon-btn:hover{background:#EEF4F7;color:var(--ink)}
+.me-btn{border:0;background:none;padding:0;cursor:pointer;border-radius:50%;display:block}
+
+/* layout */
+.shell{max-width:1100px;margin:0 auto;padding:20px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+.side{position:sticky;top:calc(var(--topH,62px) + var(--stripH,0px) + 16px);display:flex;flex-direction:column;gap:14px}
+#view{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 1px 2px rgba(23,50,77,.05)}
+.sec{font-size:1.25rem;margin-top:6px}
+.page-head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.page-head h1{font-size:1.9rem}
+.page-head p{color:var(--muted);flex-basis:100%;max-width:60ch}
+.page-head .btn{margin-left:auto}
+#banner:empty{display:none}
+.note{padding:12px 14px;border-radius:12px;background:#E3F0F5;color:var(--accent-dark);font-size:.92rem}
+.note.warn{background:var(--gold-soft);color:#6B4A07}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font-weight:600;font-size:.92rem;cursor:pointer;text-decoration:none;color:var(--ink);line-height:1.2}
+.btn:hover{background:#F4F8FA}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-dark)}
+.btn.primary:disabled{opacity:.5;cursor:default}
+.btn.quiet{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.quiet:hover{background:#EEF4F7}
+.btn.danger{color:var(--danger)}
+.btn.sm{padding:6px 10px;font-size:.85rem}
+.btn.danger-fill{background:var(--danger);border-color:var(--danger);color:#fff}
+
+/* avatars */
+.av{display:inline-grid;place-items:center;border-radius:50%;object-fit:cover;flex:none;font-weight:600;overflow:hidden}
+.av.sm{width:30px;height:30px;font-size:.75rem}
+.av.md{width:42px;height:42px;font-size:.9rem}
+.av.lg{width:64px;height:64px;font-size:1.2rem}
+.av.xl{width:104px;height:104px;font-size:2rem;border:4px solid #fff}
+.av.sys{background:var(--accent);color:#fff}
+.av.sys .ic{width:55%;height:55%}
+
+/* composer */
+.composer{display:flex;flex-direction:column;gap:10px}
+.c-row{display:flex;gap:12px;align-items:flex-start}
+.c-row textarea{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 12px;resize:none;min-height:46px;background:#F7FAFB;line-height:1.45}
+.c-row textarea:focus{background:#fff}
+.prev{display:flex;gap:8px;flex-wrap:wrap}
+.prev .pv{position:relative}
+.prev img{width:84px;height:84px;object-fit:cover;border-radius:10px;display:block}
+.prev button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--ink);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+.prev button .ic{width:14px;height:14px}
+.c-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cats{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:500;cursor:pointer;color:var(--muted)}
+.chip:hover{background:#F4F8FA}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pin-opt{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+
+/* posts */
+.post{display:flex;flex-direction:column;gap:10px}
+.p-head{display:flex;gap:11px;align-items:center}
+.p-who{flex:1;min-width:0}
+.p-name{border:0;background:none;padding:0;font-weight:600;cursor:pointer;color:var(--ink);text-align:left}
+.p-name:hover{text-decoration:underline}
+.p-meta{font-size:.82rem;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tag{font-size:.74rem;font-weight:600;padding:1px 8px;border-radius:999px;background:#E3F0F5;color:var(--accent-dark)}
+.tag.prayer{background:#E1F0E8;color:#2B5E43}
+.tag.testimony{background:var(--gold-soft);color:#6B4A07}
+.tag.announcement{background:var(--ink);color:#fff}
+.tag.pinned{background:#fff;border:1px solid var(--line);color:var(--muted);display:inline-flex;gap:4px;align-items:center}
+.tag.pinned .ic{width:12px;height:12px}
+.p-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.shots{display:grid;gap:4px;border-radius:12px;overflow:hidden}
+.shots.g1{grid-template-columns:1fr}
+.shots.g2{grid-template-columns:1fr 1fr}
+.shots.g3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
+.shots.g3 img:first-child{grid-row:1/3}
+.shots img{width:100%;height:100%;object-fit:cover;display:block;background:#E8EFF3;cursor:zoom-in;min-height:120px;max-height:460px}
+.shots.g1 img{max-height:520px}
+.acts{display:flex;gap:4px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+.acts .btn{padding:6px 10px}
+.acts .btn.on{color:var(--danger)}
+.acts .btn.on .ic{fill:currentColor}
+.acts .sp{flex:1}
+.comments{display:flex;flex-direction:column;gap:8px}
+.cm{display:flex;gap:9px;align-items:flex-start}
+.cm-b{background:#F2F7F9;border-radius:12px;padding:7px 12px;min-width:0;flex:0 1 auto}
+.cm-b b{font-size:.86rem;font-weight:600}
+.cm-b p{font-size:.93rem;overflow-wrap:anywhere;white-space:pre-wrap}
+.cm .x{opacity:.0;border:0;background:none;cursor:pointer;color:var(--muted);padding:4px}
+.cm:hover .x,.cm .x:focus-visible{opacity:1}
+.c-form{display:flex;gap:8px}
+.c-form input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:#F7FAFB}
+
+/* always-visible announcement strip */
+.ann-strip{position:sticky;top:var(--topH,62px);z-index:15;max-width:1100px;margin:0 auto;padding:10px 16px 0}
+.ann-strip:empty{display:none}
+.ann-strip a{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--ink);background:var(--gold-soft);border:1px solid #EBD59B;border-radius:12px;padding:9px 14px;box-shadow:0 2px 8px rgba(23,50,77,.08)}
+.ann-strip a:hover{background:#F8E9C2}
+.ann-strip .iw{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;flex:none}
+.ann-strip .bd{min-width:0;display:flex;flex-direction:column}
+.ann-strip b{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#7A5A12}
+.ann-strip .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.94rem;overflow-wrap:anywhere}
+.ann-strip .more{margin-left:auto;font-size:.8rem;font-weight:600;color:#7A5A12;white-space:nowrap}
+
+/* announcements as a chat thread */
+.chat{display:flex;flex-direction:column;padding:0;overflow:hidden;height:calc(100dvh - 190px);min-height:440px}
+.chat-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:#fff}
+.chat-head b{display:block;font:700 1.2rem/1.1 var(--display)}
+.chat-head small{color:var(--muted)}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;background:#F5F9FB}
+.day{align-self:center;font-size:.74rem;color:var(--muted);background:#E3ECF1;border-radius:999px;padding:2px 12px}
+.msg{display:flex;gap:8px;align-items:flex-end;max-width:90%}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.mcol{display:flex;flex-direction:column;min-width:0}
+.msg.me .mcol{align-items:flex-end}
+.bub{background:#fff;border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:9px 14px;min-width:0}
+.msg.me .bub{background:var(--accent);border-color:var(--accent);color:#fff;border-radius:18px 18px 6px 18px}
+.bub .who{font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:2px}
+.msg.me .bub .who{display:none}
+.bub .tx{white-space:pre-wrap;overflow-wrap:anywhere}
+.bub .shots{margin-top:8px}
+.m-info{font-size:.72rem;color:var(--muted);margin-top:3px;display:flex;gap:2px 6px;align-items:center;flex-wrap:wrap;padding:0 6px}
+.m-info button,.m-info a{border:0;background:none;padding:3px 6px;cursor:pointer;color:var(--muted);font-size:.74rem;font-weight:600;display:inline-flex;gap:4px;align-items:center;border-radius:8px;text-decoration:none}
+.m-info button:hover,.m-info a:hover{background:#E3ECF1}
+.m-info button.on{color:var(--danger)}
+.m-info button.on .ic{fill:currentColor}
+.m-info .ic{width:13px;height:13px}
+.reps{display:flex;flex-direction:column;gap:6px;margin-top:6px;width:100%;min-width:240px}
+.rep{display:flex;gap:6px;align-items:flex-start}
+.rep .rb{background:#E3ECF1;border-radius:14px;padding:6px 12px;font-size:.9rem;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.rep .rb b{font-size:.76rem;display:block;font-weight:600;color:var(--muted)}
+.rep .x{border:0;background:none;cursor:pointer;color:var(--muted);padding:4px}
+.chat-in{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:#fff;align-items:flex-end}
+.chat-in textarea{flex:1;border:1px solid var(--line);border-radius:20px;padding:9px 14px;resize:none;max-height:120px;background:#F5F9FB;line-height:1.4}
+.chat-in .btn{border-radius:20px;padding:9px 18px}
+.chat-in p{padding:4px 6px}
+
+/* sidebar */
+.sabbath{background:var(--gold-soft);border-color:#EBD59B}
+.eyebrow{font-size:.74rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7A5A12}
+.sabbath h2{font-size:1.55rem;margin:4px 0 2px}
+.sabbath p{font-size:.88rem;color:#5E4710}
+.side h3{font-size:1.05rem;margin-bottom:6px}
+.side .muted,.muted{color:var(--muted);font-size:.9rem}
+.verse{font-family:var(--display);font-size:1.1rem;line-height:1.35}
+.sched{white-space:pre-wrap;font-size:.92rem}
+
+/* library */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tools input[type=search]{flex:1;min-width:180px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.file{display:flex;flex-direction:column;gap:10px}
+.f-head{display:flex;gap:11px;align-items:flex-start}
+.f-ico{width:40px;height:40px;border-radius:10px;background:#E3F0F5;color:var(--accent-dark);display:grid;place-items:center;flex:none}
+.f-head h3{font-size:1.1rem;overflow-wrap:anywhere}
+.meta{font-size:.8rem;color:var(--muted)}
+.f-desc{font-size:.92rem;overflow-wrap:anywhere}
+.file audio,.file video{width:100%;border-radius:10px}
+.f-img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:block;cursor:zoom-in}
+.f-act{display:flex;gap:6px;margin-top:auto}
+
+/* members + profile */
+.mem{display:flex;gap:12px;align-items:center;text-align:left;cursor:pointer;width:100%;background:var(--card)}
+.mem:hover{border-color:#B9CDD8}
+.mem b{display:block}
+.mem span.s{display:block;font-size:.85rem;color:var(--muted)}
+.pf{padding:0;overflow:hidden}
+.cover{height:170px;background:linear-gradient(120deg,#BFDDEB,#E7EFD9 60%,#F4E7BE);position:relative}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pf-main{position:relative;display:flex;gap:16px;align-items:flex-end;padding:0 18px;margin-top:-52px;flex-wrap:wrap}
+.pf-id{flex:1;min-width:160px;padding-bottom:6px}
+.pf-id h1{font-size:2rem}
+.role{color:var(--accent-dark);font-weight:600}
+.pf-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px}
+.facts{display:flex;gap:18px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+.facts b{color:var(--ink);font-weight:600}
+.quote{font-family:var(--display);font-size:1.2rem;line-height:1.35;padding-left:14px;border-left:3px solid var(--gold)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(23,50,77,.45);display:grid;place-items:center;padding:16px;overflow-y:auto}
+.sheet{background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:calc(100% - 8px);overflow-y:auto;box-shadow:0 20px 50px rgba(23,50,77,.3)}
+.sheet.wide{max-width:560px}
+.sheet>header{display:flex;align-items:center;padding:14px 16px 6px 20px}
+.sheet>header h2{flex:1;font-size:1.4rem}
+.m-body{padding:6px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:600}
+.fld input,.fld select,.fld textarea{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-weight:400;background:#F7FAFB;width:100%}
+.fld textarea{resize:vertical;min-height:70px}
+.fld small{font-weight:400;color:var(--muted)}
+.m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.lightbox{position:fixed;inset:0;z-index:60;background:rgba(10,24,38,.88);display:grid;place-items:center;padding:16px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:70;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+
+.tabs{display:none}
+@media (max-width:900px){
+  .ann-strip .t{-webkit-line-clamp:1}
+  .chat{height:calc(100dvh - 250px)}
+  .shell{grid-template-columns:minmax(0,1fr);padding-bottom:96px}
+  .side{position:static;order:-1}
+  .side .more{display:none}
+  .dnav{display:none}
+  .brand small{display:none}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+  .tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:.7rem;font-weight:500;color:var(--muted);text-decoration:none;border-radius:10px}
+  .tabs a.on{color:var(--accent-dark);background:#E3F0F5}
+  #toast{bottom:90px}
+}
+@media (max-width:480px){
+  .page-head h1{font-size:1.6rem}
+  .cover{height:120px}
+  .pf-id h1{font-size:1.6rem}
+  .av.xl{width:88px;height:88px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* sign in and join */
+body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth) .ann-strip{visibility:hidden}
+.auth{position:fixed;inset:0;z-index:40;display:grid;place-items:start center;padding:24px 16px;overflow-y:auto;background:rgba(238,244,247,.7);backdrop-filter:blur(8px)}
+.auth-card{width:100%;max-width:430px;display:flex;flex-direction:column;gap:14px;padding:22px;margin:auto 0}
+.auth-brand{display:flex;gap:12px;align-items:center}
+.auth-brand h1{font-size:1.7rem}
+.auth form{display:flex;flex-direction:column;gap:12px}
+.seg{display:grid;grid-template-columns:1fr 1.5fr;background:#EEF4F7;border-radius:12px;padding:3px;gap:3px}
+.seg button{border:0;background:none;padding:9px 6px;border-radius:10px;font-weight:600;color:var(--muted);cursor:pointer;font-size:.9rem}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(23,50,77,.12)}
+.err{color:var(--danger);font-size:.9rem;min-height:1.2em}
+.pf-btns{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:6px}
+.mlist{display:flex;flex-direction:column}
+.mrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.mrow .mi{flex:1;min-width:140px;display:flex;flex-direction:column;line-height:1.3}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div><div class="veil"></div>
+
+<header class="top"><div class="top-in">
+  <a class="brand" href="#home" data-route="home">
+    <span class="mark" id="mark"></span>
+    <span><b id="brandName">Tubod SDA Church</b><small id="brandTag">Tubod, Isabel, Leyte</small></span>
+  </a>
+  <nav class="dnav" id="dnav" aria-label="Main"></nav>
+  <div class="top-r">
+    <button class="icon-btn" id="gearBtn" data-act="settings" aria-label="Church settings" hidden></button>
+    <button class="me-btn" id="meBtn" data-act="me" aria-label="My profile" hidden></button>
+  </div>
+</div></header>
+
+<div class="ann-strip" id="annStrip"></div>
+<div class="shell">
+  <main id="view" aria-live="polite"></main>
+  <aside class="side" id="side"></aside>
+</div>
+<nav class="tabs" id="tabs" aria-label="Main"></nav>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><div class="note warn" style="margin:16px">This site needs JavaScript. Please turn it on in your browser.</div></noscript>
+
+<script src="config.js"></script>
+<script>
+(() => {
+'use strict';
+
+const RAW_URL = String((window.CHURCH_CONFIG && window.CHURCH_CONFIG.API_URL) || '').trim();
+const API_URL = /^https:\/\/script\.google(usercontent)?\.com\//.test(RAW_URL) ? RAW_URL : '';
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const idOk = id => /^[\w-]+$/.test(String(id || ''));
+const imgUrl = (id, w) => idOk(id) ? `https://lh3.googleusercontent.com/d/${id}=w${w}` : '';
+const driveUrl = id => idOk(id) ? `https://drive.google.com/file/d/${id}/view` : '';
+
+const ICONS = {
+  home:'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',
+  bell:'M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',
+  folder:'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+  heart:'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z',
+  chat:'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+  trash:'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14',
+  pin:'M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z',
+  image:'M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M21 15l-5-5L5 21',
+  upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+  gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
+  file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6',
+  music:'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
+  x:'M18 6L6 18M6 6l12 12',
+  church:'M12 2v4M10 4h4M12 6l5 5v11H7V11zM10 22v-5a2 2 0 0 1 4 0v5'
+};
+const icon = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
+
+const CATS = {
+  share:{label:'Share', react:'Amen'},
+  prayer:{label:'Prayer request', react:'Praying'},
+  testimony:{label:'Testimony', react:'Amen'},
+  announcement:{label:'Announcement', react:'Amen'}
+};
+const LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
+const ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
+const NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['me','My profile','user']];
+const MAX_FILE_MB = 15;
+
+/* ---------- state ---------- */
+const S = {
+  route:'home', profileId:null, filter:'all', libCat:'all', libQ:'', memQ:'', limit:30,
+  token:'', uid:null, isAdmin:false, offline:false, rev:'',
+  posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{},
+  loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false}, posting:false, chatInit:false
+};
+
+/* ---------- small utilities ---------- */
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 4200);
+}
+const errMsg = e => (e && e.message) || 'Something went wrong. Try again.';
+function ago(ts){
+  ts = Number(ts) || 0;
+  const s = (Date.now() - ts) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s / 60) + ' min ago';
+  if (s < 86400) return Math.floor(s / 3600) + ' hr ago';
+  if (s < 604800) return Math.floor(s / 86400) + ' d ago';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-PH', {month:'short', day:'numeric', year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined});
+}
+function fmtSize(n){
+  n = Number(n) || 0;
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return Math.round(n / 1024) + ' KB';
+  return (n / 1048576).toFixed(1) + ' MB';
+}
+const hue = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const initials = n => String(n).trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+const nameOf = id => id === 'system' ? (S.settings.churchName || 'Tubod SDA Church') : (S.profiles[id] && S.profiles[id].name) || 'Church member';
+function av(id, size = 'md'){
+  if (id === 'system') return `<span class="av ${size} sys">${icon('church')}</span>`;
+  const p = S.profiles[id], u = p && p.avatar ? imgUrl(p.avatar, 200) : '';
+  if (u) return `<img class="av ${size}" src="${u}" alt="" loading="lazy">`;
+  const h = hue(id);
+  return `<span class="av ${size}" style="background:hsl(${h} 42% 88%);color:hsl(${h} 45% 26%)">${esc(initials(nameOf(id)))}</span>`;
+}
+const photoImg = id => { const u = imgUrl(id, 1100); return u ? `<img src="${u}" alt="" loading="lazy">` : ''; };
+
+/* ---------- talking to the church server ---------- */
+async function api(action, data = {}){
+  if (!API_URL) throw new Error('This site is not connected yet. See SETUP.md.');
+  let res;
+  try { res = await fetch(API_URL, {method:'POST', body:JSON.stringify({action, token:S.token, ...data})}); }
+  catch (e){ const err = new Error('Cannot reach the church server. Check your internet and try again.'); err.code = 'network'; throw err; }
+  let j;
+  try { j = await res.json(); }
+  catch (e){ const err = new Error('The church server sent an unexpected reply. Try again in a moment.'); err.code = 'bad_reply'; throw err; }
+  if (!j.ok){
+    const err = new Error(j.error || 'Something went wrong.'); err.code = j.code;
+    if (j.code === 'auth' && action !== 'login') forceSignOut('Please sign in again.');
+    throw err;
+  }
+  return j;
+}
+function applySync(j){
+  S.rev = j.rev; S.uid = j.me.id; S.isAdmin = j.me.access === 'admin';
+  S.settings = j.settings || {}; S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
+  S.profiles = Object.fromEntries(j.members.map(m => [m.id, m]));
+  S.loaded = {posts:true, files:true, profiles:true}; S.offline = false;
+  schedule();
+}
+async function sync(){ applySync(await api('sync')); }
+async function act(action, data){
+  try { const j = await api(action, data); await sync(); return j; }
+  catch (e){ toast(errMsg(e)); throw e; }
+}
+function saveToken(){ try { S.token ? localStorage.setItem('tubodToken', S.token) : localStorage.removeItem('tubodToken'); } catch (e) {} }
+function loadToken(){ try { return localStorage.getItem('tubodToken') || ''; } catch (e) { return ''; } }
+
+/* poll cheaply: only fetch everything when something changed */
+let pollTimer = 0, polling = false;
+async function pollNow(){
+  if (polling || !S.token || document.hidden) return;
+  polling = true;
+  try { const j = await api('ping'); if (j.rev !== S.rev) await sync(); else if (S.offline){ S.offline = false; schedule(); } }
+  catch (e){ if (e.code === 'network'){ S.offline = true; schedule(); } }
+  polling = false;
+}
+function startPolling(){ clearInterval(pollTimer); pollTimer = setInterval(pollNow, 20000); }
+
+/* ---------- image shrinking ---------- */
+function loadImg(file){
+  const url = URL.createObjectURL(file);
+  return new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => { res(i); setTimeout(() => URL.revokeObjectURL(url), 4000); };
+    i.onerror = () => { URL.revokeObjectURL(url); rej(new Error('This photo format is not supported. Try a JPG or PNG.')); };
+    i.src = url;
+  });
+}
+async function shrink(file, {w, h, crop = false, q = .8, maxChars = 0}){
+  const img = await loadImg(file);
+  let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0, dw, dh;
+  if (crop){
+    const ar = w / h;
+    if (sw / sh > ar){ const nw = sh * ar; sx = (sw - nw) / 2; sw = nw; } else { const nh = sw / ar; sy = (sh - nh) / 2; sh = nh; }
+    dw = w; dh = h;
+  } else {
+    const sc = Math.min(1, w / Math.max(sw, sh)); dw = Math.round(sw * sc); dh = Math.round(sh * sc);
+  }
+  let scale = 1, quality = q;
+  for (let i = 0; i < 6; i++){
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(dw * scale)); c.height = Math.max(1, Math.round(dh * scale));
+    const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+    x.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    const d = c.toDataURL('image/jpeg', quality);
+    if (!maxChars || d.length <= maxChars) return d;
+    quality = Math.max(.45, quality - .1); scale *= .85;
+  }
+  throw new Error('This photo is too big. Try a smaller one.');
+}
+const fileToB64 = f => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(String(r.result).split(',')[1] || '');
+  r.onerror = () => rej(new Error('Could not read that file.'));
+  r.readAsDataURL(f);
+});
+
+/* ---------- Sabbath (approximate sunset in Tubod, Isabel, Leyte) ---------- */
+const LAT = 10.93, LNG = 124.42, TZ = 8;
+function sunsetUTC(y, m, d){
+  const day = Date.UTC(y, m, d), n = Math.round((day - Date.UTC(y, 0, 0)) / 864e5);
+  const g = 2 * Math.PI / 365 * (n - 1), rad = Math.PI / 180;
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const la = LAT * rad;
+  const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(la) * Math.cos(de)) - Math.tan(la) * Math.tan(de)) / rad;
+  return day + (720 - 4 * (LNG - ha) - eq) * 60000;
+}
+function sabbathSpan(now = Date.now()){
+  const ph = new Date(now + TZ * 36e5);
+  for (let off = -1; off <= 7; off++){
+    const t = new Date(Date.UTC(ph.getUTCFullYear(), ph.getUTCMonth(), ph.getUTCDate() + off));
+    if (t.getUTCDay() !== 5) continue;
+    const y = t.getUTCFullYear(), m = t.getUTCMonth(), d = t.getUTCDate();
+    const start = sunsetUTC(y, m, d), end = sunsetUTC(y, m, d + 1);
+    if (now < end) return {start, end, on: now >= start};
+  }
+}
+function phTime(ms){
+  const d = new Date(ms + TZ * 36e5); let h = d.getUTCHours(); const mi = d.getUTCMinutes();
+  const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+  return h + ':' + String(mi).padStart(2, '0') + ' ' + ap;
+}
+const phDay = ms => new Date(ms + TZ * 36e5).toLocaleDateString('en-PH', {weekday:'long', month:'long', day:'numeric', timeZone:'UTC'});
+function sabbathCard(){
+  const s = sabbathSpan(); if (!s) return '';
+  const now = Date.now();
+  let head, line;
+  if (s.on){
+    head = 'Happy Sabbath';
+    line = `Sabbath ends at about ${phTime(s.end)} on ${phDay(s.end)}.`;
+  } else {
+    const mins = Math.max(1, Math.round((s.start - now) / 60000));
+    const dd = Math.floor(mins / 1440), hh = Math.floor((mins % 1440) / 60), mm = mins % 60;
+    head = 'Sabbath begins in ' + (dd ? `${dd} day${dd > 1 ? 's' : ''} ${hh} hr` : hh ? `${hh} hr ${mm} min` : `${mm} min`);
+    line = `${phDay(s.start)}, at about ${phTime(s.start)}.`;
+  }
+  return `<div class="eyebrow">${s.on ? 'Sabbath hours' : 'Next Sabbath'}</div><h2>${head}</h2><p>${line}</p><p style="margin-top:6px;font-size:.78rem;opacity:.8">Sunset estimate for Tubod. Check your local time.</p>`;
+}
+
+/* ---------- modal, confirm, photo viewer ---------- */
+function closeModal(){ const m = $('#modal'); if (m) m.remove(); }
+function openModal(title, body, wide){
+  closeModal();
+  const m = document.createElement('div'); m.id = 'modal'; m.className = 'modal';
+  m.innerHTML = `<div class="sheet ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="mTitle"><header><h2 id="mTitle">${esc(title)}</h2><button class="icon-btn" type="button" data-act="closemodal" aria-label="Close">${icon('x')}</button></header><div class="m-body">${body}</div></div>`;
+  document.body.appendChild(m);
+  m.addEventListener('mousedown', e => { if (e.target === m) closeModal(); });
+  const f = $('input:not([type=file]):not([type=hidden]):not([type=checkbox]),textarea', m); if (f) f.focus();
+  return m;
+}
+function confirmBox(title, text, okLabel){
+  return new Promise(res => {
+    const m = openModal(title, `<p>${esc(text)}</p><div class="m-actions"><button class="btn" type="button" id="cNo">Cancel</button><button class="btn danger-fill" type="button" id="cYes">${esc(okLabel)}</button></div>`);
+    $('#cNo', m).onclick = () => { closeModal(); res(false); };
+    $('#cYes', m).onclick = () => { closeModal(); res(true); };
+    $('#cNo', m).focus();
+  });
+}
+function openPhoto(src){
+  const l = document.createElement('div'); l.className = 'lightbox'; l.innerHTML = `<img src="${esc(src)}" alt="">`;
+  l.onclick = () => l.remove(); document.body.appendChild(l);
+}
+const mine = authorId => S.isAdmin || (S.uid && S.uid === authorId);
+function guard(){ if (!S.token || !S.uid){ toast('Please sign in first.'); return false; } return true; }
+
+/* ---------- sign in, join, sign out ---------- */
+function showAuth(mode, msg){
+  let a = $('#auth');
+  if (!a){ a = document.createElement('div'); a.id = 'auth'; a.className = 'auth'; document.body.appendChild(a); }
+  const name = S.settings.churchName || 'Tubod SDA Church', tag = S.settings.tagline || 'Tubod, Isabel, Leyte';
+  const head = `<div class="auth-brand"><span class="mark">${icon('church')}</span><div><h1>${esc(name)}</h1><p class="muted">${esc(tag)}</p></div></div>`;
+  let body;
+  if (mode === 'setup'){
+    body = `<p>This site is almost ready. Open <b>config.js</b> and paste your Google web app link, then reload this page. The steps are in SETUP.md.</p>`;
+  } else if (mode === 'offline'){
+    body = `<p>${esc(msg || 'Cannot reach the church server.')}</p><button class="btn primary" type="button" data-act="retry">Try again</button>`;
+  } else {
+    const sab = sabbathCard();
+    body = `${sab ? `<div class="card sabbath" style="padding:12px 14px">${sab}</div>` : ''}
+      <div class="seg" role="tablist"><button type="button" role="tab" class="${mode === 'login' ? 'on' : ''}" data-act="authtab" data-t="login" aria-selected="${mode === 'login'}">Sign in</button><button type="button" role="tab" class="${mode === 'join' ? 'on' : ''}" data-act="authtab" data-t="join" aria-selected="${mode === 'join'}">Join the church page</button></div>
+      ${mode === 'login' ? `<form id="authLogin">
+        <label class="fld" for="lgUser">Username<input id="lgUser" autocomplete="username" autocapitalize="none" required></label>
+        <label class="fld" for="lgPass">Password<input id="lgPass" type="password" autocomplete="current-password" required></label>
+        <div class="err" id="authErr" role="alert">${esc(msg || '')}</div>
+        <button class="btn primary" type="submit">Sign in</button></form>`
+      : `<form id="authJoin">
+        <label class="fld" for="jnName">Your full name<input id="jnName" autocomplete="name" maxlength="60" required></label>
+        <label class="fld" for="jnUser">Choose a username<input id="jnUser" autocomplete="username" autocapitalize="none" maxlength="40" required><small>Letters and numbers only, no spaces. You will use it to sign in.</small></label>
+        <label class="fld" for="jnPass">Choose a password<input id="jnPass" type="password" autocomplete="new-password" minlength="6" required><small>At least 6 characters.</small></label>
+        <label class="fld" for="jnCode">Church join code<input id="jnCode" autocapitalize="characters" autocomplete="off" required><small>Ask the church admin or pastor for the code.</small></label>
+        <div class="err" id="authErr" role="alert">${esc(msg || '')}</div>
+        <button class="btn primary" type="submit">Join</button></form>`}`;
+  }
+  a.innerHTML = `<div class="card auth-card">${head}${body}</div>`;
+  const f = $('input', a); if (f && mode !== 'offline') f.focus();
+  renderChrome();
+}
+function hideAuth(){ const a = $('#auth'); if (a) a.remove(); }
+async function authSubmit(kind, form){
+  const err = $('#authErr'), btn = $('button[type=submit]', form), old = btn.textContent;
+  err.textContent = ''; btn.disabled = true; btn.textContent = 'Please wait…';
+  const v = id => $('#' + id).value;
+  try {
+    const j = kind === 'login'
+      ? await api('login', {username:v('lgUser'), password:v('lgPass')})
+      : await api('register', {name:v('jnName'), username:v('jnUser'), password:v('jnPass'), code:v('jnCode')});
+    S.token = j.token; saveToken();
+    await sync(); hideAuth(); startPolling(); mount();
+    if (kind === 'join') toast('Welcome to the church family! Add your photo on My profile.');
+  } catch (e){ err.textContent = errMsg(e); btn.disabled = false; btn.textContent = old; }
+}
+function resetData(){
+  Object.assign(S, {uid:null, isAdmin:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false}});
+}
+function forceSignOut(msg){
+  clearInterval(pollTimer); S.token = ''; saveToken(); resetData(); closeModal();
+  S.route = 'home'; S.profileId = null;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  showAuth('login', msg || ''); mount();
+}
+async function signOut(){
+  try { await api('logout'); } catch (e) {}
+  forceSignOut('');
+}
+
+/* ---------- navigation ---------- */
+function go(route, id){
+  S.route = route; S.profileId = route === 'profile' ? id : null; S.limit = 30;
+  if (route !== 'profile'){ try { if (location.hash !== '#' + route) location.hash = route; } catch (e) {} }
+  mount(); window.scrollTo({top:0});
+}
+function fromHash(){
+  const h = (location.hash || '').slice(1);
+  if (h === 'me'){ if (S.uid) return go('profile', S.uid); return; }
+  if (['home','news','library','members'].includes(h) && h !== S.route) go(h);
+}
+function navHTML(kind){
+  return NAV.filter(n => !(kind === 'top' && n[0] === 'me')).map(([r, label, ic]) => {
+    const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : S.route === r);
+    return `<a href="#${r}" data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}<span>${esc(label)}</span></a>`;
+  }).join('');
+}
+
+/* ---------- frame pieces ---------- */
+function renderChrome(){
+  const st = S.settings;
+  $('#brandName').textContent = st.churchName || 'Tubod SDA Church';
+  $('#brandTag').textContent = st.tagline || 'Tubod, Isabel, Leyte';
+  document.title = st.churchName || 'Tubod SDA Church';
+  const u = imgUrl(st.bgId, 1920);
+  $('#bg').style.backgroundImage = u ? `url("${u}")` : '';
+  $('#dnav').innerHTML = navHTML('top');
+  $('#tabs').innerHTML = navHTML('tabs');
+  $('#gearBtn').hidden = !S.isAdmin;
+  $('#meBtn').innerHTML = S.uid ? av(S.uid, 'md') : '';
+  $('#meBtn').hidden = !S.uid;
+}
+function renderSide(){
+  const st = S.settings, n = Object.keys(S.profiles).length;
+  const sched = st.schedule ? `<div class="card"><h3>Sabbath schedule</h3><p class="sched">${esc(st.schedule)}</p></div>`
+    : S.isAdmin ? `<div class="card"><h3>Sabbath schedule</h3><p class="muted">Add your Sabbath School and worship times in church settings.</p><p style="margin-top:8px"><button class="btn sm" data-act="settings">Open settings</button></p></div>` : '';
+  const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
+  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${sched}${verse}
+    <div class="card more"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
+    <div class="card more"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
+}
+function renderBanner(){
+  const b = $('#banner'); if (!b) return;
+  b.innerHTML = S.offline ? `<div class="note warn">Cannot reach the church server right now. You are seeing the last posts that loaded.</div>` : '';
+}
+function renderStrip(){
+  const el = $('#annStrip'); if (!el) return;
+  const list = S.posts.filter(p => p.cat === 'announcement').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (!list.length || S.route === 'news'){ el.innerHTML = ''; document.documentElement.style.setProperty('--stripH', '0px'); return; }
+  const p = list[0];
+  el.innerHTML = `<a href="#news" data-route="news" aria-label="Open announcements"><span class="iw">${icon('bell')}</span><span class="bd"><b>Announcement · ${ago(p.createdAt)}</b><span class="t">${esc(p.text || 'Photo announcement')}</span></span>${list.length > 1 ? `<span class="more">+${list.length - 1} more</span>` : ''}</a>`;
+  document.documentElement.style.setProperty('--stripH', el.offsetHeight + 'px');
+}
+
+/* ---------- views ---------- */
+function mount(){
+  const v = $('#view');
+  const bannerHTML = '<div id="banner"></div>';
+  if (S.route === 'home'){
+    v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot"></div>`;
+    buildComposer();
+  } else if (S.route === 'news'){
+    S.chatInit = false;
+    v.innerHTML = `${bannerHTML}<section class="card chat" aria-label="Church announcements">
+      <div class="chat-head">${av('system', 'md')}<div><b>Church announcements</b><small>Messages from the church leaders</small></div></div>
+      <div class="msgs" id="msgs" tabindex="0" aria-label="Announcements"></div>
+      ${S.isAdmin ? `<form class="chat-in" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button></form>`
+        : `<div class="chat-in"><p class="muted">Only church leaders can send announcements. You can say Amen and reply to any message.</p></div>`}</section>`;
+    const ta = $('#aText');
+    if (ta){
+      ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; });
+      ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches){ e.preventDefault(); sendAnn(); } });
+    }
+  } else if (S.route === 'library'){
+    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Church library</h1><p>Sermons, Sabbath School lessons, hymns and documents kept for the whole church family.</p>${S.token ? `<button class="btn primary" data-act="upload">${icon('upload')}Add a file</button>` : ''}</div>
+      <div class="tools"><input type="search" id="libQ" placeholder="Search the library" aria-label="Search the library" value="${esc(S.libQ)}"></div>
+      <div class="filters" id="libCats" role="group" aria-label="Library categories"></div><div class="grid" id="libList"></div>`;
+  } else if (S.route === 'members'){
+    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Members</h1><p>Everyone who has joined the church family page.</p><button class="btn primary" data-act="invite">Invite family</button></div>
+      <div class="tools"><input type="search" id="memQ" placeholder="Search by name or ministry" aria-label="Search members" value="${esc(S.memQ)}"></div><div class="grid" id="memList"></div>`;
+  } else {
+    v.innerHTML = `${bannerHTML}<div id="profSlot"></div>`;
+  }
+  refresh();
+}
+function refresh(){
+  renderChrome(); renderStrip(); renderSide(); renderBanner();
+  if (!S.uid) return;
+  if (S.route === 'home'){ renderFilters(); renderFeed(S.filter === 'all' ? S.posts : S.posts.filter(p => p.cat === S.filter), 'No posts here yet. Be the first to share something.'); refreshComposer(); }
+  else if (S.route === 'news') renderChat();
+  else if (S.route === 'library') renderLibrary();
+  else if (S.route === 'members') renderMembers();
+  else renderProfile();
+}
+const schedule = (() => { let t = 0; return () => { if (!t) t = requestAnimationFrame(() => { t = 0; if (!$('#auth')) refresh(); }); }; })();
+function keepInputs(root, fn){
+  const vals = {};
+  $$('input[id],textarea[id]', root).forEach(el => { if (el.type !== 'file') vals[el.id] = el.value; });
+  const ae = document.activeElement; let focus = null;
+  if (ae && ae.id && root.contains(ae)) focus = {id:ae.id, s:ae.selectionStart, e:ae.selectionEnd};
+  fn();
+  for (const id in vals){ const el = document.getElementById(id); if (el && vals[id]) el.value = vals[id]; }
+  if (focus){ const el = document.getElementById(focus.id); if (el){ el.focus(); try { el.setSelectionRange(focus.s, focus.e); } catch (e) {} } }
+}
+
+/* announcements as a chat thread */
+function dayLabel(ts){
+  const d = new Date(ts), t = new Date(), y = new Date(Date.now() - 864e5);
+  if (d.toDateString() === t.toDateString()) return 'Today';
+  if (d.toDateString() === y.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en-PH', {weekday:'long', month:'long', day:'numeric'});
+}
+function msgHTML(p){
+  const me = !!S.uid && p.authorId === S.uid;
+  const rx = S.reactions.filter(r => r.postId === p.id), iReact = S.uid && rx.some(r => r.uid === S.uid);
+  const cms = S.comments.filter(c => c.postId === p.id), open = S.open.has(p.id);
+  const photos = Array.isArray(p.photos) ? p.photos.slice(0, 3) : [];
+  const t = new Date(p.createdAt || 0).toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit'});
+  return `<div class="msg ${me ? 'me' : ''}" data-id="${esc(p.id)}">${me ? '' : av(p.authorId, 'sm')}
+    <div class="mcol">
+      <div class="bub"><div class="who">${esc(nameOf(p.authorId))}</div>${p.text ? `<div class="tx">${esc(p.text)}</div>` : ''}${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}</div>
+      <div class="m-info"><span>${t}</span>
+        <button data-act="react" data-id="${esc(p.id)}" class="${iReact ? 'on' : ''}" aria-pressed="${!!iReact}">${icon('heart')}Amen${rx.length ? ' · ' + rx.length : ''}</button>
+        <button data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}Reply${cms.length ? ' · ' + cms.length : ''}</button>
+        <button data-act="shareann" data-id="${esc(p.id)}">Share</button><button data-act="copyann" data-id="${esc(p.id)}">Copy</button>
+        ${mine(p.authorId) ? `<button data-act="delpost" data-id="${esc(p.id)}">Delete</button>` : ''}</div>
+      ${open ? `<div class="reps">${cms.map(c => `<div class="rep">${av(c.authorId, 'sm')}<div class="rb"><b>${esc(nameOf(c.authorId))}</b>${esc(c.text)}</div>${mine(c.authorId) ? `<button class="x" data-act="delcm" data-id="${esc(c.id)}" aria-label="Delete reply">${icon('x')}</button>` : ''}</div>`).join('')}
+        <form class="c-form" data-comment="${esc(p.id)}"><input id="cin-${esc(p.id)}" type="text" maxlength="500" placeholder="Write a reply" aria-label="Write a reply" autocomplete="off"><button class="btn primary sm" type="submit">Send</button></form></div>` : ''}
+    </div></div>`;
+}
+function renderChat(){
+  const el = $('#msgs'); if (!el) return;
+  const atBottom = !S.chatInit || el.scrollHeight - el.scrollTop - el.clientHeight < 60, st = el.scrollTop;
+  const list = S.posts.filter(p => p.cat === 'announcement').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  keepInputs(el, () => {
+    if (!S.loaded.posts) el.innerHTML = '<div class="day">Loading…</div>';
+    else if (!list.length) el.innerHTML = `<div class="day">No announcements yet</div>`;
+    else { let last = '', h = ''; for (const p of list){ const d = dayLabel(p.createdAt || 0); if (d !== last){ h += `<div class="day">${esc(d)}</div>`; last = d; } h += msgHTML(p); } el.innerHTML = h; }
+  });
+  el.scrollTop = atBottom ? el.scrollHeight : st;
+  S.chatInit = true;
+}
+async function sendAnn(){
+  const ta = $('#aText'); if (!ta || S.annSending || !guard()) return;
+  const text = ta.value.trim(); if (!text) return;
+  S.annSending = true; const btn = $('#aSend'); if (btn) btn.disabled = true;
+  try { await act('post', {cat:'announcement', text}); ta.value = ''; ta.style.height = 'auto'; S.chatInit = false; renderChat(); }
+  catch (e) {}
+  S.annSending = false; if (btn) btn.disabled = false; ta.focus();
+}
+async function copyAnn(id){
+  const p = S.posts.find(x => x.id === id); if (!p) return;
+  const text = (S.settings.churchName || 'Tubod SDA Church') + ' announcement:\n' + (p.text || '');
+  try { await navigator.clipboard.writeText(text); toast('Copied. Paste it into Messenger or a text message.'); }
+  catch (e){
+    const m = openModal('Copy announcement', `<label class="fld" for="cpT">Select this message and copy it<textarea id="cpT" readonly rows="6">${esc(text)}</textarea></label><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`);
+    const t = $('#cpT', m); t.focus(); t.select();
+  }
+}
+
+/* sharing to Messenger, Facebook and texts through the phone's share sheet */
+const siteUrl = () => location.href.split('#')[0];
+async function shareOut(title, text, url){
+  if (navigator.share){
+    try { await navigator.share({title, text, url}); return; }
+    catch (e){ if (e && e.name === 'AbortError') return; }
+  }
+  const all = text + (url ? '\n' + url : '');
+  try { await navigator.clipboard.writeText(all); toast('Copied. Paste it into Messenger or a text message.'); }
+  catch (e){
+    const m = openModal('Copy this message', `<label class="fld" for="cpT">Select this message and copy it<textarea id="cpT" readonly rows="6">${esc(all)}</textarea></label><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`);
+    const t = $('#cpT', m); t.focus(); t.select();
+  }
+}
+function shareAnn(id){
+  const p = S.posts.find(x => x.id === id); if (!p) return;
+  const name = S.settings.churchName || 'Tubod SDA Church';
+  shareOut(name, name + ' announcement:\n' + (p.text || ''), siteUrl() + '#news');
+}
+function shareInvite(){
+  const name = S.settings.churchName || 'Tubod SDA Church';
+  const code = S.isAdmin && S.settings.joinCode ? `\nJoin code: ${S.settings.joinCode}` : '';
+  shareOut(name, `Join the ${name} family page. See announcements, share prayer requests and testimonies, and find sermons and lessons.${code}`, siteUrl());
+}
+
+/* feed */
+function renderFilters(){
+  const f = $('#filters'); if (!f) return;
+  const all = [['all','All'],['share','Shares'],['prayer','Prayer requests'],['testimony','Testimonies'],['announcement','Announcements']];
+  f.innerHTML = all.map(([k, l]) => `<button type="button" class="chip ${S.filter === k ? 'on' : ''}" data-act="filter" data-f="${k}" aria-pressed="${S.filter === k}">${esc(l)}</button>`).join('');
+}
+function postHTML(p){
+  const cat = CATS[p.cat] ? p.cat : 'share';
+  const photos = Array.isArray(p.photos) ? p.photos.slice(0, 3) : [];
+  const cms = S.comments.filter(c => c.postId === p.id);
+  const rx = S.reactions.filter(r => r.postId === p.id);
+  const iReact = S.uid && rx.some(r => r.uid === S.uid);
+  const open = S.open.has(p.id);
+  const sys = p.authorId === 'system';
+  return `<article class="card post" data-id="${esc(p.id)}">
+    <div class="p-head">${av(p.authorId)}
+      <div class="p-who">${sys ? `<b>${esc(nameOf(p.authorId))}</b>` : `<button class="p-name" data-act="profile" data-uid="${esc(p.authorId)}">${esc(nameOf(p.authorId))}</button>`}
+        <div class="p-meta"><span>${ago(p.createdAt)}</span><span class="tag ${cat}">${esc(CATS[cat].label)}</span>${p.pinned ? `<span class="tag pinned">${icon('pin')}Pinned</span>` : ''}</div></div>
+      ${S.isAdmin ? `<button class="icon-btn" data-act="pin" data-id="${esc(p.id)}" aria-label="${p.pinned ? 'Unpin' : 'Pin'} post" title="${p.pinned ? 'Unpin' : 'Pin to top'}">${icon('pin')}</button>` : ''}
+      ${mine(p.authorId) ? `<button class="icon-btn" data-act="delpost" data-id="${esc(p.id)}" aria-label="Delete post" title="Delete post">${icon('trash')}</button>` : ''}
+    </div>
+    ${p.text ? `<p class="p-text">${esc(p.text)}</p>` : ''}
+    ${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}
+    <div class="acts">
+      <button class="btn quiet ${iReact ? 'on' : ''}" data-act="react" data-id="${esc(p.id)}" aria-pressed="${!!iReact}">${icon('heart')}${CATS[cat].react}${rx.length ? ' · ' + rx.length : ''}</button>
+      <button class="btn quiet" data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}${cms.length ? cms.length + (cms.length === 1 ? ' comment' : ' comments') : 'Comment'}</button>
+    </div>
+    ${open ? `<div class="comments">${cms.map(c => `<div class="cm">${av(c.authorId, 'sm')}<div class="cm-b"><b>${esc(nameOf(c.authorId))}</b> <span class="meta">${ago(c.createdAt)}</span><p>${esc(c.text)}</p></div>${mine(c.authorId) ? `<button class="x" data-act="delcm" data-id="${esc(c.id)}" aria-label="Delete comment">${icon('x')}</button>` : ''}</div>`).join('')}
+      <form class="c-form" data-comment="${esc(p.id)}"><input id="cin-${esc(p.id)}" type="text" maxlength="500" placeholder="Write a comment" aria-label="Write a comment" autocomplete="off"><button class="btn primary sm" type="submit">Send</button></form></div>` : ''}
+  </article>`;
+}
+function renderFeed(list, emptyMsg){
+  const slot = $('#feedSlot'); if (!slot) return;
+  const rank = p => p.pinned ? 2 : (p.cat === 'announcement' && Date.now() - (p.createdAt || 0) < 7 * 864e5) ? 1 : 0;
+  const sorted = [...list].sort((a, b) => rank(b) - rank(a) || (b.createdAt || 0) - (a.createdAt || 0));
+  const shown = sorted.slice(0, S.limit);
+  keepInputs(slot, () => {
+    if (!S.loaded.posts) slot.innerHTML = `<div class="card empty">Loading posts…</div>`;
+    else if (!shown.length) slot.innerHTML = `<div class="card empty">${esc(emptyMsg)}</div>`;
+    else slot.innerHTML = shown.map(postHTML).join('') + (sorted.length > shown.length ? `<button class="btn" data-act="more" style="align-self:center">Show older posts</button>` : '');
+  });
+}
+
+/* composer */
+function buildComposer(){
+  const slot = $('#composerSlot'); if (!slot) return;
+  if (!S.uid){ slot.innerHTML = ''; return; }
+  const first = (nameOf(S.uid) || '').split(' ')[0];
+  slot.innerHTML = `<section class="card composer" aria-label="Write a post">
+    <div class="c-row"><span id="cAv">${av(S.uid)}</span><textarea id="cText" rows="2" maxlength="3000" placeholder="What is on your heart, ${esc(first)}?" aria-label="Write a post">${esc(S.draft.text)}</textarea></div>
+    <div class="prev" id="cPrev"></div>
+    <div class="c-bar">
+      <div class="cats" id="cCats" role="group" aria-label="Post type"></div>
+      <label class="pin-opt" id="cPinWrap" hidden><input type="checkbox" id="cPin"> Pin to top</label>
+      <button class="btn" type="button" data-act="attach">${icon('image')}Photo</button>
+      <input type="file" id="cFile" accept="image/*" multiple hidden>
+      <button class="btn primary" type="button" id="cPost" data-act="post">Post</button>
+    </div></section>`;
+  const ta = $('#cText');
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 260) + 'px'; };
+  ta.addEventListener('input', () => { S.draft.text = ta.value; grow(); composerBits(); });
+  $('#cFile').addEventListener('change', onPickPhotos);
+  $('#cPin').addEventListener('change', e => { S.draft.pin = e.target.checked; });
+  grow(); composerBits();
+}
+function composerBits(){
+  const cats = $('#cCats'); if (!cats) return;
+  const keys = Object.keys(CATS).filter(k => k !== 'announcement' || S.isAdmin);
+  if (!keys.includes(S.draft.cat)) S.draft.cat = 'share';
+  cats.innerHTML = keys.map(k => `<button type="button" class="chip ${S.draft.cat === k ? 'on' : ''}" data-act="ccat" data-cat="${k}" aria-pressed="${S.draft.cat === k}">${esc(CATS[k].label)}</button>`).join('');
+  $('#cPrev').innerHTML = S.draft.photos.map((d, i) => `<div class="pv"><img src="${d}" alt="Photo ${i + 1} to post"><button type="button" data-act="rmphoto" data-i="${i}" aria-label="Remove photo ${i + 1}">${icon('x')}</button></div>`).join('');
+  $('#cPinWrap').hidden = !S.isAdmin;
+  $('#cPin').checked = !!S.draft.pin;
+  const btn = $('#cPost'); btn.disabled = S.posting || (!S.draft.text.trim() && !S.draft.photos.length);
+  btn.textContent = S.posting ? 'Posting…' : 'Post';
+}
+function refreshComposer(){
+  const a = $('#cAv'); if (a && S.uid) a.innerHTML = av(S.uid);
+  if (!$('#cText') && S.uid) buildComposer();
+  else if ($('#cText')) composerBits();
+}
+async function onPickPhotos(e){
+  const files = [...e.target.files]; e.target.value = '';
+  for (const f of files){
+    if (S.draft.photos.length >= 3){ toast('You can add up to 3 photos.'); break; }
+    try { S.draft.photos.push(await shrink(f, {w:1100, q:.78, maxChars:300000})); }
+    catch (err){ toast(errMsg(err)); }
+  }
+  composerBits();
+}
+async function submitPost(){
+  if (S.posting || !guard()) return;
+  const text = S.draft.text.trim();
+  if (!text && !S.draft.photos.length) return;
+  S.posting = true; composerBits();
+  try {
+    await act('post', {cat:S.draft.cat, text, photos:S.draft.photos, pinned:!!(S.isAdmin && S.draft.pin)});
+    S.draft = {text:'', cat:S.draft.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false};
+    const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
+  } catch (err){}
+  S.posting = false; composerBits();
+}
+
+/* library */
+const isAV = m => /^(audio|video)\//.test(m);
+function fileIcon(mime){ return /^audio/.test(mime) ? 'music' : /^image/.test(mime) ? 'image' : 'file'; }
+function fileHTML(f){
+  const url = driveUrl(f.driveId), mime = String(f.mime || '');
+  const cat = (LIB_CATS.find(c => c[0] === f.cat) || [0, 'Other'])[1];
+  const prev = /^image\//.test(mime) && !/svg/.test(mime) && imgUrl(f.driveId, 700) ? `<img class="f-img" src="${imgUrl(f.driveId, 700)}" alt="${esc(f.title)}" loading="lazy" data-act="zoom">` : '';
+  return `<article class="card file" data-id="${esc(f.id)}">
+    <div class="f-head"><span class="f-ico">${icon(fileIcon(mime))}</span><div><h3>${esc(f.title || f.name)}</h3><p class="meta">${esc(cat)} · ${fmtSize(f.size)} · ${esc(nameOf(f.authorId))} · ${ago(f.createdAt)}</p></div></div>
+    ${f.desc ? `<p class="f-desc">${esc(f.desc)}</p>` : ''}${prev}
+    <div class="f-act">${url ? `<a class="btn" href="${url}" target="_blank" rel="noopener">${isAV(mime) ? 'Play' : 'Open or download'}</a>` : ''}${mine(f.authorId) ? `<button class="btn quiet danger" data-act="delfile" data-id="${esc(f.id)}">Delete</button>` : ''}</div></article>`;
+}
+function renderLibrary(){
+  const cats = $('#libCats'); if (!cats) return;
+  cats.innerHTML = [['all','All'], ...LIB_CATS].map(([k, l]) => `<button type="button" class="chip ${S.libCat === k ? 'on' : ''}" data-act="libcat" data-c="${k}" aria-pressed="${S.libCat === k}">${esc(l)}</button>`).join('');
+  const q = S.libQ.trim().toLowerCase();
+  const list = S.files.filter(f => (S.libCat === 'all' || f.cat === S.libCat) && (!q || (f.title + ' ' + (f.desc || '') + ' ' + (f.name || '')).toLowerCase().includes(q)));
+  $('#libList').innerHTML = !S.loaded.files ? '<div class="card empty" style="grid-column:1/-1">Loading files…</div>'
+    : list.length ? list.map(fileHTML).join('')
+    : `<div class="card empty" style="grid-column:1/-1">${S.files.length ? 'No files match.' : 'The library is empty. Add the first sermon, lesson or hymn sheet.'}</div>`;
+}
+
+/* members */
+function memCard(id, p){
+  return `<button class="card mem" data-act="profile" data-uid="${esc(id)}">${av(id, 'lg')}<span><b>${esc(p.name || 'Church member')}</b><span class="s">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</span>${p.ministries ? `<span class="s">${esc(p.ministries)}</span>` : ''}</span></button>`;
+}
+function renderMembers(){
+  const q = S.memQ.trim().toLowerCase();
+  const list = Object.entries(S.profiles).filter(([, p]) => !q || ((p.name || '') + ' ' + (p.ministries || '') + ' ' + (p.role || '')).toLowerCase().includes(q))
+    .sort((a, b) => String(a[1].name).localeCompare(String(b[1].name)));
+  $('#memList').innerHTML = !S.loaded.profiles ? '<div class="card empty" style="grid-column:1/-1">Loading members…</div>'
+    : list.length ? list.map(([id, p]) => memCard(id, p)).join('')
+    : `<div class="card empty" style="grid-column:1/-1">No members match.</div>`;
+}
+
+/* profile */
+function renderProfile(){
+  const slot = $('#profSlot'); if (!slot) return;
+  const id = S.profileId, own = id && id === S.uid, p = S.profiles[id];
+  if (!p){ slot.innerHTML = `<div class="card empty">This member is no longer here.</div>`; return; }
+  const posts = S.posts.filter(x => x.authorId === id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const files = S.files.filter(f => f.authorId === id);
+  const cover = p.cover ? imgUrl(p.cover, 1200) : '';
+  keepInputs(slot, () => {
+    slot.innerHTML = `<section class="card pf">
+      <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
+      <div class="pf-main">${av(id, 'xl')}<div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p></div>
+        ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
+      <div class="pf-body">
+        ${p.bio ? `<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.bio)}</p>` : own ? `<p class="muted">Add your photo and a few words so the church family can get to know you.</p>` : ''}
+        ${p.verse ? `<p class="quote">${esc(p.verse)}</p>` : ''}
+        <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}</div>
+      </div></section>
+      <h2 class="sec">Posts</h2><div id="feedSlot"></div>
+      ${files.length ? `<h2 class="sec">Shared in the library</h2><div class="grid">${files.map(fileHTML).join('')}</div>` : ''}`;
+  });
+  renderFeed(posts, own ? 'You have not posted yet.' : 'No posts yet.');
+}
+
+/* ---------- profile, password ---------- */
+function openProfileModal(){
+  const p = S.profiles[S.uid] || {};
+  const m = openModal('Edit profile', `
+    <form id="pForm" class="m-body" style="padding:0">
+      <label class="fld" for="pName">Your name<input id="pName" required maxlength="60" value="${esc(p.name || '')}" autocomplete="name"></label>
+      <label class="fld" for="pRole">Role in the church<input id="pRole" maxlength="60" list="roleList" value="${esc(p.role || '')}" placeholder="Member"><datalist id="roleList">${ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist></label>
+      <label class="fld" for="pMin">Ministries<input id="pMin" maxlength="100" value="${esc(p.ministries || '')}" placeholder="Choir, Pathfinders, Deacons"></label>
+      <label class="fld" for="pSince">Member since<input id="pSince" maxlength="4" inputmode="numeric" value="${esc(p.since || '')}" placeholder="Year"></label>
+      <label class="fld" for="pBio">About you<textarea id="pBio" maxlength="500" placeholder="A few words about you and your family">${esc(p.bio || '')}</textarea></label>
+      <label class="fld" for="pVerse">Favorite verse<textarea id="pVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(p.verse || '')}</textarea></label>
+      <label class="fld" for="pAv">Profile photo<input id="pAv" type="file" accept="image/*"><small>Optional. A face photo works best.</small></label>
+      <label class="fld" for="pCover">Cover photo<input id="pCover" type="file" accept="image/*"><small>Optional. A wide photo, such as your family or a church event.</small></label>
+      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="pSave">Save profile</button></div>
+    </form>`, true);
+  $('#pForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#pSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value};
+      const af = $('#pAv', m).files[0], cf = $('#pCover', m).files[0];
+      if (af) body.avatar = await shrink(af, {w:240, h:240, crop:true, q:.82, maxChars:300000});
+      if (cf) body.cover = await shrink(cf, {w:1200, h:400, crop:true, q:.78, maxChars:900000});
+      await api('saveProfile', body); await sync();
+      closeModal(); toast('Profile saved.');
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save profile'; }
+  });
+}
+function openPasswordModal(){
+  const m = openModal('Change password', `
+    <form id="wForm" class="m-body" style="padding:0">
+      <label class="fld" for="wOld">Current password<input id="wOld" type="password" autocomplete="current-password" required></label>
+      <label class="fld" for="wNew">New password<input id="wNew" type="password" autocomplete="new-password" minlength="6" required><small>At least 6 characters.</small></label>
+      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="wSave">Change password</button></div>
+    </form>`);
+  $('#wForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#wSave', m); btn.disabled = true;
+    try { await api('changePassword', {oldPassword:$('#wOld', m).value, newPassword:$('#wNew', m).value}); closeModal(); toast('Password changed.'); }
+    catch (err){ toast(errMsg(err)); btn.disabled = false; }
+  });
+}
+
+/* ---------- library upload ---------- */
+function openUploadModal(){
+  const m = openModal('Add a file', `
+    <form id="uForm" class="m-body" style="padding:0">
+      <label class="fld" for="uFile">File<input id="uFile" type="file" required><small>Up to ${MAX_FILE_MB} MB. Audio, video, PDF, Word, slides and photos all work.</small></label>
+      <label class="fld" for="uTitle">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
+      <label class="fld" for="uCat">Category<select id="uCat">${LIB_CATS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
+      <label class="fld" for="uDesc">Description<textarea id="uDesc" maxlength="300" placeholder="Optional"></textarea></label>
+      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="uSave">Upload</button></div>
+    </form>`);
+  $('#uFile', m).addEventListener('change', e => {
+    const f = e.target.files[0]; const t = $('#uTitle', m);
+    if (f && !t.value) t.value = f.name.replace(/\.[^.]+$/, '');
+    if (f && /^audio/.test(f.type)) $('#uCat', m).value = 'sermons';
+    if (f && /^(image|video)/.test(f.type)) $('#uCat', m).value = 'media';
+  });
+  $('#uForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = $('#uFile', m).files[0]; if (!f) return;
+    if (f.size > MAX_FILE_MB * 1048576){ toast(`That file is over ${MAX_FILE_MB} MB. Choose a smaller one.`); return; }
+    const btn = $('#uSave', m); btn.disabled = true; btn.textContent = 'Uploading… please wait';
+    try {
+      const data = await fileToB64(f);
+      await api('uploadFile', {title:$('#uTitle', m).value, cat:$('#uCat', m).value, desc:$('#uDesc', m).value, name:f.name, mime:f.type || 'application/octet-stream', data});
+      await sync(); closeModal(); toast('File added to the library.');
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Upload'; }
+  });
+}
+
+/* ---------- church settings and members (admins) ---------- */
+function openSettingsModal(){
+  const st = S.settings;
+  const m = openModal('Church settings', `
+    <form id="sForm" class="m-body" style="padding:0">
+      <label class="fld" for="sName">Church name<input id="sName" maxlength="60" value="${esc(st.churchName || 'Tubod SDA Church')}"></label>
+      <label class="fld" for="sTag">Tagline or location<input id="sTag" maxlength="80" value="${esc(st.tagline || '')}"></label>
+      <label class="fld" for="sSched">Sabbath schedule<textarea id="sSched" maxlength="400" placeholder="Sabbath School 9:00 AM&#10;Divine Service 10:30 AM&#10;Prayer Meeting Wednesday 7:00 PM">${esc(st.schedule || '')}</textarea></label>
+      <label class="fld" for="sVerse">Verse of the week<textarea id="sVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(st.verse || '')}</textarea></label>
+      <label class="fld" for="sCode">Church join code<input id="sCode" maxlength="30" value="${esc(st.joinCode || '')}"><small>New members type this code to join. Change it any time. Share it only with your church family.</small></label>
+      <label class="fld" for="sBg">Background photo<input id="sBg" type="file" accept="image/*"><small>Pick a church photo. It sits behind the whole site and you can change it any time.</small></label>
+      ${st.bgId ? '<label class="pin-opt"><input type="checkbox" id="sBgReset"> Go back to the default background</label>' : ''}
+      <button class="btn" type="button" data-act="members">Manage members</button>
+      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="sSave">Save settings</button></div>
+    </form>`, true);
+  $('#sForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#sSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const body = {churchName:$('#sName', m).value, tagline:$('#sTag', m).value, schedule:$('#sSched', m).value, verse:$('#sVerse', m).value, joinCode:$('#sCode', m).value};
+      const f = $('#sBg', m).files[0];
+      if (f) body.bg = await shrink(f, {w:1920, q:.8, maxChars:2800000});
+      else if ($('#sBgReset', m) && $('#sBgReset', m).checked) body.resetBg = true;
+      await api('saveSettings', body); await sync();
+      closeModal(); toast('Settings saved.');
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save settings'; }
+  });
+}
+function openMembersModal(){
+  const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => `
+    <div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${p.access === 'admin' ? 'Church admin' : 'Member'}${p.role ? ' · ' + esc(p.role) : ''}</span></div>
+    ${p.id === S.uid ? '<span class="meta">You</span>' : `<button class="btn sm" data-act="macc" data-uid="${esc(p.id)}" data-to="${p.access === 'admin' ? 'member' : 'admin'}">${p.access === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>`}</div>`).join('');
+  openModal('Manage members', `<p class="muted">Admins can post announcements, pin and delete any post, and manage members.</p><div class="mlist">${rows}</div><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
+}
+async function memberAction(a, uid, to){
+  const p = S.profiles[uid]; if (!p) return;
+  try {
+    if (a === 'macc'){ await api('setAccess', {uid, access:to}); await sync(); openMembersModal(); toast(to === 'admin' ? `${p.name} is now an admin.` : `${p.name} is now a member.`); }
+    else if (a === 'mdel'){
+      if (!await confirmBox('Remove this member?', `${p.name} will lose access. Their posts stay on the page.`, 'Remove')){ openMembersModal(); return; }
+      await api('removeMember', {uid}); await sync(); openMembersModal(); toast('Member removed.');
+    } else if (a === 'mpw'){
+      const m = openModal('Set a new password', `<form id="rForm" class="m-body" style="padding:0"><p class="muted">Choose a temporary password for ${esc(p.name)} and tell them. They can change it after signing in.</p>
+        <label class="fld" for="rPw">New password<input id="rPw" minlength="6" required></label>
+        <div class="m-actions"><button class="btn" type="button" data-act="members">Back</button><button class="btn primary" type="submit">Save</button></div></form>`);
+      $('#rForm', m).addEventListener('submit', async e => {
+        e.preventDefault();
+        try { await api('resetPassword', {uid, password:$('#rPw', m).value}); closeModal(); toast('Password changed. Share it with them in person.'); }
+        catch (err){ toast(errMsg(err)); }
+      });
+    }
+  } catch (err){ toast(errMsg(err)); }
+}
+
+/* ---------- actions ---------- */
+async function deletePost(id){
+  if (!await confirmBox('Delete this post?', 'The post, its photos and comments will be removed for everyone.', 'Delete post')) return;
+  try { await act('deletePost', {id}); } catch (e) {}
+}
+async function deleteFile(id){
+  if (!await confirmBox('Delete this file?', 'It will be removed from the library for everyone.', 'Delete file')) return;
+  try { await act('deleteFile', {id}); } catch (e) {}
+}
+async function toggleReact(pid){
+  if (!guard()) return;
+  const rid = pid + '_' + S.uid;
+  S.reactions = S.reactions.some(r => r.id === rid) ? S.reactions.filter(r => r.id !== rid) : [...S.reactions, {id:rid, postId:pid, uid:S.uid}];
+  refresh();
+  try { await api('react', {postId:pid}); await sync(); }
+  catch (e){ toast(errMsg(e)); sync().catch(() => {}); }
+}
+async function addComment(pid, input){
+  const text = input.value.trim(); if (!text || !guard()) return;
+  input.value = ''; input.disabled = true;
+  try { await act('comment', {postId:pid, text}); }
+  catch (e){ const i = document.getElementById(input.id); if (i) i.value = text; }
+  const i2 = document.getElementById(input.id); if (i2){ i2.disabled = false; i2.focus(); }
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const nav = e.target.closest('a[data-route]');
+  if (nav){ e.preventDefault(); const r = nav.dataset.route; if (r === 'me'){ if (S.uid) go('profile', S.uid); } else go(r); return; }
+  const img = e.target.closest('.shots img');
+  if (img && img.src){ openPhoto(img.src.replace(/=w\d+$/, '=w1600')); return; }
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  switch (a){
+    case 'me': if (S.uid) go('profile', S.uid); break;
+    case 'profile': go('profile', el.dataset.uid); break;
+    case 'filter': S.filter = el.dataset.f; S.limit = 30; refresh(); break;
+    case 'more': S.limit += 30; refresh(); break;
+    case 'ccat': S.draft.cat = el.dataset.cat; composerBits(); break;
+    case 'attach': $('#cFile') && $('#cFile').click(); break;
+    case 'rmphoto': S.draft.photos.splice(Number(el.dataset.i), 1); composerBits(); break;
+    case 'post': submitPost(); break;
+    case 'react': toggleReact(id); break;
+    case 'togglecm': S.open.has(id) ? S.open.delete(id) : S.open.add(id); refresh(); { const i = document.getElementById('cin-' + id); if (i) i.focus(); } break;
+    case 'delpost': deletePost(id); break;
+    case 'delcm': act('deleteComment', {id}).catch(() => {}); break;
+    case 'pin': act('pinPost', {id}).catch(() => {}); break;
+    case 'libcat': S.libCat = el.dataset.c; renderLibrary(); break;
+    case 'upload': if (guard()) openUploadModal(); break;
+    case 'delfile': deleteFile(id); break;
+    case 'zoom': openPhoto(el.src.replace(/=w\d+$/, '=w1600')); break;
+    case 'editprofile': openProfileModal(); break;
+    case 'chpw': openPasswordModal(); break;
+    case 'signout': signOut(); break;
+    case 'settings': if (S.isAdmin) openSettingsModal(); break;
+    case 'members': if (S.isAdmin) openMembersModal(); break;
+    case 'macc': case 'mdel': case 'mpw': memberAction(a, el.dataset.uid, el.dataset.to); break;
+    case 'copyann': copyAnn(id); break;
+    case 'shareann': shareAnn(id); break;
+    case 'invite': shareInvite(); break;
+    case 'authtab': showAuth(el.dataset.t); break;
+    case 'retry': bootSession(); break;
+    case 'closemodal': closeModal(); break;
+  }
+});
+document.addEventListener('submit', e => {
+  const id = e.target.id;
+  if (id === 'authLogin' || id === 'authJoin'){ e.preventDefault(); authSubmit(id === 'authLogin' ? 'login' : 'join', e.target); return; }
+  if (id === 'annForm'){ e.preventDefault(); sendAnn(); return; }
+  const f = e.target.closest('form[data-comment]');
+  if (f){ e.preventDefault(); addComment(f.dataset.comment, f.querySelector('input')); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'libQ'){ S.libQ = e.target.value; renderLibrary(); }
+  if (e.target.id === 'memQ'){ S.memQ = e.target.value; renderMembers(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+window.addEventListener('hashchange', fromHash);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pollNow(); });
+
+/* ---------- start ---------- */
+async function bootSession(){
+  if (!API_URL){ showAuth('setup'); return; }
+  try {
+    const info = await api('publicInfo');
+    S.settings = {...S.settings, ...info.church};
+  } catch (e){
+    if (e.code === 'network' || e.code === 'bad_reply'){ showAuth('offline', errMsg(e)); return; }
+  }
+  if (!S.token){ showAuth('login'); return; }
+  try { await sync(); hideAuth(); startPolling(); mount(); fromHash(); }
+  catch (e){ if (e.code !== 'auth') showAuth('offline', errMsg(e)); }
+}
+function boot(){
+  const setTop = () => { const t = $('.top'); if (t) document.documentElement.style.setProperty('--topH', t.offsetHeight + 'px'); };
+  setTop(); window.addEventListener('resize', setTop); if (document.fonts && document.fonts.ready) document.fonts.ready.then(setTop);
+  $('#mark').innerHTML = icon('church'); $('#gearBtn').innerHTML = icon('gear');
+  const h = (location.hash || '').slice(1);
+  if (['home','news','library','members'].includes(h)) S.route = h;
+  S.token = loadToken();
+  mount();
+  setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard(); }, 60000);
+  bootSession();
+}
+boot();
+})();
+</script>
+</body>
+</html>
