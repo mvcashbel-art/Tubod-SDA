@@ -281,6 +281,28 @@ button,input,select,textarea{font:inherit;color:inherit}
 #upbar.err .up-fill{background:#B3382C}
 .prev .vfile{display:flex;align-items:center;gap:8px;background:#EAF3F7;border-radius:10px;padding:8px 34px 8px 12px;position:relative;font-size:.88rem;max-width:100%}
 .prev .vfile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alb-open{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;width:100%;cursor:pointer;color:inherit}
+.alb-open:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:12px}
+.alb-open h3{font-size:1.1rem;overflow-wrap:anywhere}
+.alb-cover{height:160px;border-radius:10px;overflow:hidden;display:grid;gap:3px;background:#DCE8EE;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.alb-cover img{width:100%;height:100%;object-fit:cover;display:block;min-height:0}
+.alb-cover.n1{grid-template-columns:1fr;grid-template-rows:1fr}
+.alb-cover.n2{grid-template-rows:1fr}
+.alb-cover.n3 img:first-child{grid-row:span 2}
+.alb-cover.n0{display:grid;place-items:center;color:var(--muted)}
+.alb-cover.n0 .ic{width:44px;height:44px}
+.sheet.alb{max-width:780px}
+.alb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.alb-it{margin:0;display:flex;flex-direction:column;gap:5px;min-width:0}
+.alb-it img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;display:block;cursor:zoom-in;background:#E3ECF1}
+.alb-it .vid{margin:0;aspect-ratio:1}
+.alb-it figcaption{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere;display:flex;gap:6px;align-items:flex-start;justify-content:space-between}
+.alb-it .x{border:0;background:none;color:#B3382C;font-size:.78rem;font-weight:600;cursor:pointer;padding:0;flex:none}
+.alb-doc{aspect-ratio:1;border-radius:10px;background:#EAF3F7;display:grid;place-items:center;color:var(--accent-dark);text-decoration:none;font-size:.82rem;padding:8px;text-align:center}
+.urows{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:8px;background:#F7FAFB}
+.urow{display:flex;flex-direction:column;gap:2px}
+.urow input{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff}
+.urow small{color:var(--muted);font-size:.74rem}
 .vid-note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
 
 
@@ -993,7 +1015,7 @@ function mount(){
       ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches){ e.preventDefault(); sendAnn(); } });
     }
   } else if (S.route === 'library'){
-    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Church library</h1><p>Sermons, Sabbath School lessons, hymns and documents kept for the whole church family.</p>${S.token ? `<button class="btn primary" data-act="upload">${icon('upload')}Add a file</button>` : ''}</div>
+    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Church library</h1><p>Sermons, Sabbath School lessons, hymns and documents kept for the whole church family.</p>${S.token ? `<button class="btn primary" data-act="upload">${icon('upload')}Add files or album</button>` : ''}</div>
       <div class="tools"><input type="search" id="libQ" placeholder="Search the library" aria-label="Search the library" value="${esc(S.libQ)}"></div>
       <div class="filters" id="libCats" role="group" aria-label="Library categories"></div><div class="grid" id="libList"></div>`;
   } else if (S.route === 'members'){
@@ -1304,17 +1326,52 @@ function fileHTML(f){
   const prev = vid ? fileVideo(f) : /^image\//.test(mime) && !/svg/.test(mime) && imgUrl(f.driveId, 700) ? `<img class="f-img" src="${imgUrl(f.driveId, 700)}" alt="${esc(f.title)}" loading="lazy" data-act="zoom">` : '';
   return `<article class="card file" data-id="${esc(f.id)}">
     <div class="f-head"><span class="f-ico">${icon(fileIcon(mime))}</span><div><h3>${esc(f.title || f.name)}</h3><p class="meta">${esc(cat)} · ${fmtSize(f.size)} · ${esc(nameOf(f.authorId))} · ${ago(f.createdAt)}</p></div></div>
-    ${f.desc ? `<p class="f-desc">${esc(f.desc)}</p>` : ''}${prev}
+    ${descOf(f) ? `<p class="f-desc">${esc(descOf(f))}</p>` : ''}${prev}
     <div class="f-act">${url ? `<a class="btn" href="${url}" target="_blank" rel="noopener">${vid ? 'Open in Google Drive' : isAV(mime) ? 'Play' : 'Open or download'}</a>` : ''}${mine(f.authorId) ? `<button class="btn quiet danger" data-act="delfile" data-id="${esc(f.id)}">Delete</button>` : ''}</div></article>`;
+}
+/* albums: a file belongs to an album when its description starts with [[album:Name]]. This works with any server version. */
+const ALB_RX = /^\[\[album:([^\]]{1,60})\]\]\s*/;
+const albumOf = f => { const m = ALB_RX.exec(String(f.desc || '')); return m ? m[1].trim() : ''; };
+const descOf = f => String(f.desc || '').replace(ALB_RX, '');
+const albKey = n => String(n || '').trim().toLowerCase();
+function albumList(files){
+  const map = new Map();
+  files.forEach(f => { const n = albumOf(f); if (!n) return; const k = albKey(n); if (!map.has(k)) map.set(k, {k, name:n, items:[]}); map.get(k).items.push(f); });
+  return [...map.values()];
+}
+function albumCard(a){
+  const imgs = a.items.filter(f => /^image\//.test(f.mime) && imgUrl(f.driveId, 400)).slice(0, 4);
+  const cover = imgs.length ? `<div class="alb-cover n${imgs.length}">${imgs.map(f => `<img src="${imgUrl(f.driveId, 400)}" alt="" loading="lazy">`).join('')}</div>` : `<div class="alb-cover n0">${icon('folder')}</div>`;
+  const authors = new Set(a.items.map(f => f.authorId)), newest = Math.max(...a.items.map(f => Number(f.createdAt) || 0));
+  return `<article class="card album"><button type="button" class="alb-open" data-act="openalbum" data-k="${esc(a.k)}" aria-label="Open album ${esc(a.name)}">${cover}<h3>${esc(a.name)}</h3><p class="meta">Album · ${a.items.length} item${a.items.length === 1 ? '' : 's'} · ${esc(nameOf(a.items[0].authorId))}${authors.size > 1 ? ' and others' : ''} · ${ago(newest)}</p></button></article>`;
 }
 function renderLibrary(){
   const cats = $('#libCats'); if (!cats) return;
   cats.innerHTML = [['all','All'], ...LIB_CATS].map(([k, l]) => `<button type="button" class="chip ${S.libCat === k ? 'on' : ''}" data-act="libcat" data-c="${k}" aria-pressed="${S.libCat === k}">${esc(l)}</button>`).join('');
   const q = S.libQ.trim().toLowerCase();
-  const list = S.files.filter(f => (S.libCat === 'all' || f.cat === S.libCat) && (!q || (f.title + ' ' + (f.desc || '') + ' ' + (f.name || '')).toLowerCase().includes(q)));
+  const list = S.files.filter(f => (S.libCat === 'all' || f.cat === S.libCat) && (!q || (f.title + ' ' + albumOf(f) + ' ' + descOf(f) + ' ' + (f.name || '')).toLowerCase().includes(q)));
+  const entries = albumList(list).map(a => ({t:Math.max(...a.items.map(f => Number(f.createdAt) || 0)), html:albumCard(a)}))
+    .concat(list.filter(f => !albumOf(f)).map(f => ({t:Number(f.createdAt) || 0, html:fileHTML(f)}))).sort((x, y) => y.t - x.t);
   $('#libList').innerHTML = !S.loaded.files ? '<div class="card empty" style="grid-column:1/-1">Loading files…</div>'
-    : list.length ? list.map(fileHTML).join('')
-    : `<div class="card empty" style="grid-column:1/-1">${S.files.length ? 'No files match.' : 'The library is empty. Add the first sermon, lesson or hymn sheet.'}</div>`;
+    : entries.length ? entries.map(e => e.html).join('')
+    : `<div class="card empty" style="grid-column:1/-1">${S.files.length ? 'No files match.' : 'The library is empty. Add the first sermon, lesson, hymn sheet or photo album.'}</div>`;
+}
+function albItem(f){
+  const mime = String(f.mime || ''), id = f.driveId, t = esc(f.title || f.name || '');
+  const del = mine(f.authorId) ? `<button type="button" class="x" data-act="delalbfile" data-id="${esc(f.id)}" aria-label="Delete ${t}">Delete</button>` : '';
+  let body;
+  if (/^image\//.test(mime) && imgUrl(id, 500)) body = `<img src="${imgUrl(id, 500)}" alt="${t}" loading="lazy" data-act="zoom">`;
+  else if (/^video\//.test(mime) && idOk(id)) body = `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="gd" data-id="${esc(id)}" data-url="" aria-label="Play ${t}">${imgUrl(id, 400) ? `<img src="${imgUrl(id, 400)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:0;cursor:pointer" onerror="this.remove()">` : ''}<span class="vid-btn" aria-hidden="true"></span></button></div>`;
+  else body = `<a class="alb-doc" href="${driveUrl(id)}" target="_blank" rel="noopener">${icon('file')}<br>${t}<br>Open</a>`;
+  return `<figure class="alb-it">${body}<figcaption><span>${t}</span>${del}</figcaption></figure>`;
+}
+function openAlbum(key){
+  const items = S.files.filter(f => albKey(albumOf(f)) === key).sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+  if (!items.length){ closeModal(); return; }
+  const name = albumOf(items[0]); S.albumOpen = key;
+  const m = openModal(name, `<p class="meta">${items.length} item${items.length === 1 ? '' : 's'} in this album</p><div class="alb-grid">${items.map(albItem).join('')}</div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button>${S.token ? `<button class="btn primary" type="button" data-act="albadd" data-name="${esc(name)}">${icon('upload')}Add to this album</button>` : ''}</div>`, true);
+  $('.sheet', m).classList.add('alb');
 }
 
 /* members */
@@ -1556,27 +1613,29 @@ async function runUpload(job){
     return 'error';
   }
 }
-function openUploadModal(){
-  const m = openModal('Add files', `
+function openUploadModal(opts){
+  opts = opts || {};
+  const albums = albumList(S.files);
+  const m = openModal(opts.album ? 'Add to album' : 'Add files', `
     <form id="uForm" class="m-body" style="padding:0">
       <label class="fld" for="uFile">Files<input id="uFile" type="file" multiple required><small>Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. They upload one after another. Keep this page open and your phone awake until it finishes.</small></label>
-      <div id="uList" class="muted" hidden></div>
+      <div id="uList" hidden></div>
       <label class="fld" for="uTitle" id="uTitleWrap">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
+      <label class="fld" for="uAlbum">Album <small>(optional)</small><input id="uAlbum" maxlength="60" list="uAlbums" autocomplete="off" placeholder="Youth camp 2026" value="${esc(opts.album || '')}"><datalist id="uAlbums">${albums.map(a => `<option value="${esc(a.name)}">`).join('')}</datalist><small>Type a name to keep these files together in one album. Use the same name again to add more later.</small></label>
       <label class="fld" for="uCat">Category<select id="uCat"><option value="auto" hidden>Automatic, by file type</option>${LIB_CATS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
-      <label class="fld" for="uDesc">Description<textarea id="uDesc" maxlength="300" placeholder="Optional"></textarea></label>
+      <label class="fld" for="uDesc">Description<textarea id="uDesc" maxlength="240" placeholder="Optional"></textarea></label>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="uSave">Upload</button></div>
     </form>`, true);
-  const cat = $('#uCat', m), title = $('#uTitle', m), list = $('#uList', m);
+  const cat = $('#uCat', m), title = $('#uTitle', m), list = $('#uList', m), titleWrap = $('#uTitleWrap', m);
   $('#uFile', m).addEventListener('change', e => {
     const fs = [...e.target.files];
     if (fs.length > 1){
-      title.value = ''; title.required = false; title.disabled = true; title.placeholder = 'Each file uses its own name';
+      title.value = ''; title.required = false; titleWrap.hidden = true;
       cat.querySelector('[value=auto]').hidden = false; cat.value = 'auto';
       list.hidden = false;
-      const tot = fs.reduce((n, f) => n + f.size, 0);
-      list.innerHTML = `<b>${fs.length} files, ${esc(fmtSize(tot))}</b><br>` + fs.slice(0, 8).map(f => esc(f.name) + ' · ' + fmtSize(f.size)).join('<br>') + (fs.length > 8 ? `<br>and ${fs.length - 8} more` : '');
+      list.innerHTML = `<p class="muted" style="margin-bottom:6px"><b>${fs.length} files, ${esc(fmtSize(fs.reduce((n, f) => n + f.size, 0)))}.</b> You can change each title below.</p><div class="urows">${fs.map((f, i) => `<div class="urow"><input class="ut" maxlength="100" aria-label="Title for ${esc(f.name)}" value="${esc(f.name.replace(/\.[^.]+$/, ''))}"><small>${esc(f.name)} · ${esc(fmtSize(f.size))}</small></div>`).join('')}</div>`;
     } else {
-      title.disabled = false; title.required = true; title.placeholder = 'Sabbath School Lesson, Week 5'; list.hidden = true;
+      titleWrap.hidden = false; title.required = true; list.hidden = true; list.innerHTML = '';
       if (cat.value === 'auto') cat.value = 'sermons';
       const f = fs[0];
       if (f){ title.value = f.name.replace(/\.[^.]+$/, ''); cat.value = autoCat(f); }
@@ -1588,8 +1647,11 @@ function openUploadModal(){
     if (fs.length > 50){ toast('Choose up to 50 files at a time.'); return; }
     const big = fs.find(f => f.size > MAX_BIG_GB * 1073741824);
     if (big){ toast(`"${big.name}" is over ${MAX_BIG_GB} GB. Remove it and try again.`); return; }
-    const desc = $('#uDesc', m).value, c = cat.value;
-    enqueueUploads(fs.map(f => ({file:f, title:(fs.length === 1 ? title.value : f.name.replace(/\.[^.]+$/, '')).trim().slice(0, 100) || f.name, cat:c === 'auto' ? autoCat(f) : c, desc})));
+    let alb = $('#uAlbum', m).value.replace(/[\[\]\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+    const known = albums.find(a => a.k === albKey(alb)); if (known) alb = known.name;
+    const note = $('#uDesc', m).value.trim(), desc = (alb ? `[[album:${alb}]] ${note}` : note).trim().slice(0, 300), c = cat.value;
+    const titles = $$('.ut', m).map(i => i.value);
+    enqueueUploads(fs.map((f, i) => ({file:f, title:((fs.length === 1 ? title.value : titles[i]) || f.name.replace(/\.[^.]+$/, '')).trim().slice(0, 100) || f.name, cat:c === 'auto' ? autoCat(f) : c, desc})));
     closeModal(); toast(fs.length === 1 ? 'Upload started.' : `${fs.length} files are uploading one after another. Keep this page open.`);
   });
 }
@@ -1719,6 +1781,9 @@ document.addEventListener('click', e => {
     case 'libcat': S.libCat = el.dataset.c; renderLibrary(); break;
     case 'upload': if (guard()) openUploadModal(); break;
     case 'delfile': deleteFile(id); break;
+    case 'openalbum': openAlbum(el.dataset.k); break;
+    case 'albadd': openUploadModal({album:el.dataset.name}); break;
+    case 'delalbfile': (async () => { const k = S.albumOpen; await deleteFile(el.dataset.id); openAlbum(k); })(); break;
     case 'zoom': openPhoto(el.src.replace(/=w\d+$/, '=w1600')); break;
     case 'editprofile': openProfileModal(); break;
     case 'chpw': openPasswordModal(); break;
