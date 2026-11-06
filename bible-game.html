@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bible Game · Tubod SDA Church</title>
+<meta name="theme-color" content="#1D6A8A">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1330; --bg2:#1a2150; --card:#fbf7ec; --ink:#1d2038; --muted:#5e6282;
+  --line:#e6dec5; --gold:#d6a93f; --gold-d:#9c7620; --ok:#2e7d5b; --ok-bg:#e3f3ea;
+  --bad:#b4413f; --bad-bg:#f8e4e3; --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:'Public Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:var(--ink); min-height:100vh; min-height:100dvh;
+  background:radial-gradient(1200px 700px at 50% -10%, #2b3580 0%, var(--bg2) 38%, var(--bg) 100%) fixed;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:'Alegreya',Georgia,serif;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px;color:#e9e4d0}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Alegreya',serif;font-weight:700;letter-spacing:.2px;font-size:18px}
+.brand svg{width:26px;height:26px}
+.homebtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#f3eedb;border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px}
+.homebtn:hover{background:rgba(255,255,255,.18)}
+
+/* Home */
+.hero{text-align:center;color:#f6f1de;padding:10px 6px 22px}
+.hero h1{font-size:clamp(32px,8vw,46px);line-height:1.1;color:#fff}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p{margin:12px auto 0;max-width:30em;color:#cfd2ee;font-size:16px;line-height:1.5}
+.verse-line{margin-top:14px;font-family:'Alegreya',serif;font-style:italic;color:#e9d9a4;font-size:15px}
+.modes{display:grid;gap:12px}
+.mode{display:flex;gap:14px;align-items:center;text-align:left;width:100%;background:var(--card);border:0;border-radius:var(--radius);padding:16px 18px;box-shadow:0 8px 24px rgba(0,0,0,.28);transition:transform .15s}
+.mode:hover{transform:translateY(-2px)}
+.mode .ico{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#f1d98c,var(--gold));color:#3b2c06;font-family:'Alegreya',serif;font-weight:700;font-size:24px}
+.mode h3{font-size:19px}
+.mode p{margin:3px 0 0;color:var(--muted);font-size:14px;line-height:1.35}
+.mode .best{margin-left:auto;flex:none;text-align:right;font-size:12px;color:var(--muted)}
+.mode .best b{display:block;font-size:18px;color:var(--gold-d);font-family:'Alegreya',serif}
+.foot{margin-top:22px;text-align:center;color:#9aa0cf;font-size:12.5px;line-height:1.5}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);padding:20px 18px;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.card h2{font-size:clamp(20px,5vw,24px);line-height:1.3}
+.sub{color:var(--muted);margin:6px 0 16px;font-size:15px}
+.cats{display:grid;gap:10px}
+.cat{display:flex;justify-content:space-between;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-weight:800;text-align:left}
+.cat:hover{border-color:var(--gold)}
+.cat small{font-weight:600;color:var(--muted)}
+
+/* HUD */
+.hud{display:flex;justify-content:space-between;align-items:center;color:#eae6d3;font-weight:700;font-size:14px;margin-bottom:8px}
+.hs{display:flex;gap:12px;align-items:center}
+.hs b{color:var(--gold)}
+.streak{background:rgba(214,169,63,.2);color:#f2d98e;border-radius:999px;padding:3px 10px;font-size:13px}
+.prog{height:6px;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#f1d98c,var(--gold));border-radius:99px;transition:width .3s}
+.tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--gold-d);background:#f5ecd0;border-radius:99px;padding:4px 10px;margin-bottom:10px}
+.timer{height:8px;background:#ece4cb;border-radius:99px;overflow:hidden;margin:14px 0 14px}
+.timer i{display:block;height:100%;width:100%;background:var(--ok);border-radius:99px}
+.timer i.low{background:var(--bad)}
+
+/* Options */
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:700;font-size:16px;line-height:1.3;transition:border-color .12s, background .12s, transform .12s}
+.opt b{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#f5ecd0;color:var(--gold-d);font-size:14px}
+.opt:hover:not(:disabled){border-color:var(--gold);transform:translateX(2px)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.right b{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt.wrong b{background:var(--bad);color:#fff}
+.opt.gone{opacity:.35;text-decoration:line-through}
+.tools{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.ghost{background:transparent;border:2px dashed var(--gold);color:var(--gold-d);border-radius:12px;padding:8px 14px;font-weight:800;font-size:14px}
+.ghost:disabled{opacity:.4;cursor:default}
+.primary{background:linear-gradient(135deg,#f1d98c,var(--gold));border:0;color:#2f2305;border-radius:14px;padding:13px 22px;font-weight:800;font-size:16px;box-shadow:0 4px 0 var(--gold-d)}
+.primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--gold-d)}
+.secondary{background:#fff;border:2px solid var(--line);color:var(--ink);border-radius:14px;padding:11px 20px;font-weight:800;font-size:16px}
+
+/* Feedback */
+.fb{margin-top:16px;border-radius:14px;padding:14px 16px;animation:pop .25s ease}
+.fb.ok{background:var(--ok-bg);border:1px solid #b7e0c9}
+.fb.no{background:var(--bad-bg);border:1px solid #efc1bf}
+.fb h3{font-size:18px;margin-bottom:4px}
+.fb .pts{font-weight:800;color:var(--gold-d)}
+.fb p{margin:6px 0 0;line-height:1.45;font-size:15px}
+.fb .ref{font-weight:800;color:var(--muted);font-size:13.5px}
+.fb .row{display:flex;justify-content:flex-end;margin-top:12px}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Verse */
+.verse{font-family:'Alegreya',serif;font-size:clamp(19px,4.8vw,23px);line-height:1.6;margin:10px 0 16px;padding:14px 16px;border-left:4px solid var(--gold);background:#fff;border-radius:0 12px 12px 0}
+.blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--gold);text-align:center;color:transparent;user-select:none}
+.filled{color:var(--ok);font-weight:700;border-bottom:3px solid var(--ok);padding:0 2px}
+.vref{display:block;margin-top:8px;font-family:'Public Sans',sans-serif;font-style:normal;font-weight:800;font-size:14px;color:var(--gold-d)}
+
+/* Who am I */
+.clues{list-style:none;margin:12px 0 16px;padding:0;display:grid;gap:8px}
+.clues li{background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 14px;line-height:1.4;animation:pop .25s ease}
+.clues li span{display:inline-block;font-weight:800;color:var(--gold-d);margin-right:8px}
+.worth{font-weight:800;color:var(--gold-d)}
+
+/* Results */
+.res{text-align:center}
+.rank{font-family:'Alegreya',serif;font-size:clamp(26px,7vw,34px);margin:6px 0 4px}
+.big{font-family:'Alegreya',serif;font-size:56px;font-weight:700;color:var(--gold-d);line-height:1}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0}
+.stat{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 16px;min-width:100px}
+.stat b{display:block;font-size:22px;font-family:'Alegreya',serif}
+.stat span{font-size:12.5px;color:var(--muted);font-weight:700}
+.newbest{display:inline-block;background:var(--gold);color:#2f2305;font-weight:800;border-radius:99px;padding:4px 12px;font-size:13px;margin-bottom:8px}
+.btnrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.acts{font-family:'Alegreya',serif;font-style:italic;color:var(--muted);margin:10px 0 0;font-size:15px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Language switch */
+.lang{display:flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:3px}
+.lang button{background:transparent;border:0;color:#d9d6c3;border-radius:999px;padding:5px 12px;font-weight:800;font-size:13px}
+.lang button.on{background:var(--gold);color:#2f2305}
+.lang[hidden],.homebtn[hidden]{display:none}
+/* Order the books */
+.slots{list-style:none;margin:14px 0;padding:0;display:grid;gap:8px}
+.slot{display:flex;align-items:center;gap:10px;min-height:48px;border:2px dashed var(--line);border-radius:12px;padding:6px 10px;background:#fffdf6}
+.slot .num{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#f5ecd0;color:var(--gold-d);font-weight:800;font-size:13px}
+.slot.full{border-style:solid;border-color:var(--gold);background:#fff}
+.slot.good{border-color:var(--ok);background:var(--ok-bg)}
+.slot.bad{border-color:var(--bad);background:var(--bad-bg)}
+.slotbtn,.bk{background:transparent;border:0;font-weight:800;font-size:16px;padding:6px 2px;text-align:left;flex:1}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.tile{background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:800;font-size:15px}
+.tile:hover{border-color:var(--gold)}
+.hint{color:var(--muted);font-size:14px}
+/* Duel */
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 14px}
+.names input{font:inherit;font-weight:700;padding:11px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;min-width:0}
+.names input:focus{outline:3px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
+.duelhud{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.pl{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.08);color:#d9d6c3;font-weight:800;border:2px solid transparent}
+.pl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl.on{background:rgba(214,169,63,.2);border-color:var(--gold);color:#fff}
+.pl b{color:var(--gold);font-family:'Alegreya',serif;font-size:18px}
+.pass{text-align:center;padding:30px 18px}
+.who-big{font-family:'Alegreya',serif;font-size:clamp(30px,9vw,44px);font-weight:700;color:var(--gold-d);margin:6px 0 22px;word-break:break-word}
+.stat.win{border-color:var(--gold);background:#fff8e1}
+
+/* ---- Church site theme: lake blue and paper white, gold used sparingly ---- */
+:root{--bg:#EEF4F7;--card:#FFFFFF;--ink:#17324D;--muted:#5B7083;--line:#D9E4EA;--accent:#1D6A8A;--accent-d:#14516B;--gold:#D79A22;--gold-d:#8A6212;--ok:#3F8060;--ok-bg:#E3F2EA;--bad:#B0433A;--bad-bg:#F9E6E3}
+body{background:linear-gradient(180deg,#CFE3EC 0,#EEF4F7 380px) #EEF4F7 fixed;color:var(--ink)}
+button:focus-visible{outline-color:var(--accent)}
+.churchbar{display:inline-flex;align-items:center;gap:4px;color:var(--accent-d);font-weight:700;font-size:.92rem;text-decoration:none;padding:4px 2px}
+.churchbar:hover{text-decoration:underline}
+.top,.brand{color:var(--ink)}
+.homebtn{background:#fff;border:1px solid var(--line);color:var(--accent-d)}
+.homebtn:hover{background:#F4F8FA}
+.lang{background:#fff;border:1px solid var(--line)}
+.lang button{color:var(--muted)}
+.lang button.on{background:var(--accent);color:#fff}
+.hero{color:var(--ink)}
+.hero h1{color:var(--ink)}
+.hero h1 em{color:var(--accent)}
+.hero p{color:var(--muted)}
+.verse-line{color:var(--gold-d)}
+.foot{color:var(--muted)}
+.hud{color:var(--ink)}
+.hs b{color:var(--accent)}
+.streak{background:#FBF1D9;color:#7A5A12}
+.prog{background:#D9E4EA}
+.prog i{background:var(--accent)}
+.mode{border:1px solid var(--line);box-shadow:0 1px 3px rgba(23,50,77,.08)}
+.mode:hover{border-color:var(--accent)}
+.mode .ico{background:linear-gradient(135deg,#2C8AAE,#1D6A8A);color:#fff}
+.mode .best b{color:var(--accent)}
+.card{box-shadow:0 1px 4px rgba(23,50,77,.1);border:1px solid var(--line)}
+.tag{background:#E3F0F5;color:var(--accent-d)}
+.timer{background:#E3EDF2}
+.opt b{background:#E3F0F5;color:var(--accent-d)}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.ghost{border-color:var(--accent);color:var(--accent-d)}
+.primary{background:var(--accent);color:#fff;box-shadow:0 4px 0 var(--accent-d)}
+.primary:active{box-shadow:0 2px 0 var(--accent-d)}
+.cat:hover,.tile:hover{border-color:var(--accent)}
+.verse{border-left-color:var(--accent)}
+.blank{border-bottom-color:var(--accent)}
+.vref{color:var(--accent-d)}
+.clues li span{color:var(--accent-d)}
+.big{color:var(--accent)}
+.newbest{background:var(--gold);color:#2f2305}
+.stat.win{background:#FBF1D9;border-color:var(--gold)}
+.pl{background:#fff;color:var(--ink);border-color:var(--line)}
+.pl.on{background:#E3F0F5;border-color:var(--accent);color:var(--ink)}
+.pl b{color:var(--accent)}
+.names input:focus{outline-color:var(--accent);border-color:var(--accent)}
+.slot .num{background:#E3F0F5;color:var(--accent-d)}
+.slot.full{border-color:var(--accent)}
+.slot.good{border-color:var(--ok)}.slot.bad{border-color:var(--bad)}
+.who-big{color:var(--accent)}
+.fb .pts{color:var(--gold-d)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="churchbar" href="index.html">&#8249; <span id="backTxt">Tubod SDA Church</span></a>
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 7c-2.6-2.2-6.6-3-11-2.2v18.4c4.4-.8 8.4 0 11 2.2 2.6-2.2 6.6-3 11-2.2V4.8C22.600 4 18.600 4.800 16 7z" fill="#1D6A8A"/><path d="M16 7v18.400" stroke="#EEF4F7" stroke-width="1.600" fill="none"/></svg>
+      Scripture Quest
+    </div>
+    <button class="homebtn" id="homeTop" data-act="home" hidden>Home</button>
+    <div class="lang" id="langBox"><button data-act="lang" data-lang="en">English</button><button data-act="lang" data-lang="ceb">Bisaya</button></div>
+  </div>
+  <main id="app"></main>
+</div>
+
+<script>
+/* ---------- Helpers ---------- */
+const app = document.getElementById('app');
+const homeTop = document.getElementById('homeTop');
+const langBox = document.getElementById('langBox');
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('sq_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('sq_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ---------- Content ---------- */
+
+const CAT = { ot: 'Old Testament', nt: 'New Testament', pr: 'Daniel & Revelation', sb: 'Sabbath & Beliefs', ah: 'Adventist Heritage' };
+const Q = (c, q, a, w, r, n) => ({ c, q, a, w, r, n });
+
+const QUIZ = [
+  /* Old Testament */
+  Q('ot', 'Who built the ark to survive the great flood?', 'Noah', ['Moses', 'Abraham', 'Enoch'], 'Genesis 6:13–22', 'God told Noah to build an ark of gopher wood, and Noah did everything God commanded.'),
+  Q('ot', 'On which day of Creation Week did God rest?', 'The seventh day', ['The first day', 'The third day', 'The sixth day'], 'Genesis 2:2–3', 'God blessed the seventh day and sanctified it, the first Sabbath.'),
+  Q('ot', 'What sign did God give as His promise never to flood the whole earth again?', 'A rainbow', ['A dove', 'A star', 'A pillar of cloud'], 'Genesis 9:12–16', 'The rainbow is the token of God’s everlasting covenant with every living creature.'),
+  Q('ot', 'Who was thrown into the den of lions for praying to God?', 'Daniel', ['Jeremiah', 'Shadrach', 'Elijah'], 'Daniel 6:10–23', 'God sent His angel and shut the lions’ mouths because Daniel trusted in Him.'),
+  Q('ot', 'Which prophet spent three days and nights inside a great fish?', 'Jonah', ['Elisha', 'Hosea', 'Amos'], 'Jonah 1:17', 'Jesus later pointed to Jonah as a sign of His own three days in the grave (Matthew 12:40).'),
+  Q('ot', 'How many plagues did God send on Egypt?', 'Ten', ['Seven', 'Twelve', 'Five'], 'Exodus 7–12', 'The tenth plague, the death of the firstborn, led to the first Passover.'),
+  Q('ot', 'Which son of Jacob was sold by his brothers and later became ruler in Egypt?', 'Joseph', ['Benjamin', 'Judah', 'Reuben'], 'Genesis 37; 41:41–43', 'Joseph told his brothers, “Ye thought evil against me; but God meant it unto good” (Genesis 50:20).'),
+  Q('ot', 'What did David use to defeat Goliath?', 'A sling and a stone', ['A sword', 'A spear', 'A bow and arrow'], '1 Samuel 17:45–50', 'David came “in the name of the LORD of hosts,” not in his own strength.'),
+  Q('ot', 'Which king asked God for wisdom and built the temple in Jerusalem?', 'Solomon', ['David', 'Hezekiah', 'Josiah'], '1 Kings 3:9–12; 6:1', 'God gave Solomon a wise and understanding heart.'),
+  Q('ot', 'How was the prophet Elijah taken to heaven?', 'In a whirlwind, with a chariot of fire', ['He died peacefully at Mount Carmel', 'He was carried off by ravens', 'He crossed the Red Sea and vanished'], '2 Kings 2:11', 'Elijah is one of only two people in the Old Testament who did not see death. Enoch is the other.'),
+  Q('ot', 'Who saved the Jewish people by approaching the Persian king without being summoned?', 'Esther', ['Ruth', 'Deborah', 'Hannah'], 'Esther 4:14–16; 5:1–2', 'Mordecai asked whether Esther had come to the kingdom “for such a time as this.”'),
+  Q('ot', 'Who killed his brother Abel, the first murder in the Bible?', 'Cain', ['Seth', 'Lamech', 'Esau'], 'Genesis 4:8', 'Abel’s offering was accepted by faith (Hebrews 11:4).'),
+  Q('ot', 'Which three young men were thrown into the fiery furnace but were not burned?', 'Shadrach, Meshach and Abednego', ['Peter, James and John', 'Ezra, Nehemiah and Haggai', 'Elijah, Elisha and Samuel'], 'Daniel 3:19–27', 'The king saw a fourth figure in the fire “like the Son of God.”'),
+  Q('ot', 'How many books are in the Old Testament?', '39', ['27', '66', '46'], 'Bible overview', '39 Old Testament books plus 27 New Testament books make 66 in all.'),
+  Q('ot', 'Which judge’s great strength was tied to his uncut hair?', 'Samson', ['Gideon', 'Ehud', 'Jephthah'], 'Judges 16:17', 'Samson was a Nazarite from birth.'),
+  Q('ot', 'Which sea did God part so Israel could cross on dry ground?', 'The Red Sea', ['The Dead Sea', 'The Sea of Galilee', 'The Mediterranean Sea'], 'Exodus 14:21–22', 'The waters were a wall to them on their right hand and on their left.'),
+  Q('ot', 'Who was Abraham’s son of promise?', 'Isaac', ['Ishmael', 'Jacob', 'Esau'], 'Genesis 21:1–3, 12', 'Isaac was born when Abraham was 100 years old and Sarah was 90.'),
+  Q('ot', 'Who was the first man God created?', 'Adam', ['Enoch', 'Seth', 'Abel'], 'Genesis 2:7', 'God formed man of the dust of the ground and breathed into him the breath of life.'),
+
+  /* New Testament */
+  Q('nt', 'In which town was Jesus born?', 'Bethlehem', ['Nazareth', 'Jerusalem', 'Capernaum'], 'Luke 2:4–7; Micah 5:2', 'Micah foretold the birthplace of the Messiah centuries earlier.'),
+  Q('nt', 'Who baptized Jesus in the Jordan River?', 'John the Baptist', ['Peter', 'Philip', 'Andrew'], 'Matthew 3:13–17', 'A voice from heaven said, “This is my beloved Son, in whom I am well pleased.”'),
+  Q('nt', 'How many apostles did Jesus choose?', 'Twelve', ['Seven', 'Ten', 'Seventy'], 'Luke 6:13', 'Jesus later sent out seventy others as well (Luke 10:1), but the apostles numbered twelve.'),
+  Q('nt', 'What was Jesus’ first recorded miracle?', 'Turning water into wine', ['Feeding the five thousand', 'Healing a blind man', 'Walking on water'], 'John 2:1–11', 'It happened at a wedding in Cana of Galilee.'),
+  Q('nt', 'Which disciple denied knowing Jesus three times?', 'Peter', ['John', 'Thomas', 'Andrew'], 'Luke 22:54–62', 'Peter wept bitterly, and Jesus later restored him (John 21:15–17).'),
+  Q('nt', 'Whom did Jesus raise from the dead after four days in the tomb?', 'Lazarus', ['The daughter of Jairus', 'The widow’s son at Nain', 'Dorcas'], 'John 11:38–44', 'Jesus said, “I am the resurrection, and the life.”'),
+  Q('nt', 'Which short tax collector climbed a sycamore tree to see Jesus?', 'Zacchaeus', ['Bartimaeus', 'Nicodemus', 'Cornelius'], 'Luke 19:1–10', 'Jesus said, “The Son of man is come to seek and to save that which was lost.”'),
+  Q('nt', 'On what day after His death did Jesus rise from the grave?', 'The third day', ['The second day', 'The seventh day', 'The fortieth day'], '1 Corinthians 15:3–4', 'Jesus rested in the tomb over the Sabbath and rose on the first day of the week.'),
+  Q('nt', 'Who met Jesus on the road to Damascus and became a great apostle?', 'Saul, also called Paul', ['Barnabas', 'Timothy', 'Silas'], 'Acts 9:1–19', 'Saul went from persecuting the church to preaching Christ to the Gentiles.'),
+  Q('nt', 'Which Gospel writer was a physician?', 'Luke', ['Matthew', 'Mark', 'John'], 'Colossians 4:14', 'Paul called him “Luke, the beloved physician.” He also wrote the book of Acts.'),
+  Q('nt', 'How many books are in the New Testament?', '27', ['39', '66', '24'], 'Bible overview', 'It runs from Matthew to Revelation.'),
+  Q('nt', 'Who was the first Christian martyr?', 'Stephen', ['Philip', 'Barnabas', 'Timothy'], 'Acts 7:54–60', 'As he died, Stephen prayed for those who stoned him.'),
+  Q('nt', 'What is the last book of the Bible?', 'Revelation', ['Jude', 'Acts', 'Hebrews'], 'Revelation 1:1', 'It is “the Revelation of Jesus Christ.”'),
+  Q('nt', 'In which town did Jesus grow up?', 'Nazareth', ['Bethlehem', 'Jericho', 'Bethany'], 'Luke 2:39–40, 51', 'Jesus was known as “Jesus of Nazareth.”'),
+  Q('nt', 'Which disciple doubted the resurrection until he saw the nail prints?', 'Thomas', ['Philip', 'Andrew', 'Bartholomew'], 'John 20:24–29', 'Jesus said, “Blessed are they that have not seen, and yet have believed.”'),
+
+  /* Daniel & Revelation */
+  Q('pr', 'In Daniel 2, what was the head of the great image in Nebuchadnezzar’s dream made of?', 'Gold', ['Silver', 'Brass', 'Iron'], 'Daniel 2:32, 38', 'Daniel told the king, “Thou art this head of gold.”'),
+  Q('pr', 'In Daniel 2, what struck the image and filled the whole earth?', 'A stone cut without hands', ['A great flood', 'A fiery sword', 'A mighty wind'], 'Daniel 2:34–35, 44–45', 'The stone represents God’s everlasting kingdom that will never be destroyed.'),
+  Q('pr', 'In Daniel 7, how many great beasts rose up out of the sea?', 'Four', ['Three', 'Seven', 'Ten'], 'Daniel 7:3', 'Like the image of Daniel 2, the four beasts picture four successive world powers.'),
+  Q('pr', 'According to Daniel 8:14, how many days until the sanctuary would be cleansed?', '2,300', ['1,260', '1,335', '490'], 'Daniel 8:14', 'Adventists understand this long prophecy to reach to 1844 and to the work of Christ in the heavenly sanctuary.'),
+  Q('pr', 'Where was John when he received the visions of Revelation?', 'The isle of Patmos', ['Mount Sinai', 'The island of Crete', 'Babylon'], 'Revelation 1:9', 'John was there “for the word of God, and for the testimony of Jesus Christ.”'),
+  Q('pr', 'Which of these was NOT one of the seven churches of Revelation?', 'Corinth', ['Ephesus', 'Smyrna', 'Laodicea'], 'Revelation 1:11', 'The seven were Ephesus, Smyrna, Pergamos, Thyatira, Sardis, Philadelphia and Laodicea.'),
+  Q('pr', 'What does the first angel of Revelation 14 say has come?', 'The hour of His judgment', ['The day of rest', 'The marriage supper', 'The end of famine'], 'Revelation 14:6–7', 'The first angel also calls everyone to “fear God, and give glory to him” and to worship the Creator.'),
+  Q('pr', 'Revelation 14:12 says the saints keep the commandments of God and have what?', 'The faith of Jesus', ['The wealth of kings', 'The wisdom of Solomon', 'The strength of Samson'], 'Revelation 14:12', 'Obedience and faith go together in the last-day message.'),
+  Q('pr', 'In Revelation 19:10, “the testimony of Jesus is the spirit of” what?', 'Prophecy', ['Truth', 'Wisdom', 'Grace'], 'Revelation 19:10', 'Revelation 12:17 links “the testimony of Jesus Christ” with God’s remnant people.'),
+  Q('pr', 'In Matthew 24:14, what must happen before the end comes?', 'The gospel preached in all the world as a witness to all nations', ['All kingdoms unite into one', 'The temple is rebuilt', 'Every person is baptized'], 'Matthew 24:14', 'This verse drives the Adventist passion for world mission.'),
+  Q('pr', 'What final promise does Jesus make in Revelation 22:20?', 'Surely I come quickly', ['I will build My church', 'I am with you always', 'Peace I leave with you'], 'Revelation 22:20', 'John answers, “Even so, come, Lord Jesus.”'),
+  Q('pr', 'In Acts 1:11, how did the angels say Jesus will return?', 'In the same way He went into heaven', ['As a baby in Bethlehem', 'In secret to a few', 'Only in spirit through the church'], 'Acts 1:9–11', 'Jesus’ return will be personal, visible and glorious (Revelation 1:7).'),
+  Q('pr', 'According to 1 Thessalonians 4:16, who rises first when the Lord descends from heaven?', 'The dead in Christ', ['Those still alive on earth', 'The angels', 'The wicked dead'], '1 Thessalonians 4:16–17', 'Then the living righteous are caught up together with them to meet the Lord.'),
+  Q('pr', 'In Revelation 21, what does John see coming down from God out of heaven?', 'The holy city, New Jerusalem', ['A mighty army', 'The ark of the covenant', 'A great white throne'], 'Revelation 21:1–2', 'God will make “a new heaven and a new earth,” and wipe away every tear.'),
+
+  /* Sabbath & Beliefs */
+  Q('sb', 'Which commandment begins with the word “Remember”?', 'The fourth (the Sabbath)', ['The first (no other gods)', 'The fifth (honour parents)', 'The tenth (do not covet)'], 'Exodus 20:8–11', 'The Sabbath commandment points back to Creation: God made all things in six days and rested on the seventh.'),
+  Q('sb', 'When did God first bless and sanctify the seventh day?', 'At Creation, in Eden', ['At Mount Sinai', 'In the days of Nehemiah', 'When Jesus was born'], 'Genesis 2:2–3', 'The Sabbath was given before sin and before Israel as a nation.'),
+  Q('sb', 'In Mark 2:27, Jesus said the Sabbath was made for whom?', 'Man', ['Israel only', 'The priests', 'The angels'], 'Mark 2:27–28', 'Jesus added that He is “Lord also of the sabbath.”'),
+  Q('sb', 'What was Jesus’ custom on the Sabbath day?', 'Worshipping in the synagogue', ['Travelling to Jerusalem', 'Fasting alone in the desert', 'Working as a carpenter'], 'Luke 4:16', 'Luke says that, “as his custom was, he went into the synagogue on the sabbath day.”'),
+  Q('sb', 'After Jesus was buried, what did the women do on the Sabbath?', 'Rested according to the commandment', ['Anointed His body at the tomb', 'Travelled back to Galilee', 'Taught in the temple'], 'Luke 23:55–56', 'They kept the Sabbath even in their grief, and came to the tomb on the first day of the week.'),
+  Q('sb', 'On what did God write the Ten Commandments?', 'Two tables of stone', ['Scrolls of papyrus', 'Bronze plates', 'A wall of the temple'], 'Exodus 31:18', 'They were written “with the finger of God.”'),
+  Q('sb', 'According to 1 Kings 8:9, what was inside the ark of the covenant?', 'The two tables of stone', ['The golden lampstand', 'The bread of the presence', 'The altar’s ashes'], '1 Kings 8:9', 'The law of God sat at the very heart of the sanctuary, beneath the mercy seat.'),
+  Q('sb', 'According to Hebrews 8:1–2, where does Jesus minister as our High Priest?', 'In the heavenly sanctuary', ['In the Jerusalem temple', 'On the Mount of Olives', 'In the synagogue at Nazareth'], 'Hebrews 8:1–2', 'The earthly sanctuary was a copy and shadow of heavenly things (Hebrews 8:5).'),
+  Q('sb', 'How did Jesus describe Lazarus’s death in John 11:11?', 'Sleep', ['A journey', 'A punishment', 'A transformation'], 'John 11:11–14', 'Jesus said, “Our friend Lazarus sleepeth; but I go, that I may awake him out of sleep.”'),
+  Q('sb', 'According to Ecclesiastes 9:5, what do the dead know?', 'Nothing (“not any thing”)', ['All things', 'The future', 'What the living are doing'], 'Ecclesiastes 9:5–6', 'The Bible teaches that the dead rest until the resurrection at Christ’s return.'),
+  Q('sb', 'What portion of our increase does Scripture call the tithe?', 'A tenth', ['A fifth', 'A third', 'A half'], 'Leviticus 27:30; Malachi 3:10', 'The tithe is holy to the LORD and is returned to Him in faithfulness.'),
+  Q('sb', 'In Daniel 1, what did Daniel ask to eat in place of the king’s food?', 'Pulse (vegetables) and water', ['Fish and bread', 'Honey and milk', 'Lamb and wine'], 'Daniel 1:8–16', 'After ten days Daniel and his friends looked healthier than all who ate the king’s portion.'),
+  Q('sb', 'What does Paul call your body in 1 Corinthians 6:19?', 'The temple of the Holy Ghost', ['A burden to bear', 'A servant of the mind', 'A garden of delights'], '1 Corinthians 6:19–20', 'Therefore, Paul says, “glorify God in your body.”'),
+  Q('sb', 'In Romans 6:23, what are “the wages of sin”?', 'Death', ['Shame', 'Exile', 'Sorrow'], 'Romans 6:23', '“But the gift of God is eternal life through Jesus Christ our Lord.”'),
+  Q('sb', 'According to Romans 6:4, baptism pictures being buried with Christ so we can walk in what?', 'Newness of life', ['Fear of judgment', 'The old covenant', 'Perfect comfort'], 'Romans 6:4', 'Baptism by immersion pictures death to the old life and resurrection to the new.'),
+
+  /* Adventist Heritage */
+  Q('ah', 'In what year did the Great Disappointment take place, when early Adventists expected Christ to return?', '1844', ['1798', '1863', '1888'], 'Adventist history', 'It was October 22, 1844. Many studied the Bible and came to understand the sanctuary message afterward.'),
+  Q('ah', 'In what year was the Seventh-day Adventist Church formally organized?', '1863', ['1844', '1888', '1915'], 'Adventist history', 'The General Conference was organized in Battle Creek, Michigan.'),
+  Q('ah', 'Which early pioneer, a former sea captain, helped introduce the seventh-day Sabbath to early Adventists?', 'Joseph Bates', ['William Miller', 'John Harvey Kellogg', 'Uriah Smith'], 'Adventist history', 'Joseph Bates was a co-founder of the Adventist Church along with James and Ellen White.'),
+  Q('ah', 'How many Fundamental Beliefs does the Seventh-day Adventist Church currently teach?', '28', ['10', '22', '36'], 'Adventist beliefs', 'They cover Scripture, God, salvation, the church, the Sabbath, the sanctuary, Christ’s return and more.'),
+  Q('ah', 'Which farmer-turned-preacher sparked the 1840s Advent awakening in America?', 'William Miller', ['Martin Luther', 'John Wesley', 'Charles Spurgeon'], 'Adventist history', 'Miller studied Daniel’s prophecies and preached that Christ’s return was near.'),
+  Q('ah', 'What does the “Advent” in Adventist point to?', 'The coming of Christ', ['The Sabbath day', 'The gifts of the Spirit', 'The Reformation'], 'Titus 2:13', 'Adventists look for “that blessed hope, and the glorious appearing of the great God and our Saviour Jesus Christ.”')
+  ,
+  /* More questions */
+  Q('ot', 'What did God send to feed Israel in the wilderness?', 'Manna', ['Locusts', 'Barley loaves', 'Fish from the sea'], 'Exodus 16:14–15', 'Each morning manna lay on the ground around the camp, “bread from heaven.”'),
+  Q('ot', 'Who was the first king of Israel?', 'Saul', ['David', 'Solomon', 'Samuel'], '1 Samuel 10:1', 'Samuel anointed Saul at God’s direction.'),
+  Q('ot', 'For how many days and nights did the rain fall during the flood?', 'Forty', ['Seven', 'Ten', 'One hundred'], 'Genesis 7:12', 'The waters then stayed on the earth for 150 days.'),
+  Q('ot', 'Which prophet did God call as a boy when he heard a voice in the night?', 'Samuel', ['Isaiah', 'Jeremiah', 'Elisha'], '1 Samuel 3:1–10', 'Samuel answered, “Speak; for thy servant heareth.”'),
+  Q('pr', 'Who explained the writing on the wall at Belshazzar’s feast?', 'Daniel', ['Ezekiel', 'Mordecai', 'Nehemiah'], 'Daniel 5:5, 25–28', 'The words were “Mene, Mene, Tekel, Upharsin,” and Babylon fell that very night.'),
+  Q('nt', 'How many loaves and fish did Jesus use to feed the five thousand?', 'Five loaves and two fish', ['Seven loaves and a few fish', 'Twelve loaves and one fish', 'Three loaves and five fish'], 'Matthew 14:17–21', 'Twelve baskets of leftovers were gathered afterward.'),
+  Q('nt', 'What did the Holy Spirit look like when it came down on Jesus at His baptism?', 'A dove', ['An eagle', 'A tongue of fire', 'A cloud'], 'Matthew 3:16–17', 'From heaven the Father said, “This is my beloved Son.”'),
+  Q('nt', 'Where was Jesus tempted by the devil for forty days?', 'In the wilderness', ['In the Garden of Gethsemane', 'On the Sea of Galilee', 'On Mount Sinai'], 'Matthew 4:1–11', 'Jesus defeated every temptation by saying, “It is written.”'),
+  Q('nt', 'What did Jesus say is the greatest commandment?', 'Love the Lord your God with all your heart, soul and mind', ['Honour your father and mother', 'Remember the Sabbath day', 'Do not bear false witness'], 'Matthew 22:36–39', 'The second, Jesus said, is to love your neighbour as yourself.'),
+  Q('sb', 'In John 14:15, Jesus says, “If ye love me…” what?', 'Keep my commandments', ['Give much money', 'Build a temple', 'Fast every day'], 'John 14:15', 'Love and obedience go hand in hand. Obedience is the fruit of love.'),
+  Q('sb', 'According to John 1:1–3, who made all things?', 'The Word, who is Jesus', ['The angels', 'The prophets', 'Nature itself'], 'John 1:1–3', '“All things were made by him.” Jesus is our Creator and our Saviour.'),
+  Q('sb', 'What does Hebrews 4:9 say remains for the people of God?', 'A rest', ['A temple', 'A kingdom', 'A sacrifice'], 'Hebrews 4:9', 'Many Bible students see Sabbath-keeping in this verse, a rest that still remains.'),
+  Q('ah', 'Which co-founder of the Adventist Church wrote the book “Steps to Christ”?', 'Ellen G. White', ['Joseph Bates', 'J. N. Andrews', 'Uriah Smith'], 'Adventist history', 'It is a much-loved introduction to the love of Jesus.'),
+  Q('ah', 'What is the highest level of Seventh-day Adventist church organization called?', 'The General Conference', ['The Synod', 'The Diocese', 'The Presbytery'], 'Adventist history', 'Local churches unite in conferences, and together they form one worldwide family.')
+];
+
+/* Fill-in-the-verse (King James Version) */
+const VERSES = [
+  { r: 'John 3:16', t: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not ___, but have everlasting life.', a: 'perish', d: ['fall', 'suffer', 'wander'] },
+  { r: 'Psalm 23:1', t: 'The LORD is my ___; I shall not want.', a: 'shepherd', d: ['king', 'rock', 'shield'] },
+  { r: 'Genesis 1:1', t: 'In the beginning God ___ the heaven and the earth.', a: 'created', d: ['made', 'formed', 'spake'] },
+  { r: 'Exodus 20:8', t: '___ the sabbath day, to keep it holy.', a: 'Remember', d: ['Honour', 'Observe', 'Welcome'] },
+  { r: 'Exodus 20:9–10', t: 'Six days shalt thou labour, and do all thy work: But the ___ day is the sabbath of the LORD thy God.', a: 'seventh', d: ['first', 'third', 'sixth'] },
+  { r: 'Mark 2:27', t: 'And he said unto them, The sabbath was made for ___, and not man for the sabbath.', a: 'man', d: ['priests', 'Israel', 'angels'] },
+  { r: 'Proverbs 3:5', t: 'Trust in the LORD with all thine ___; and lean not unto thine own understanding.', a: 'heart', d: ['mind', 'soul', 'strength'] },
+  { r: 'Philippians 4:13', t: 'I can do all things through Christ which ___ me.', a: 'strengtheneth', d: ['loveth', 'guideth', 'calleth'] },
+  { r: 'Romans 6:23', t: 'For the wages of sin is death; but the ___ of God is eternal life through Jesus Christ our Lord.', a: 'gift', d: ['promise', 'mercy', 'reward'] },
+  { r: 'Psalm 119:105', t: 'Thy word is a ___ unto my feet, and a light unto my path.', a: 'lamp', d: ['shield', 'staff', 'star'] },
+  { r: 'Isaiah 41:10', t: 'Fear thou not; for I am with thee: be not ___; for I am thy God: I will strengthen thee; yea, I will help thee.', a: 'dismayed', d: ['troubled', 'anxious', 'forgotten'] },
+  { r: 'Matthew 11:28', t: 'Come unto me, all ye that labour and are heavy laden, and I will give you ___.', a: 'rest', d: ['peace', 'strength', 'wisdom'] },
+  { r: 'John 14:3', t: 'And if I go and prepare a place for you, I will ___ again, and receive you unto myself; that where I am, there ye may be also.', a: 'come', d: ['send', 'bring', 'wait'] },
+  { r: 'Revelation 14:12', t: 'Here is the patience of the saints: here are they that keep the ___ of God, and the faith of Jesus.', a: 'commandments', d: ['mysteries', 'judgments', 'promises'] },
+  { r: 'Revelation 22:20', t: 'He which testifieth these things saith, Surely I come ___. Amen. Even so, come, Lord Jesus.', a: 'quickly', d: ['suddenly', 'tomorrow', 'gladly'] },
+  { r: 'Joshua 1:9', t: 'Have not I commanded thee? Be strong and of a good ___; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest.', a: 'courage', d: ['cheer', 'hope', 'faith'] },
+  { r: 'Psalm 46:10', t: 'Be ___, and know that I am God.', a: 'still', d: ['strong', 'humble', 'joyful'] },
+  { r: 'Hebrews 11:1', t: 'Now faith is the ___ of things hoped for, the evidence of things not seen.', a: 'substance', d: ['power', 'promise', 'shadow'] },
+  { r: 'Matthew 24:14', t: 'And this gospel of the kingdom shall be preached in all the world for a ___ unto all nations; and then shall the end come.', a: 'witness', d: ['warning', 'blessing', 'sign'] },
+  { r: '1 Thessalonians 4:16', t: 'For the Lord himself shall ___ from heaven with a shout, with the voice of the archangel, and with the trump of God: and the dead in Christ shall rise first.', a: 'descend', d: ['shine', 'speak', 'depart'] },
+  { r: 'Ecclesiastes 9:5', t: 'For the living know that they shall ___: but the dead know not any thing.', a: 'die', d: ['rise', 'sleep', 'rejoice'] },
+  { r: 'Jeremiah 29:11', t: 'For I know the thoughts that I think toward you, saith the LORD, thoughts of ___, and not of evil, to give you an expected end.', a: 'peace', d: ['joy', 'wealth', 'comfort'] },
+  { r: 'Micah 6:8', t: 'He hath shewed thee, O man, what is good; and what doth the LORD require of thee, but to do justly, and to love ___, and to walk humbly with thy God?', a: 'mercy', d: ['truth', 'wisdom', 'peace'] },
+  { r: '1 John 1:9', t: 'If we ___ our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness.', a: 'confess', d: ['forget', 'hide', 'count'] },
+  { r: 'Ephesians 2:8', t: 'For by ___ are ye saved through faith; and that not of yourselves: it is the gift of God.', a: 'grace', d: ['works', 'mercy', 'love'] }
+];
+
+/* Who Am I? (clues go from hardest to easiest) */
+const WHO = [
+  { n: 'Noah', r: 'Genesis 6–9', c: ['I found grace in the eyes of the LORD in a wicked age.', 'God told me to build a huge vessel, far from any sea.', 'The LORD Himself shut me and my family inside.', 'I sent out a raven and a dove to look for dry land.'] },
+  { n: 'Moses', r: 'Exodus 2–3; 20', c: ['As a baby I was hidden in a basket among the reeds.', 'I was raised in Pharaoh’s household but fled to Midian.', 'God spoke to me from a bush that burned but was not consumed.', 'I led Israel out of Egypt and received the law on Mount Sinai.'] },
+  { n: 'David', r: '1 Samuel 16–17', c: ['I was the youngest son of Jesse, and I tended sheep.', 'Samuel anointed me while I was still a boy.', 'My harp calmed a troubled king.', 'I defeated a giant named Goliath.'] },
+  { n: 'Daniel', r: 'Daniel 1–6', c: ['I was taken as a young man to serve in Babylon.', 'I chose not to defile myself with the king’s food and wine.', 'I explained a king’s dream about a great statue.', 'I spent a night with lions that did not harm me.'] },
+  { n: 'Esther', r: 'Esther 2–7', c: ['I was an orphan raised by my cousin Mordecai.', 'I was chosen to be queen of Persia.', 'I fasted three days before going to the king uninvited.', 'I exposed Haman’s plot and saved my people.'] },
+  { n: 'Peter', r: 'Matthew 14; Luke 22; Acts 2', c: ['I was a fisherman, and my brother is Andrew.', 'Jesus called me to become a fisher of men.', 'I stepped out of the boat and walked on water, then began to sink.', 'I denied my Lord three times, yet preached at Pentecost.'] },
+  { n: 'Paul', r: 'Acts 9', c: ['I was born in Tarsus and trained as a Pharisee.', 'I once approved of Stephen’s death and hunted believers.', 'A blinding light stopped me on the road to Damascus.', 'I wrote many New Testament letters and carried the gospel to the Gentiles.'] },
+  { n: 'Joseph (son of Jacob)', r: 'Genesis 37–45', c: ['My father gave me a special coat.', 'My brothers sold me for twenty pieces of silver.', 'I explained Pharaoh’s dreams about seven fat and seven lean cows.', 'I became second in command of Egypt and forgave my brothers.'] },
+  { n: 'Ruth', r: 'Ruth 1–4', c: ['I was a Moabite woman who lost my husband.', 'I told my mother-in-law, “Whither thou goest, I will go.”', 'I gleaned grain in the fields of Boaz.', 'I became the great-grandmother of King David.'] },
+  { n: 'Abraham', r: 'Genesis 12; 22', c: ['God called me to leave my homeland for a land He would show me.', 'He promised my descendants would be as many as the stars.', 'Sarah and I had a son in our old age.', 'I was ready to offer Isaac, but God provided a ram.'] },
+  { n: 'Elijah', r: '1 Kings 17–18; 2 Kings 2', c: ['I came from Gilead and boldly confronted King Ahab.', 'Ravens fed me beside a brook.', 'On Mount Carmel, fire fell from heaven in answer to my prayer.', 'I never died. I was taken up in a whirlwind.'] },
+  { n: 'John the Baptist', r: 'Matthew 3', c: ['My parents were Zechariah and Elizabeth.', 'I wore camel’s hair and ate locusts and wild honey.', 'I cried in the wilderness, “Prepare ye the way of the Lord.”', 'I baptized Jesus in the Jordan.'] },
+  { n: 'Jonah', r: 'Jonah 1–4', c: ['God told me to go to Nineveh, but I ran the other way.', 'I boarded a ship for Tarshish.', 'I was thrown overboard in a storm and a great fish swallowed me.', 'I was angry when God showed mercy to a repentant city.'] },
+  { n: 'Samuel', r: '1 Samuel 1–3; 16', c: ['My mother Hannah prayed for me and gave me to the LORD.', 'I grew up serving in the house of the LORD under Eli.', 'Three times I thought Eli called me, but it was God.', 'I anointed Israel’s first two kings.'] },
+  { n: 'John the apostle', r: 'Revelation 1:9', c: ['I was a fisherman, the son of Zebedee.', 'My brother was James.', 'I am called the disciple whom Jesus loved.', 'I was exiled to Patmos and wrote Revelation.'] }
+];
+
+/* ---------- Bisaya (Cebuano) content: same order as QUIZ and WHO ---------- */
+const CEB_QUIZ = [
+  ["Kinsa ang nagtukod sa arka aron mabuhi sa dakong lunop?", "Noe", ["Moises", "Abraham", "Enoc"], "Gisugo sa Dios si Noe nga magtukod og arka nga kahoy nga gopher, ug gihimo ni Noe ang tanan nga gisugo sa Dios."],
+  ["Unsang adlawa sa Semana sa Paglalang mipahulay ang Dios?", "Ang ikapitong adlaw", ["Ang unang adlaw", "Ang ikatulong adlaw", "Ang ikaunom nga adlaw"], "Gipanalanginan sa Dios ang ikapitong adlaw ug gibalaan kini—ang unang Igpapahulay."],
+  ["Unsang timaan ang gihatag sa Dios nga saad nga dili na Siya magpadala pag-usab og lunop sa tibuok kalibotan?", "Ang balangaw", ["Ang salampati", "Ang bituon", "Ang haligi sa panganod"], "Ang balangaw mao ang timaan sa walay kataposang pakigsaad sa Dios uban sa tanang buhing linalang."],
+  ["Kinsa ang gisalibay sa lungib sa mga leon tungod sa pag-ampo sa Dios?", "Daniel", ["Jeremias", "Sadrac", "Elias"], "Gipadala sa Dios ang Iyang anghel ug gisirhan ang baba sa mga leon tungod kay misalig si Daniel Kaniya."],
+  ["Hain nga propeta ang tulo ka adlaw ug tulo ka gabii sa tiyan sa dakong isda?", "Jonas", ["Eliseo", "Oseas", "Amos"], "Si Jesus sa ulahi nagtumong kang Jonas isip timaan sa Iyang kaugalingong tulo ka adlaw sa lubnganan (Mateo 12:40)."],
+  ["Pila ka hampak ang gipadala sa Dios sa Egipto?", "Napulo", ["Pito", "Napulo ug duha", "Lima"], "Ang ikanapulo nga hampak, ang pagkamatay sa mga panganay, nagdala sa unang Paskuwa."],
+  ["Hain nga anak ni Jacob ang gibaligya sa iyang mga igsoon ug sa ulahi nahimong magmamando sa Egipto?", "Jose", ["Benjamin", "Juda", "Ruben"], "Miingon si Jose sa iyang mga igsoon nga ang dautan nga ilang gituyo, gihimo sa Dios alang sa kaayohan (Genesis 50:20)."],
+  ["Unsa ang gigamit ni David sa pagpildi kang Goliat?", "Usa ka tirador ug bato", ["Usa ka espada", "Usa ka bangkaw", "Usa ka pana"], "Mianhi si David “sa ngalan sa Ginoo sa mga panon,” dili sa iyang kaugalingong gahum."],
+  ["Hain nga hari ang mihangyo sa Dios og kaalam ug nagtukod sa templo sa Jerusalem?", "Solomon", ["David", "Ezequias", "Josias"], "Gihatagan sa Dios si Solomon og manggialamon ug masinabtanon nga kasingkasing."],
+  ["Giunsa pagdala sa langit ang propeta nga si Elias?", "Sa alimpulos, uban sa karwahe nga kalayo", ["Namatay siya nga malinawon sa Bukid sa Carmelo", "Gidala siya sa mga uwak", "Mitabok siya sa Dagat nga Pula ug nawala"], "Si Elias usa sa duha lamang ka tawo sa Daang Kasabotan nga wala makatilaw og kamatayon. Ang usa pa mao si Enoc."],
+  ["Kinsa ang nagluwas sa mga Judio pinaagi sa pagduol sa hari sa Persia nga wala gipatawag?", "Ester", ["Rut", "Debora", "Ana"], "Gipangutana ni Mardokeo kon si Ester ba nahimong rayna alang sa maong panahon."],
+  ["Kinsa ang mipatay sa iyang igsoon nga si Abel—ang unang pagpatay sa Bibliya?", "Cain", ["Set", "Lamec", "Esau"], "Ang halad ni Abel gidawat tungod sa pagtuo (Hebreo 11:4)."],
+  ["Hain nga tulo ka batan-ong lalaki ang gisalibay sa hudno nga nagdilaab apan wala masunog?", "Sadrac, Mesac ug Abednego", ["Pedro, Santiago ug Juan", "Esdras, Nehemias ug Hageo", "Elias, Eliseo ug Samuel"], "Nakita sa hari ang ikaupat nga hulagway sa kalayo nga “sama sa Anak sa Dios.”"],
+  ["Pila ka libro ang anaa sa Daang Kasabotan?", "39", ["27", "66", "46"], "Ang 39 ka libro sa Daang Kasabotan ug 27 sa Bag-ong Kasabotan mao ang 66 ka tanan."],
+  ["Hain nga maghuhukom ang kusog nalakip sa wala nagupti nga buhok?", "Samson", ["Gideon", "Ehud", "Jefte"], "Si Samson usa ka Nazareo sukad pa sa pagkahimugso."],
+  ["Unsang dagat ang gibahin sa Dios aron makatabok ang Israel sa uga nga yuta?", "Ang Dagat nga Pula", ["Ang Patay nga Dagat", "Ang Dagat sa Galilea", "Ang Dagat Mediteraneo"], "Ang tubig nahimong paril alang kanila sa tuo ug sa wala."],
+  ["Kinsa ang anak nga saad ni Abraham?", "Isaac", ["Ismael", "Jacob", "Esau"], "Natawo si Isaac sa dihang si Abraham 100 anyos ug si Sara 90."],
+  ["Kinsa ang unang tawo nga gilalang sa Dios?", "Adan", ["Enoc", "Set", "Abel"], "Gimugna sa Dios ang tawo gikan sa abog sa yuta ug gihuypan sa gininhawa sa kinabuhi."],
+  ["Asang lungsora natawo si Jesus?", "Betlehem", ["Nazaret", "Jerusalem", "Capernaum"], "Gitagna ni Miqueas ang dapit nga natawhan sa Mesiyas sa daghang siglo sa wala pa kini."],
+  ["Kinsa ang nagbawtismo kang Jesus sa Suba sa Jordan?", "Juan Bautista", ["Pedro", "Felipe", "Andres"], "Usa ka tingog gikan sa langit miingon nga Siya ang hinigugma nga Anak nga nakapahimuot sa Amahan."],
+  ["Pila ka apostoles ang gipili ni Jesus?", "Napulo ug duha", ["Pito", "Napulo", "Kapitoan"], "Sa ulahi nagpadala si Jesus og pitumpo pa (Lucas 10:1), apan napulo ug duha ang mga apostoles."],
+  ["Unsa ang unang milagro ni Jesus nga natala?", "Gihimong bino ang tubig", ["Pagpakaon sa lima ka libo", "Pag-ayo sa buta", "Paglakaw sa ibabaw sa tubig"], "Nahitabo kini sa usa ka kasal sa Cana sa Galilea."],
+  ["Hain nga tinun-an ang naglimod nga nakaila kang Jesus sa tulo ka higayon?", "Pedro", ["Juan", "Tomas", "Andres"], "Mihilak og mapait si Pedro, ug sa ulahi gipasig-uli siya ni Jesus (Juan 21:15–17)."],
+  ["Kinsa ang gibanhaw ni Jesus gikan sa mga patay human sa upat ka adlaw sa lubnganan?", "Lazaro", ["Ang anak nga babaye ni Jairo", "Ang anak sa balo sa Nain", "Dorcas"], "Miingon si Jesus, “Ako mao ang pagkabanhaw ug ang kinabuhi.”"],
+  ["Hain nga mubo nga maniningil sa buhis ang misaka sa kahoy nga sikomoro aron makita si Jesus?", "Zaqueo", ["Bartimeo", "Nicodemo", "Cornelio"], "Miingon si Jesus nga ang Anak sa Tawo mianhi aron sa pagpangita ug sa pagluwas sa nawala."],
+  ["Unsang adlawa human sa Iyang kamatayon mibangon si Jesus gikan sa lubnganan?", "Ang ikatulo nga adlaw", ["Ang ikaduhang adlaw", "Ang ikapitong adlaw", "Ang ika-kap-atan nga adlaw"], "Mipahulay si Jesus sa lubnganan sa Igpapahulay ug mibangon sa unang adlaw sa semana."],
+  ["Kinsa ang nahimamat ni Jesus sa dalan paingon sa Damasco ug nahimong bantogang apostol?", "Saulo, nga gitawag usab og Pablo", ["Bernabe", "Timoteo", "Silas"], "Si Saulo nga tigpanggukod sa iglesia nahimong magwawali ni Kristo ngadto sa mga Hentil."],
+  ["Hain nga magsusulat sa Ebanghelyo ang usa ka doktor?", "Lucas", ["Mateo", "Marcos", "Juan"], "Gitawag siya ni Pablo nga “Lucas, ang hinigugma nga manggamot.” Siya usab ang nagsulat sa Binuhatan."],
+  ["Pila ka libro ang anaa sa Bag-ong Kasabotan?", "27", ["39", "66", "24"], "Nagsugod kini sa Mateo ug mahuman sa Pinadayag."],
+  ["Kinsa ang unang martir sa Kristiyano?", "Esteban", ["Felipe", "Bernabe", "Timoteo"], "Samtang namatay, nag-ampo si Esteban alang niadtong nagbato kaniya."],
+  ["Unsa ang katapusang libro sa Bibliya?", "Pinadayag", ["Judas", "Binuhatan", "Hebreo"], "Kini mao ang “Pinadayag ni Jesukristo.”"],
+  ["Asang lungsora nagdako si Jesus?", "Nazaret", ["Betlehem", "Jerico", "Betania"], "Si Jesus nailhan nga “Jesus nga taga-Nazaret.”"],
+  ["Hain nga tinun-an ang nagduhaduha sa pagkabanhaw hangtod nga nakita niya ang mga samad sa lansang?", "Tomas", ["Felipe", "Andres", "Bartolome"], "Miingon si Jesus nga bulahan kadtong wala makakita apan nagtuo."],
+  ["Sa Daniel 2, unsa ang gihimo sa ulo sa dakong larawan sa damgo ni Nabucodonosor?", "Bulawan", ["Salapi", "Tumbaga", "Puthaw"], "Miingon si Daniel sa hari, “Ikaw mao kining ulo nga bulawan.”"],
+  ["Sa Daniel 2, unsa ang mitigbas sa larawan ug mitabon sa tibuok yuta?", "Usa ka bato nga giputol nga walay kamot", ["Usa ka dakong lunop", "Usa ka espada nga kalayo", "Usa ka kusog nga hangin"], "Ang bato nagrepresentar sa walay kataposang gingharian sa Dios nga dili gayod malaglag."],
+  ["Sa Daniel 7, pila ka dagko nga mananap ang mitungha gikan sa dagat?", "Upat", ["Tulo", "Pito", "Napulo"], "Sama sa larawan sa Daniel 2, ang upat ka mananap nagpakita sa upat ka sunodsunod nga gahum sa kalibotan."],
+  ["Subay sa Daniel 8:14, pila ka adlaw sa dili pa mahinloan ang santuaryo?", "2,300", ["1,260", "1,335", "490"], "Ang mga Adventista nakasabot nga kini nga taas nga tagna moabot sa 1844 ug sa buluhaton ni Kristo sa langitnong santuaryo."],
+  ["Asa si Juan sa dihang nadawat niya ang mga panan-awon sa Pinadayag?", "Sa pulo sa Patmos", ["Sa Bukid sa Sinai", "Sa pulo sa Creta", "Sa Babilonia"], "Didto si Juan tungod sa pulong sa Dios ug sa pagpamatuod ni Jesukristo."],
+  ["Hain niini ang DILI usa sa pito ka iglesia sa Pinadayag?", "Corinto", ["Efeso", "Smirna", "Laodicea"], "Ang pito mao ang Efeso, Smirna, Pergamo, Tiatira, Sardis, Filadelfia ug Laodicea."],
+  ["Unsa ang giingon sa unang anghel sa Pinadayag 14 nga miabot na?", "Ang takna sa Iyang paghukom", ["Ang adlaw sa pahulay", "Ang kombira sa kasal", "Ang kataposan sa gutom"], "Gitawag usab sa unang anghel ang tanan sa pagkahadlok sa Dios, sa pagpasidungog Kaniya, ug sa pagsimba sa Magbubuhat."],
+  ["Subay sa Pinadayag 14:12, ang mga santos nagtuman sa mga sugo sa Dios ug adunay unsa?", "Ang pagtuo ni Jesus", ["Ang bahandi sa mga hari", "Ang kaalam ni Solomon", "Ang kusog ni Samson"], "Ang pagtuman ug pagtuo magkauban diha sa mensahe sa kataposang panahon."],
+  ["Sa Pinadayag 19:10, ang pagpamatuod ni Jesus mao ang espiritu sa unsa?", "Tagna", ["Kamatuoran", "Kaalam", "Grasya"], "Gihiusa usab sa Pinadayag 12:17 ang pagpamatuod ni Jesukristo sa nahibiling katawhan sa Dios."],
+  ["Sumala sa Mateo 24:14, unsa ang angay mahitabo sa dili pa moabot ang kataposan?", "Ang ebanghelyo igawali sa tibuok kalibotan isip pagpamatuod sa tanang nasud", ["Ang tanang gingharian magkahiusa sa usa", "Tukoron pag-usab ang templo", "Ang matag tawo bawtismohan"], "Kini nga bersikulo mao ang nagdasig sa mga Adventista alang sa misyon sa tibuok kalibotan."],
+  ["Unsang katapusang saad ang gihimo ni Jesus sa Pinadayag 22:20?", "Sa pagkamatuod moanhi ako sa madali", ["Tukoron ko ang akong iglesia", "Ania ako uban kaninyo kanunay", "Ang kalinaw akong gibilin kaninyo"], "Mitubag si Juan, “Amen. Umari ka, Ginoong Jesus.”"],
+  ["Sa Binuhatan 1:11, giunsa pag-ingon sa mga anghel ang pagbalik ni Jesus?", "Sa samang paagi nga mitungas Siya sa langit", ["Isip usa ka masuso sa Betlehem", "Sa tago ngadto sa pipila", "Sa espiritu lamang pinaagi sa iglesia"], "Ang pagbalik ni Jesus personal, makita sa tanan ug mahimayaon (Pinadayag 1:7)."],
+  ["Subay sa 1 Tesalonica 4:16, kinsa ang unang mabanhaw sa dihang mokanaog ang Ginoo gikan sa langit?", "Ang mga patay diha kang Kristo", ["Ang mga buhi pa sa yuta", "Ang mga anghel", "Ang mga dautan nga patay"], "Unya ang mga matarong nga buhi pa dad-on uban kanila aron mosugat sa Ginoo."],
+  ["Sa Pinadayag 21, unsa ang nakita ni Juan nga mikanaog gikan sa Dios gikan sa langit?", "Ang balaang siyudad, ang Bag-ong Jerusalem", ["Usa ka gamhanang kasundalohan", "Ang arka sa pakigsaad", "Usa ka dakong puti nga trono"], "Maghimo ang Dios og usa ka bag-ong langit ug usa ka bag-ong yuta, ug pahiran ang matag luha."],
+  ["Hain nga sugo ang nagsugod sa pulong nga “Handumi”?", "Ang ikaupat (ang Igpapahulay)", ["Ang una (walay laing dios)", "Ang ikalima (tahora ang inyong ginikanan)", "Ang ikanapulo (ayaw pagpangandoy)"], "Ang sugo bahin sa Igpapahulay nagtumong balik sa Paglalang: gihimo sa Dios ang tanan sulod sa unom ka adlaw ug mipahulay sa ikapito."],
+  ["Kanus-a unang gipanalanginan ug gibalaan sa Dios ang ikapitong adlaw?", "Sa Paglalang, sa Eden", ["Sa Bukid sa Sinai", "Sa mga adlaw ni Nehemias", "Sa natawo si Jesus"], "Ang Igpapahulay gihatag sa wala pa ang sala ug sa wala pa ang Israel isip nasud."],
+  ["Sa Marcos 2:27, para kang kinsa giingon ni Jesus nga gihimo ang Igpapahulay?", "Para sa tawo", ["Para sa Israel lamang", "Para sa mga pari", "Para sa mga anghel"], "Gidugang ni Jesus nga Siya Ginoo usab sa Igpapahulay."],
+  ["Unsa ang naandan ni Jesus sa Adlaw nga Igpapahulay?", "Pagsimba sa sinagoga", ["Pagbiyahe ngadto sa Jerusalem", "Pagpuasa nga nag-inusara sa kamingawan", "Pagtrabaho isip panday-kahoy"], "Si Lucas nag-ingon nga sumala sa iyang naandan, misulod siya sa sinagoga sa adlaw nga igpapahulay."],
+  ["Human gilubong si Jesus, unsa ang gibuhat sa mga babaye sa Adlaw nga Igpapahulay?", "Mipahulay sumala sa sugo", ["Gihiloan ang Iyang lawas sa lubnganan", "Mibalik sa Galilea", "Nagtudlo sa templo"], "Gituman nila ang Igpapahulay bisan sa ilang kalisod, ug miadto sa lubnganan sa unang adlaw sa semana."],
+  ["Diin gisulat sa Dios ang Napulo ka Sugo?", "Sa duha ka papan nga bato", ["Sa mga linukot nga papiro", "Sa mga plato nga tumbaga", "Sa paril sa templo"], "Gisulat kini pinaagi sa tudlo sa Dios."],
+  ["Subay sa 1 Mga Hari 8:9, unsa ang diha sa sulod sa arka sa pakigsaad?", "Ang duha ka papan nga bato", ["Ang bulawan nga tangkal sa suga", "Ang tinapay sa atubangan", "Ang abo sa halaran"], "Ang balaod sa Dios anaa sa kinasingkasing sa santuaryo, ilalom sa lingkoranan sa kaluoy."],
+  ["Subay sa Hebreo 8:1–2, asa nag-alagad si Jesus isip atong Labawng Pari?", "Sa langitnong santuaryo", ["Sa templo sa Jerusalem", "Sa Bukid sa mga Olibo", "Sa sinagoga sa Nazaret"], "Ang yutan-ong santuaryo kopya ug landong sa mga butang sa langit (Hebreo 8:5)."],
+  ["Giunsa pagbatbat ni Jesus ang kamatayon ni Lazaro sa Juan 11:11?", "Pagkatulog", ["Usa ka panaw", "Usa ka silot", "Usa ka kausaban"], "Miingon si Jesus nga ang atong higala nga si Lazaro natulog, ug moadto Siya aron pagmata kaniya."],
+  ["Subay sa Ecclesiastes 9:5, unsa ang nahibaloan sa mga patay?", "Walay bisan unsa", ["Tanang butang", "Ang umaabot", "Ang gibuhat sa mga buhi"], "Gitudlo sa Bibliya nga ang mga patay nagapahulay hangtod sa pagkabanhaw sa pagbalik ni Kristo."],
+  ["Unsang bahin sa atong kita ang gitawag sa Kasulatan nga ikapulo?", "Ang ikanapulo (usa sa napulo)", ["Ang ikalima", "Ang ikatulo", "Ang katunga"], "Ang ikapulo balaan sa Ginoo ug gibalik Kaniya uban sa pagkamatinud-anon."],
+  ["Sa Daniel 1, unsa ang gihangyo ni Daniel nga kan-on puli sa pagkaon sa hari?", "Mga utanon ug tubig", ["Isda ug tinapay", "Dugos ug gatas", "Karnero ug bino"], "Human sa napulo ka adlaw, si Daniel ug ang iyang mga higala daw mas himsog kay sa tanan nga mikaon sa bahin sa hari."],
+  ["Unsa ang gitawag ni Pablo sa imong lawas sa 1 Corinto 6:19?", "Ang templo sa Balaang Espiritu", ["Usa ka palas-anon nga dad-on", "Alagad sa hunahuna", "Usa ka tanaman sa kalingawan"], "Busa, matod ni Pablo, ipadayag ang himaya sa Dios diha sa inyong lawas."],
+  ["Sa Roma 6:23, unsa ang suhol sa sala?", "Kamatayon", ["Kaulaw", "Pagkadestiyero", "Kasubo"], "Apan ang gasa sa Dios mao ang kinabuhing dayon pinaagi ni Jesukristo nga atong Ginoo."],
+  ["Subay sa Roma 6:4, ang bawtismo nagpakita sa paglubong uban kang Kristo aron makalakaw kita sa unsa?", "Bag-ong kinabuhi", ["Kahadlok sa paghukom", "Ang daang pakigsaad", "Hingpit nga kahupayan"], "Ang bawtismo pinaagi sa pagpalumos nagpakita sa kamatayon sa daang kinabuhi ug pagkabanhaw ngadto sa bag-o."],
+  ["Unsa nga tuiga nahitabo ang Dakong Pagkadismaya, sa dihang gipaabot sa unang mga Adventista ang pagbalik ni Kristo?", "1844", ["1798", "1863", "1888"], "Oktubre 22, 1844 kadto. Daghan ang nagtuon sa Bibliya ug sa ulahi nakasabot sa mensahe sa santuaryo."],
+  ["Unsa nga tuiga pormal nga giorganisar ang Simbahan sa Seventh-day Adventist?", "1863", ["1844", "1888", "1915"], "Giorganisar ang General Conference sa Battle Creek, Michigan."],
+  ["Hain nga unang pioneer, kanhi kapitan sa barko, ang nagtabang sa pagpaila sa ikapitong adlaw nga Igpapahulay sa unang mga Adventista?", "Joseph Bates", ["William Miller", "John Harvey Kellogg", "Uriah Smith"], "Si Joseph Bates usa ka co-founder sa Simbahang Adventista uban nila James ug Ellen White."],
+  ["Pila ka Pundamental nga Pagtuo ang gitudlo karon sa Simbahan sa Seventh-day Adventist?", "28", ["10", "22", "36"], "Naglakip kini sa Kasulatan, Dios, kaluwasan, iglesia, Igpapahulay, santuaryo, pagbalik ni Kristo ug uban pa."],
+  ["Hain nga mag-uuma nga nahimong magwawali ang mipukaw sa pagmata sa Advent sa 1840s sa Amerika?", "William Miller", ["Martin Luther", "John Wesley", "Charles Spurgeon"], "Gitun-an ni Miller ang mga tagna ni Daniel ug mipanudlo nga hapit na ang pagbalik ni Kristo."],
+  ["Unsay gitumong sa Advent sa pulong nga Adventista?", "Ang pag-abot ni Kristo", ["Ang Adlaw nga Igpapahulay", "Ang mga gasa sa Espiritu", "Ang Reporma"], "Ang mga Adventista nagtinguha sa bulahan nga paglaum ug sa mahimayaong pagpadayag sa atong Dios ug Manluluwas nga si Jesukristo."],
+  /* More questions */
+  ["Unsa ang gipadala sa Dios aron pakan-on ang Israel sa kamingawan?", "Manna", ["Mga dulon (locust)", "Tinapay nga sebada", "Isda gikan sa dagat"], "Matag buntag mihugsak ang manna sa palibot sa kampo—tinapay gikan sa langit."],
+  ["Kinsa ang unang hari sa Israel?", "Saul", ["David", "Solomon", "Samuel"], "Gidihogan siya ni Samuel sumala sa gitugyan sa Dios."],
+  ["Pila ka adlaw ug gabii ang ulan sa panahon sa lunop?", "Kap-atan", ["Pito", "Napulo", "Usa ka gatos"], "Human niini, ang tubig nagpabilin sa yuta sulod sa 150 ka adlaw."],
+  ["Hain nga propeta ang gitawag sa Dios isip bata pa sa dihang nadungog niya ang tingog sa kagabhion?", "Samuel", ["Isaias", "Jeremias", "Eliseo"], "Mitubag si Samuel nga mosulti na ang Ginoo kay ang Iyang sulugoon namati."],
+  ["Kinsa ang nagpasabot sa sinulat sa bungbong sa kombira ni Belsasar?", "Daniel", ["Ezequiel", "Mardokeo", "Nehemias"], "Ang mga pulong mao ang “Mene, Mene, Tekel, Upharsin”—ug nahulog ang Babilonia nianang gabii."],
+  ["Pila ka tinapay ug isda ang gigamit ni Jesus sa pagpakaon sa lima ka libo?", "Lima ka tinapay ug duha ka isda", ["Pito ka tinapay ug pipila ka isda", "Napulo ug duha ka tinapay ug usa ka isda", "Tulo ka tinapay ug lima ka isda"], "Napulo ug duha ka bukag ang nahibilin nga gitigom human niini."],
+  ["Unsa ang hitsura sa Espiritu Santo sa dihang mikanaog kang Jesus sa Iyang bawtismo?", "Usa ka salampati", ["Usa ka agila", "Usa ka dila sa kalayo", "Usa ka panganod"], "Gikan sa langit miingon ang Amahan nga Siya ang hinigugma Niyang Anak."],
+  ["Asa gisulayan sa yawa si Jesus sulod sa kap-atan ka adlaw?", "Sa kamingawan", ["Sa Tanaman sa Getsemani", "Sa Dagat sa Galilea", "Sa Bukid sa Sinai"], "Gibuntog ni Jesus ang matag pagsulay pinaagi sa pag-ingon, “Nahisulat na.”"],
+  ["Unsa ang giingon ni Jesus nga labing dako nga sugo?", "Higugmaa ang Ginoo nga imong Dios sa tibuok nimong kasingkasing, kalag ug hunahuna", ["Tahora ang imong amahan ug inahan", "Handumi ang adlaw nga Igpapahulay", "Ayaw pagpanumbaling sa bakak"], "Ang ikaduha, matod ni Jesus, mao ang paghigugma sa imong silingan sama sa imong kaugalingon."],
+  ["Sa Juan 14:15, miingon si Jesus, “Kon nahigugma kamo kanako…” unsa?", "tumana ang akong mga sugo", ["hatagi ako og daghang kuwarta", "tukora ako og templo", "magpuasa matag adlaw"], "Ang gugma ug pagtuman maghiusa. Ang pagtuman mao ang bunga sa gugma."],
+  ["Subay sa Juan 1:1–3, kinsa ang naglalang sa tanang butang?", "Ang Pulong, nga mao si Jesus", ["Ang mga anghel", "Ang mga propeta", "Ang kinaiyahan mismo"], "Ang tanang butang gibuhat pinaagi Kaniya. Si Jesus mao ang atong Magbubuhat ug Manluluwas."],
+  ["Unsa ang giingon sa Hebreo 4:9 nga nahabilin alang sa katawhan sa Dios?", "Usa ka pahulay", ["Usa ka templo", "Usa ka gingharian", "Usa ka halad"], "Daghang estudyante sa Bibliya ang nakakita niini nga bersikulo sa pagtuman sa Igpapahulay."],
+  ["Kinsa nga co-founder sa Simbahang Adventista ang nagsulat sa librong “Steps to Christ”?", "Ellen G. White", ["Joseph Bates", "J. N. Andrews", "Uriah Smith"], "Kini usa ka hinigugma nga pasiuna sa gugma ni Jesus."],
+  ["Unsa ang labing taas nga lebel sa organisasyon sa Simbahang Adventista?", "Ang General Conference", ["Ang Synod", "Ang Diocese", "Ang Presbytery"], "Ang mga lokal nga iglesia naghiusa sa mga conference, ug kining tanan nagkahiusa isip usa ka pamilya sa tibuok kalibotan."]
+];
+
+const CEB_WHO = [
+  { n: 'Noe', c: ['Nakakaplag ako og grasya sa mga mata sa Ginoo sa panahon sa kadaotan.', 'Gisugo ako sa Dios nga magtukod og dakong sakayan, layo sa dagat.', 'Ang Ginoo mismo ang nagsira sa pultahan alang kanako ug sa akong pamilya.', 'Nagpalupad ako og uwak ug salampati aron pangitaon ang uga nga yuta.'] },
+  { n: 'Moises', c: ['Isip masuso gitagoan ako sa usa ka bukag taliwala sa mga tangbo.', 'Nagdako ako sa balay ni Faraon apan mikalagiw ngadto sa Madian.', 'Nakigsulti ang Dios kanako gikan sa kahoy nga nagdilaab apan wala masunog.', 'Giguyod ko ang Israel gikan sa Egipto ug nadawat ko ang balaod sa Bukid sa Sinai.'] },
+  { n: 'David', c: ['Ako ang kinamanghoran nga anak ni Jesse, ug nagbantay ako og karnero.', 'Gidihogan ako ni Samuel samtang bata pa ako.', 'Ang akong alpa nakapahayahay sa usa ka nasamok nga hari.', 'Gipildi ko ang higante nga si Goliat.'] },
+  { n: 'Daniel', c: ['Gidala ako isip batan-on aron mag-alagad sa Babilonia.', 'Gipili ko nga dili mahugawan sa pagkaon ug bino sa hari.', 'Gipasabot ko ang damgo sa hari bahin sa dakong estatwa.', 'Gigugol ko ang usa ka gabii uban sa mga leon nga wala makaangot kanako.'] },
+  { n: 'Ester', c: ['Ako usa ka ilo nga gipadako sa akong ig-agaw nga si Mardokeo.', 'Gipili ako nga rayna sa Persia.', 'Nagpuasa ako og tulo ka adlaw sa wala pa moadto sa hari nga wala gitawag.', 'Gibutyag ko ang laraw ni Aman ug giluwas ang akong katawhan.'] },
+  { n: 'Pedro', c: ['Mangingisda ako, ug ang akong igsoon mao si Andres.', 'Gitawag ako ni Jesus nga mahimong mangingisda og mga tawo.', 'Migawas ako sa sakayan ug naglakaw sa ibabaw sa tubig, unya nagsugod ako sa paglubog.', 'Gilimod ko ang akong Ginoo sa tulo ka higayon, apan nagwali ako sa Pentekostes.'] },
+  { n: 'Pablo', c: ['Natawo ako sa Tarso ug gitudloan isip Pariseo.', 'Uyon ako sa kamatayon ni Esteban ug gigukod ko ang mga magtotoo.', 'Usa ka nagasidlak nga kahayag ang mihunong kanako sa dalan paingon sa Damasco.', 'Nagsulat ako og daghang sulat sa Bag-ong Kasabotan ug gidala ko ang ebanghelyo ngadto sa mga Hentil.'] },
+  { n: 'Jose (anak ni Jacob)', c: ['Gihatagan ako sa akong amahan og espesyal nga bisti.', 'Gibaligya ako sa akong mga igsoon sa kaluhaan ka pilak.', 'Gipasabot ko ang damgo ni Faraon bahin sa pito ka matambok ug pito ka sagpa nga baka.', 'Nahimo akong ikaduha sa labing gamhanan sa Egipto ug gipasaylo ko ang akong mga igsoon.'] },
+  { n: 'Rut', c: ['Ako usa ka Moabita nga nabalo.', 'Miingon ako sa akong ugangan, “Bisan asa ka moadto, moadto ako.”', 'Nagtigom ako og lugas sa uma ni Boaz.', 'Nahimo akong apohan sa amahan ni Haring David.'] },
+  { n: 'Abraham', c: ['Gitawag ako sa Dios nga biyaan ang akong yutang natawhan alang sa yuta nga Iyang ipakita.', 'Gisaad Niya nga ang akong mga kaliwat sama kadaghan sa mga bituon.', 'Si Sara ug ako adunay anak sa among pagkatigulang.', 'Andam ako nga ihalad si Isaac, apan ang Dios naghatag og karnero.'] },
+  { n: 'Elias', c: ['Gikan ako sa Galaad ug maisugon nga misukol kang Haring Acab.', 'Gipakaon ako sa mga uwak daplin sa usa ka sapa.', 'Sa Bukid sa Carmelo, nahulog ang kalayo gikan sa langit tubag sa akong pag-ampo.', 'Wala ako mamatay. Gikuha ako sa alimpulos.'] },
+  { n: 'Juan Bautista', c: ['Ang akong mga ginikanan mao sila Zacarias ug Elisabet.', 'Nagsul-ob ako og balhibo sa kamelyo ug mikaon og dulon ug dugos sa ihalas.', 'Misinggit ako sa kamingawan, “Andama ang dalan sa Ginoo.”', 'Gibawtismohan ko si Jesus sa Jordan.'] },
+  { n: 'Jonas', c: ['Gisugo ako sa Dios nga moadto sa Ninive, apan midagan ako sa laing direksyon.', 'Misakay ako sa barko paingon sa Tarsis.', 'Gisalibay ako sa dagat sa bagyo ug gilamoy ako sa dakong isda.', 'Nasuko ako sa dihang gipakitaan sa Dios og kaluoy ang usa ka lungsod nga naghinulsol.'] },
+  { n: 'Samuel', c: ['Ang akong inahan nga si Ana nag-ampo alang kanako ug gihatag ako sa Ginoo.', 'Nagdako ako nga nag-alagad sa balay sa Ginoo ilalom ni Eli.', 'Tulo ka higayon nga gihunahuna kong si Eli ang nagtawag kanako, apan ang Dios kadto.', 'Gidihogan ko ang unang duha ka hari sa Israel.'] },
+  { n: 'Juan nga apostol', c: ['Mangingisda ako, ang anak ni Zebedeo.', 'Ang akong igsoon mao si Santiago.', 'Gitawag ako nga tinun-an nga gihigugma ni Jesus.', 'Gipadestiyero ako sa Patmos ug gisulat ko ang Pinadayag.'] }
+];
+
+const BOOKS_EN = ['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Solomon','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi','Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation'];
+const BOOKS_CEB = ['Genesis','Exodo','Levitico','Numeros','Deuteronomio','Josue','Mga Maghuhukom','Rut','1 Samuel','2 Samuel','1 Mga Hari','2 Mga Hari','1 Cronicas','2 Cronicas','Esdras','Nehemias','Ester','Job','Salmo','Proverbio','Ecclesiastes','Awit ni Solomon','Isaias','Jeremias','Panaghoy','Ezequiel','Daniel','Oseas','Joel','Amos','Obadias','Jonas','Miqueas','Nahum','Habacuc','Sofonias','Hageo','Zacarias','Malaquias','Mateo','Marcos','Lucas','Juan','Binuhatan','Roma','1 Corinto','2 Corinto','Galacia','Efeso','Filipos','Colosas','1 Tesalonica','2 Tesalonica','1 Timoteo','2 Timoteo','Tito','Filemon','Hebreo','Santiago','1 Pedro','2 Pedro','1 Juan','2 Juan','3 Juan','Judas','Pinadayag'];
+
+/* English book names in references -> Bisaya */
+const REF_CEB = {
+  'Exodus':'Exodo','Leviticus':'Levitico','Judges':'Mga Maghuhukom','Joshua':'Josue','Ruth':'Rut','1 Samuel':'1 Samuel','1 Kings':'1 Mga Hari','2 Kings':'2 Mga Hari',
+  'Esther':'Ester','Psalm':'Salmo','Proverbs':'Proverbio','Isaiah':'Isaias','Jeremiah':'Jeremias','Micah':'Miqueas','Jonah':'Jonas','Malachi':'Malaquias',
+  'Matthew':'Mateo','Mark':'Marcos','Luke':'Lucas','1 John':'1 Juan','John':'Juan','Acts':'Binuhatan','Romans':'Roma','1 Corinthians':'1 Corinto',
+  'Philippians':'Filipos','Ephesians':'Efeso','Colossians':'Colosas','1 Thessalonians':'1 Tesalonica','Titus':'Tito','Hebrews':'Hebreo','Revelation':'Pinadayag',
+  'Bible overview':'Katingbanan sa Bibliya','Adventist history':'Kasaysayan sa mga Adventista','Adventist beliefs':'Mga Pagtu-o sa mga Adventista'
+};
+const REF_RX = new RegExp(Object.keys(REF_CEB).sort((a, b) => b.length - a.length).join('|'), 'g');
+const refCeb = r => r.replace(REF_RX, m => REF_CEB[m]);
+
+QUIZ.forEach((q, i) => { const c = CEB_QUIZ[i]; if (c) q.ceb = { q: c[0], a: c[1], w: c[2], n: c[3] }; });
+
+/* ---------- Interface text ---------- */
+const T = {
+  en: {
+    heroP: 'Test your knowledge of the Word, from Genesis to Revelation, with a few Adventist favorites along the way.',
+    verseLine: '“Search the scriptures… they are they which testify of me.” John 5:39',
+    best: 'Best', home: 'Home',
+    m_quiz_t: 'Bible Quiz', m_quiz_d: 'Timed questions. Pick a category, earn speed and streak bonuses.',
+    m_verse_t: 'Finish the Verse', m_verse_d: 'Fill in the missing word in well-loved King James verses.',
+    m_who_t: 'Who Am I?', m_who_d: 'Guess the Bible character from the clues. Fewer clues, more points.',
+    m_books_t: 'Order the Books', m_books_d: 'Put books of the Bible in their right order, Genesis to Revelation.',
+    m_duel_t: 'Two-Player Duel', m_duel_d: 'Pass the phone back and forth. Same Bible, who knows it better?',
+    foot: 'Scripture quotations from the King James Version (public domain).',
+    chooseCat: 'Choose a category', catSub: 'Each round has up to 10 questions, 20 seconds each.',
+    nQ: n => `${n} questions`, allCats: 'All Categories',
+    score: 'Score', streak: 'Streak', lifeLeft: n => `50/50 (${n} left)`,
+    ok: 'Correct!', timeUp: 'Time’s up', no: 'Not quite', next: 'Next', seeResults: 'See results',
+    verseTag: 'Finish the verse', whoQ: 'Which Bible character is this?', clue: n => `Clue ${n}`,
+    worth: n => `Worth <span class="worth">${n} points</span> right now.`, revealClue: 'Reveal next clue', itWas: 'It was ',
+    booksQ: 'Tap the books in Bible order, first to last.', booksHint: 'Tap a placed book to take it back.',
+    check: 'Check order', correctOrder: 'Correct order:', round: 'Round',
+    duelTitle: 'Two-Player Duel', duelSub: 'Players take turns on the same device. Names are optional.',
+    p1: 'Player 1', p2: 'Player 2', pickCat: 'Choose a category to begin:',
+    passTo: 'Pass the device to', ready: 'I’m ready', turnOf: n => `${n}’s turn`,
+    ranks: ['Scripture Master', 'Berean Scholar', 'Faithful Disciple', 'Growing Learner', 'Keep Searching'],
+    points: 'points', correctL: 'Correct', bestStreakL: 'Best streak', yourBest: 'Your best', newBest: 'New personal best!',
+    playAgain: 'Play again', winner: n => `${n} wins!`, tie: 'It’s a tie!',
+    acts: '“These were more noble… in that they… searched the scriptures daily.” Acts 17:11',
+    verseNote: ''
+  },
+  ceb: {
+    heroP: 'Sulayi ang imong nahibaloan sa Pulong sa Dios, gikan sa Genesis hangtod sa Pinadayag, uban ang pipila ka paborito sa mga Adventista.',
+    verseLine: 'Pagsusi sa mga Kasulatan — Juan 5:39',
+    best: 'Labing taas', home: 'Balay',
+    m_quiz_t: 'Pangutana sa Bibliya', m_quiz_d: 'May oras ang matag pangutana. Pili og kategoriya ug makakuha og dugang puntos sa kadali ug sunodsunod nga husto.',
+    m_verse_t: 'Tapuson ang Bersikulo', m_verse_d: 'Pun-a ang nawala nga pulong sa inilang mga bersikulo (English, KJV).',
+    m_who_t: 'Kinsa Ako?', m_who_d: 'Tagda kinsa ang karakter sa Bibliya gikan sa mga timailhan. Mas diyutay nga timailhan, mas daghan ang puntos.',
+    m_books_t: 'Han-ayon ang mga Libro', m_books_d: 'Ibutang sa husto nga han-ay ang mga libro sa Bibliya, Genesis hangtod Pinadayag.',
+    m_duel_t: 'Duwa sa Duha ka Magdudula', m_duel_d: 'Ipasa ang telepono sa usag usa. Kinsa ang mas nakahibalo sa Bibliya?',
+    foot: 'Ang mga bersikulo sa English gikan sa King James Version (public domain).',
+    chooseCat: 'Pili og kategoriya', catSub: 'Hangtod sa 10 ka pangutana sa matag hugna, 20 segundos kada pangutana.',
+    nQ: n => `${n} ka pangutana`, allCats: 'Tanang Kategoriya',
+    score: 'Puntos', streak: 'Sunodsunod', lifeLeft: n => `50/50 (${n} nahibilin)`,
+    ok: 'Husto!', timeUp: 'Naubos ang oras', no: 'Sayop', next: 'Sunod', seeResults: 'Tan-awa ang resulta',
+    verseTag: 'Tapuson ang bersikulo', whoQ: 'Kinsang karakter sa Bibliya kini?', clue: n => `Timailhan ${n}`,
+    worth: n => `Bili karon og <span class="worth">${n} ka puntos</span>.`, revealClue: 'Ipakita ang sunod nga timailhan', itWas: 'Ang tubag: ',
+    booksQ: 'Tuoka ang mga libro sumala sa han-ay sa Bibliya, gikan sa una hangtod sa katapusan.', booksHint: 'Tuoka ang nabutang nga libro aron kuhaon pag-usab.',
+    check: 'Susiha ang han-ay', correctOrder: 'Husto nga han-ay:', round: 'Hugna',
+    duelTitle: 'Duwa sa Duha ka Magdudula', duelSub: 'Magsalitan ang duha ka magdudula sa samang aparato. Opsyonal ang mga ngalan.',
+    p1: 'Magdudula 1', p2: 'Magdudula 2', pickCat: 'Pili og kategoriya aron magsugod:',
+    passTo: 'Ipasa ang aparato kang', ready: 'Andam na ako', turnOf: n => `Turno ni ${n}`,
+    ranks: ['Hanas sa Kasulatan', 'Tagsusi nga Berean', 'Matinud-anon nga Tinun-an', 'Nagtubo nga Nagtuon', 'Padayon sa Pagpangita'],
+    points: 'puntos', correctL: 'Husto', bestStreakL: 'Labing taas nga sunodsunod', yourBest: 'Imong labing taas', newBest: 'Bag-ong labing taas nga puntos!',
+    playAgain: 'Duwa pag-usab', winner: n => `${n} ang midaog!`, tie: 'Patas!',
+    acts: 'Ang mga taga-Berea nagsusi sa mga Kasulatan matag adlaw — Binuhatan 17:11',
+    verseNote: 'Ang mga bersikulo naa sa English (KJV).'
+  }
+};
+let LANG = store.get('lang', 'en'); if (LANG !== 'ceb') LANG = 'en';
+const t = k => { const v = T[LANG][k]; return v !== undefined ? v : T.en[k]; };
+const CATN = () => LANG === 'ceb' ? { ot: 'Daang Kasabotan', nt: 'Bag-ong Kasabotan', pr: 'Daniel ug Pinadayag', sb: 'Igpapahulay ug mga Pagtu-o', ah: 'Kabilin sa mga Adventista' } : CAT;
+const BOOKS = () => LANG === 'ceb' ? BOOKS_CEB : BOOKS_EN;
+
+/* ---------- State ---------- */
+const CLUE_PTS = [100, 70, 40, 20];
+const BOOK_SIZES = [4, 4, 5, 5, 6, 6];
+const SOLO_N = { quiz: 10, verse: 8, who: 6 };
+let S = {};
+function freshState(mode, cat, names) {
+  return { mode, cat, names: names || [t('p1'), t('p2')], items: [], i: 0, score: 0, streak: 0, bestStreak: 0, correct: 0,
+           lifelines: 2, usedFifty: false, answered: false, timer: null, timeLeft: 20, clue: 0, gone: new Set(),
+           placed: [], checked: false, lastPts: 0, lastPerfect: false,
+           ps: [0, 0], pstreak: [0, 0], pcorrect: [0, 0], turn: 0 };
+}
+const isQ = () => S.mode === 'quiz' || S.mode === 'duel';
+function stopTimer() { if (S.timer) { clearInterval(S.timer); S.timer = null; } }
+
+/* ---------- Chrome ---------- */
+function setChrome(view) {
+  const onHome = view === 'home';
+  homeTop.hidden = onHome; homeTop.textContent = t('home');
+  langBox.hidden = !onHome;
+  langBox.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.lang === LANG));
+  document.documentElement.lang = LANG === 'ceb' ? 'ceb' : 'en';
+}
+
+/* ---------- Home and setup ---------- */
+function renderHome() {
+  stopTimer(); S = {}; setChrome('home');
+  const best = store.get('best', {});
+  const card = (mode, ico) => `
+    <button class="mode" data-act="mode" data-mode="${mode}">
+      <div class="ico">${ico}</div>
+      <div><h3>${t('m_' + mode + '_t')}</h3><p>${t('m_' + mode + '_d')}</p></div>
+      ${mode === 'duel' ? '' : `<div class="best">${t('best')}<b>${best[mode] || 0}</b></div>`}
+    </button>`;
+  app.innerHTML = `
+    <section class="hero">
+      <h1>Scripture <em>Quest</em></h1>
+      <p>${t('heroP')}</p>
+      <div class="verse-line">${t('verseLine')}</div>
+    </section>
+    <section class="modes">
+      ${card('quiz', '?')}
+      ${card('verse', '“')}
+      ${card('who', '☺')}
+      ${card('books', '≡')}
+      ${card('duel', 'VS')}
+    </section>
+    <p class="foot">${t('foot')}</p>`;
+}
+
+function catButtons(act) {
+  const names = CATN();
+  const count = k => k === 'all' ? QUIZ.length : QUIZ.filter(q => q.c === k).length;
+  const cats = [['all', t('allCats')]].concat(Object.keys(CAT).map(k => [k, names[k]]));
+  return `<div class="cats">${cats.map(([k, name]) => `<button class="cat" data-act="${act}" data-cat="${k}">${name}<small>${t('nQ')(count(k))}</small></button>`).join('')}</div>`;
+}
+
+function renderCats() {
+  setChrome('play');
+  app.innerHTML = `<div class="card"><h2>${t('chooseCat')}</h2><p class="sub">${t('catSub')}</p>${catButtons('cat')}</div>`;
+}
+
+function renderDuelSetup() {
+  setChrome('play');
+  app.innerHTML = `
+    <div class="card">
+      <h2>${t('duelTitle')}</h2>
+      <p class="sub">${t('duelSub')}</p>
+      <div class="names">
+        <input id="n1" maxlength="14" placeholder="${t('p1')}" aria-label="${t('p1')}">
+        <input id="n2" maxlength="14" placeholder="${t('p2')}" aria-label="${t('p2')}">
+      </div>
+      <p class="sub">${t('pickCat')}</p>
+      ${catButtons('duelcat')}
+    </div>`;
+}
+
+/* ---------- Building a round ---------- */
+function qItem(q) {
+  const useC = LANG === 'ceb' && q.ceb;
+  const L = useC ? q.ceb : q;
+  const opts = shuffle([L.a, ...L.w]);
+  return { c: q.c, q: L.q, opts, ci: opts.indexOf(L.a), r: useC ? refCeb(q.r) : q.r, n: L.n };
+}
+
+function startGame(mode, cat, names) {
+  stopTimer();
+  S = freshState(mode, cat, names);
+  setChrome('play');
+  if (mode === 'quiz' || mode === 'duel') {
+    const pool = cat === 'all' ? QUIZ : QUIZ.filter(q => q.c === cat);
+    let n = mode === 'duel' ? 10 : SOLO_N.quiz;
+    n = Math.min(n, pool.length);
+    if (mode === 'duel' && n % 2) n--;
+    S.items = shuffle(pool).slice(0, n).map(qItem);
+  } else if (mode === 'verse') {
+    S.items = shuffle(VERSES).slice(0, SOLO_N.verse).map(v => {
+      const opts = shuffle([v.a, ...v.d]);
+      return Object.assign({}, v, { opts, ci: opts.indexOf(v.a) });
+    });
+  } else if (mode === 'who') {
+    S.items = shuffle(WHO).slice(0, SOLO_N.who).map(w => {
+      const idx = WHO.indexOf(w), c = LANG === 'ceb';
+      const nameOf = x => c ? CEB_WHO[WHO.indexOf(x)].n : x.n;
+      const others = shuffle(WHO.filter(x => x !== w)).slice(0, 3).map(nameOf);
+      const name = c ? CEB_WHO[idx].n : w.n;
+      const opts = shuffle([name, ...others]);
+      return { n: name, r: c ? refCeb(w.r) : w.r, cl: c ? CEB_WHO[idx].c : w.c, opts, ci: opts.indexOf(name) };
+    });
+  } else {
+    S.items = BOOK_SIZES.map(size => {
+      const idx = shuffle(BOOKS_EN.map((_, i) => i)).slice(0, size).sort((a, b) => a - b);
+      let tiles = shuffle(idx);
+      for (let tries = 0; tries < 5 && tiles.every((b, k) => b === idx[k]); tries++) tiles = shuffle(idx);
+      return { idx, tiles };
+    });
+  }
+  renderStep();
+}
+
+/* ---------- HUD ---------- */
+function hud() {
+  const total = S.items.length, label = S.mode === 'books' ? t('round') : t('m_' + S.mode + '_t');
+  const prog = `<div class="prog"><i style="width:${(S.i / total) * 100}%"></i></div>`;
+  if (S.mode === 'duel') {
+    const p = i => `<div class="pl ${S.turn === i ? 'on' : ''}"><span>${esc(S.names[i])}</span><b id="ps${i}">${S.ps[i]}</b></div>`;
+    return `<div class="duelhud">${p(0)}${p(1)}</div><div class="hud"><div>${label} · <b>${S.i + 1}</b> / ${total}</div></div>${prog}`;
+  }
+  return `
+    <div class="hud">
+      <div>${label} · <b>${S.i + 1}</b> / ${total}</div>
+      <div class="hs"><span>${t('score')} <b id="sc">${S.score}</b></span>${isQ() && S.streak > 1 || S.mode === 'verse' && S.streak > 1 ? `<span class="streak">${t('streak')} ×${S.streak}</span>` : ''}</div>
+    </div>${prog}`;
+}
+function updateHud() {
+  if (S.mode === 'duel') { [0, 1].forEach(i => { const e = document.getElementById('ps' + i); if (e) e.textContent = S.ps[i]; }); }
+  else { const e = document.getElementById('sc'); if (e) e.textContent = S.score; }
+}
+
+/* ---------- Steps ---------- */
+function optButtons(opts) {
+  return opts.map((o, k) => `<button class="opt" data-act="pick" data-k="${k}"><b>${'ABCD'[k]}</b><span>${o}</span></button>`).join('');
+}
+
+function renderStep() {
+  stopTimer();
+  S.answered = false; S.usedFifty = false; S.clue = 0; S.gone = new Set(); S.placed = []; S.checked = false;
+  S.turn = S.mode === 'duel' ? S.i % 2 : 0;
+  if (S.mode === 'duel') renderPass();
+  else if (S.mode === 'quiz') renderQuestion();
+  else if (S.mode === 'verse') renderVerse();
+  else if (S.mode === 'who') renderWho();
+  else renderBooks();
+}
+
+function renderPass() {
+  app.innerHTML = hud() + `
+    <div class="card pass">
+      <p class="sub">${t('passTo')}</p>
+      <div class="who-big">${esc(S.names[S.turn])}</div>
+      <button class="primary" data-act="ready">${t('ready')}</button>
+    </div>`;
+}
+
+function renderQuestion() {
+  const it = S.items[S.i];
+  app.innerHTML = hud() + `
+    <div class="card">
+      <span class="tag">${CATN()[it.c]}</span>
+      <h2>${it.q}</h2>
+      <div class="timer"><i id="tbar"></i></div>
+      <div class="opts" id="opts">${optButtons(it.opts)}</div>
+      ${S.mode === 'quiz' ? `<div class="tools"><button class="ghost" id="fifty" data-act="fifty" ${S.lifelines < 1 ? 'disabled' : ''}>${t('lifeLeft')(S.lifelines)}</button></div>` : ''}
+      <div id="fb" aria-live="polite"></div>
+    </div>`;
+  startTimer();
+}
+
+function renderVerse() {
+  const it = S.items[S.i];
+  const text = it.t.replace('___', '<span class="blank" id="blank">______</span>');
+  app.innerHTML = hud() + `
+    <div class="card">
+      <span class="tag">${t('verseTag')}</span>
+      <div class="verse">${text}<span class="vref">${it.r} (KJV)</span></div>
+      <div class="opts" id="opts">${optButtons(it.opts)}</div>
+      <div id="fb" aria-live="polite"></div>
+    </div>`;
+}
+
+function renderWho() {
+  const it = S.items[S.i];
+  const clues = it.cl.slice(0, S.clue + 1).map((c, k) => `<li><span>${t('clue')(k + 1)}</span>${c}</li>`).join('');
+  const opts = it.opts.map((o, k) => `<button class="opt ${S.gone.has(k) ? 'gone' : ''}" data-act="pick" data-k="${k}" ${S.gone.has(k) || S.answered ? 'disabled' : ''}><b>${'ABCD'[k]}</b><span>${o}</span></button>`).join('');
+  app.innerHTML = hud() + `
+    <div class="card">
+      <span class="tag">${t('m_who_t')}</span>
+      <h2>${t('whoQ')}</h2>
+      <ul class="clues">${clues}</ul>
+      <p class="sub">${t('worth')(CLUE_PTS[S.clue])}</p>
+      <div class="opts" id="opts">${opts}</div>
+      <div class="tools">${S.clue < 3 ? `<button class="ghost" data-act="clue">${t('revealClue')}</button>` : ''}</div>
+      <div id="fb" aria-live="polite"></div>
+    </div>`;
+}
+
+function renderBooks() {
+  const it = S.items[S.i], n = it.idx.length, names = BOOKS();
+  const slots = it.idx.map((_, k) => {
+    const b = S.placed[k];
+    if (b == null) return `<li class="slot empty"><span class="num">${k + 1}</span></li>`;
+    const cls = S.checked ? (it.idx[k] === b ? 'slot full good' : 'slot full bad') : 'slot full';
+    const label = S.checked ? `<span class="bk">${names[b]}</span>` : `<button class="slotbtn" data-act="unplace" data-k="${k}">${names[b]}</button>`;
+    return `<li class="${cls}"><span class="num">${k + 1}</span>${label}</li>`;
+  }).join('');
+  const rest = it.tiles.filter(b => !S.placed.includes(b));
+  let tail = '';
+  if (S.checked) {
+    const order = it.idx.map(b => names[b]).join(' → ');
+    const perfect = S.lastPerfect;
+    tail = `<div class="fb ${perfect ? 'ok' : 'no'}">
+        <h3>${perfect ? t('ok') : t('no')} <span class="pts">+${S.lastPts}</span></h3>
+        <p><span class="ref">${t('correctOrder')}</span><br>${order}</p>
+        <div class="row"><button class="primary" data-act="next">${S.i >= S.items.length - 1 ? t('seeResults') : t('next')}</button></div>
+      </div>`;
+  } else {
+    tail = `<div class="tiles">${rest.map(b => `<button class="tile" data-act="place" data-b="${b}">${names[b]}</button>`).join('')}</div>
+      <div class="tools">${S.placed.length === n ? `<button class="primary" data-act="check">${t('check')}</button>` : `<span class="hint">${t('booksHint')}</span>`}</div>`;
+  }
+  app.innerHTML = hud() + `
+    <div class="card">
+      <span class="tag">${t('m_books_t')}</span>
+      <h2>${t('booksQ')}</h2>
+      <ol class="slots">${slots}</ol>
+      ${tail}
+    </div>`;
+}
+
+function startTimer() {
+  const bar = document.getElementById('tbar'), total = 20000, t0 = Date.now();
+  S.timer = setInterval(() => {
+    const left = Math.max(0, total - (Date.now() - t0));
+    S.timeLeft = left / 1000;
+    if (bar) { bar.style.width = (left / total * 100) + '%'; bar.classList.toggle('low', left < 6000); }
+    if (left <= 0) answer(-1);
+  }, 100);
+}
+
+/* ---------- Answers ---------- */
+function feedback(ok, pts, ref, note, timeout) {
+  const last = S.i >= S.items.length - 1;
+  const head = ok ? t('ok') : (timeout ? t('timeUp') : t('no'));
+  return `
+    <div class="fb ${ok ? 'ok' : 'no'}">
+      <h3>${head} ${ok ? `<span class="pts">+${pts}</span>` : ''}</h3>
+      <div class="ref">${ref}</div>
+      ${note ? `<p>${note}</p>` : ''}
+      <div class="row"><button class="primary" data-act="next">${last ? t('seeResults') : t('next')}</button></div>
+    </div>`;
+}
+function lockOptions(correctK, pickedK) {
+  document.querySelectorAll('#opts .opt').forEach((b, k) => {
+    b.disabled = true;
+    if (k === correctK) b.classList.add('right');
+    else if (k === pickedK) b.classList.add('wrong');
+  });
+}
+function showFb(html) {
+  const fb = document.getElementById('fb');
+  fb.innerHTML = html;
+  fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function answer(k) {
+  if (S.answered) return;
+  const it = S.items[S.i];
+
+  if (S.mode === 'who') {
+    if (k === it.ci) {
+      S.answered = true;
+      const pts = CLUE_PTS[S.clue];
+      S.score += pts; S.correct++;
+      lockOptions(it.ci, -1);
+      document.querySelectorAll('#opts .opt').forEach(b => b.classList.remove('gone'));
+      const tl = document.querySelector('.tools'); if (tl) tl.innerHTML = '';
+      updateHud();
+      showFb(feedback(true, pts, it.n + ' · ' + it.r, ''));
+    } else {
+      S.gone.add(k);
+      if (S.clue < 3) { S.clue++; renderWho(); }
+      else {
+        S.answered = true;
+        lockOptions(it.ci, k);
+        const tl = document.querySelector('.tools'); if (tl) tl.innerHTML = '';
+        showFb(feedback(false, 0, t('itWas') + it.n + ' · ' + it.r, ''));
+      }
+    }
+    return;
+  }
+
+  S.answered = true; stopTimer();
+  const ok = k === it.ci, duel = S.mode === 'duel', p = S.turn;
+  let pts = 0;
+  const streak = duel ? S.pstreak[p] : S.streak;
+  if (ok) {
+    pts = 100 + Math.min(streak, 5) * 10;
+    if (isQ()) pts += Math.round((S.timeLeft / 20) * 50);
+    if (duel) { S.ps[p] += pts; S.pcorrect[p]++; S.pstreak[p]++; }
+    else { S.score += pts; S.correct++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); }
+  } else if (duel) S.pstreak[p] = 0; else S.streak = 0;
+  lockOptions(it.ci, k);
+  const f = document.getElementById('fifty'); if (f) f.disabled = true;
+  updateHud();
+
+  if (isQ()) {
+    showFb(feedback(ok, pts, it.r, it.n, k === -1));
+  } else {
+    const b = document.getElementById('blank');
+    if (b) { b.textContent = it.a; b.className = 'filled'; }
+    showFb(feedback(ok, pts, it.r + ' (KJV)', ''));
+  }
+}
+
+function fifty() {
+  if (S.answered || S.usedFifty || S.lifelines < 1 || S.mode !== 'quiz') return;
+  S.usedFifty = true; S.lifelines--;
+  const it = S.items[S.i];
+  const wrong = shuffle(it.opts.map((_, k) => k).filter(k => k !== it.ci)).slice(0, 2);
+  const btns = document.querySelectorAll('#opts .opt');
+  wrong.forEach(k => { btns[k].disabled = true; btns[k].classList.add('gone'); });
+  const f = document.getElementById('fifty');
+  f.disabled = true; f.textContent = t('lifeLeft')(S.lifelines);
+}
+
+function checkBooks() {
+  const it = S.items[S.i];
+  if (S.checked || S.placed.length !== it.idx.length) return;
+  const right = it.idx.filter((b, k) => S.placed[k] === b).length;
+  S.lastPerfect = right === it.idx.length;
+  S.lastPts = right * 20 + (S.lastPerfect ? 50 : 0);
+  S.score += S.lastPts; if (S.lastPerfect) S.correct++;
+  S.checked = true;
+  renderBooks();
+}
+
+function next() {
+  S.i++;
+  if (S.i >= S.items.length) (S.mode === 'duel' ? renderDuelResults : renderResults)(); else renderStep();
+}
+
+/* ---------- Results ---------- */
+function renderResults() {
+  stopTimer();
+  const total = S.items.length, pct = S.correct / total;
+  const rank = t('ranks')[pct === 1 ? 0 : pct >= 0.8 ? 1 : pct >= 0.6 ? 2 : pct >= 0.4 ? 3 : 4];
+  const best = store.get('best', {});
+  const isBest = S.score > (best[S.mode] || 0);
+  if (isBest) { best[S.mode] = S.score; store.set('best', best); }
+  app.innerHTML = `
+    <div class="card res">
+      ${isBest && S.score > 0 ? `<span class="newbest">${t('newBest')}</span>` : ''}
+      <div class="rank">${rank}</div>
+      <div class="big">${S.score}</div>
+      <div class="sub">${t('points')}</div>
+      <div class="stats">
+        <div class="stat"><b>${S.correct}/${total}</b><span>${t('correctL')}</span></div>
+        ${S.mode === 'quiz' || S.mode === 'verse' ? `<div class="stat"><b>${S.bestStreak}</b><span>${t('bestStreakL')}</span></div>` : ''}
+        <div class="stat"><b>${best[S.mode] || 0}</b><span>${t('yourBest')}</span></div>
+      </div>
+      <p class="acts">${t('acts')}</p>
+      <div class="btnrow" style="margin-top:18px">
+        <button class="primary" data-act="again">${t('playAgain')}</button>
+        <button class="secondary" data-act="home">${t('home')}</button>
+      </div>
+    </div>`;
+}
+
+function renderDuelResults() {
+  stopTimer();
+  const [a, b] = S.ps;
+  const head = a === b ? t('tie') : t('winner')(esc(S.names[a > b ? 0 : 1]));
+  const col = i => `<div class="stat ${a !== b && (i === 0) === (a > b) ? 'win' : ''}"><span>${esc(S.names[i])}</span><b>${S.ps[i]}</b><span>${S.pcorrect[i]}/${S.items.length / 2} ${t('correctL')}</span></div>`;
+  app.innerHTML = `
+    <div class="card res">
+      <div class="rank">${head}</div>
+      <div class="stats">${col(0)}${col(1)}</div>
+      <p class="acts">${t('acts')}</p>
+      <div class="btnrow" style="margin-top:18px">
+        <button class="primary" data-act="again">${t('playAgain')}</button>
+        <button class="secondary" data-act="home">${t('home')}</button>
+      </div>
+    </div>`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (a === 'home') renderHome();
+  else if (a === 'lang') { LANG = b.dataset.lang === 'ceb' ? 'ceb' : 'en'; store.set('lang', LANG); renderHome(); }
+  else if (a === 'mode') {
+    const m = b.dataset.mode;
+    if (m === 'quiz') renderCats(); else if (m === 'duel') renderDuelSetup(); else startGame(m, 'all');
+  }
+  else if (a === 'cat') startGame('quiz', b.dataset.cat);
+  else if (a === 'duelcat') {
+    const n1 = (document.getElementById('n1').value || '').trim() || t('p1');
+    const n2 = (document.getElementById('n2').value || '').trim() || t('p2');
+    startGame('duel', b.dataset.cat, [n1, n2]);
+  }
+  else if (a === 'ready') renderQuestion();
+  else if (a === 'pick') answer(Number(b.dataset.k));
+  else if (a === 'fifty') fifty();
+  else if (a === 'clue') { if (S.clue < 3 && !S.answered) { S.clue++; renderWho(); } }
+  else if (a === 'place') { const it = S.items[S.i]; if (!S.checked && S.placed.length < it.idx.length) { S.placed.push(Number(b.dataset.b)); renderBooks(); } }
+  else if (a === 'unplace') { if (!S.checked) { S.placed.splice(Number(b.dataset.k), 1); renderBooks(); } }
+  else if (a === 'check') checkBooks();
+  else if (a === 'next') next();
+  else if (a === 'again') startGame(S.mode, S.cat, S.names);
+});
+
+renderHome();
+
+</script>
+</body>
+</html>

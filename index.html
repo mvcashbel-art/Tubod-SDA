@@ -282,6 +282,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
+/* Bible game card */
+.gamecard{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;margin:12px 0}
+.gamecard:hover{border-color:var(--accent)}
+.gamecard .gi{width:42px;height:42px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.gamecard .gi .ic{width:22px;height:22px}
+.gamecard b{display:block;font-family:var(--display);font-size:1.15rem}
+.gamecard small{display:block;color:var(--muted);font-size:.88rem;line-height:1.35}
+
 /* nearest worship bar */
 .ann-strip .rows{display:flex;flex-direction:column;gap:8px}
 .ann-strip .wr{display:flex;gap:10px;align-items:center;background:var(--accent);color:#fff;border-radius:12px;padding:8px 14px;box-shadow:0 2px 8px rgba(23,50,77,.12);font-size:.93rem;min-width:0}
@@ -395,6 +403,7 @@ const ICONS = {
   file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6',
   music:'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
   x:'M18 6L6 18M6 6l12 12',
+  book:'M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z',
   up:'M12 19V5M5 12l7-7 7 7',
   down:'M12 5v14M19 12l-7 7-7-7',
   church:'M12 2v4M10 4h4M12 6l5 5v11H7V11zM10 22v-5a2 2 0 0 1 4 0v5'
@@ -409,7 +418,7 @@ const CATS = {
 };
 const LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
 const ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
-const NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['me','My profile','user']];
+const NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['game','Bible Game','book','bible-game.html'],['me','My profile','user']];
 const MAX_FILE_MB = 15;
 
 /* ---------- state ---------- */
@@ -677,7 +686,8 @@ function fromHash(){
   if (['home','news','library','members'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !(kind === 'top' && n[0] === 'me')).map(([r, label, ic]) => {
+  return NAV.filter(n => !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[3])).map(([r, label, ic, href]) => {
+    if (href) return `<a href="${href}">${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : S.route === r);
     return `<a href="#${r}" data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}<span>${esc(label)}</span></a>`;
   }).join('');
@@ -863,7 +873,7 @@ function mount(){
   const v = $('#view');
   const bannerHTML = '<div id="banner"></div>';
   if (S.route === 'home'){
-    v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot"></div>`;
+    v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><a class="card gamecard" href="bible-game.html"><span class="gi">${icon('book')}</span><span><b>Bible Game</b><small>Quiz, finish the verse, who am I? and more. Play alone or with a friend, in English or Bisaya.</small></span></a><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot"></div>`;
     buildComposer();
   } else if (S.route === 'news'){
     S.chatInit = false;
