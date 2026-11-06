@@ -125,6 +125,24 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .acts{font-family:'Alegreya',serif;font-style:italic;color:var(--muted);margin:10px 0 0;font-size:15px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+/* Wide screens: use the width, keep the height short */
+@media (min-width:900px){
+  .wrap{max-width:900px}
+  .opts{grid-template-columns:1fr 1fr}
+  .modes{grid-template-columns:1fr 1fr}
+  .modes .mode:last-child:nth-child(odd){grid-column:1/-1}
+  .cats{grid-template-columns:1fr 1fr}
+  .hero{padding-bottom:14px}
+}
+
+/* Fit to screen controls */
+.barrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;min-height:38px}
+.vctl{display:flex;gap:6px;margin-left:auto}
+.vctl button{min-width:38px;height:34px;padding:0 8px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#f3eedb;font-weight:800;font-size:14px;display:grid;place-items:center}
+.vctl button:hover{background:rgba(255,255,255,.22)}
+.vctl svg{width:18px;height:18px}
+.vctl button[hidden]{display:none}
+
 /* Language switch */
 .lang{display:flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:3px}
 .lang button{background:transparent;border:0;color:#d9d6c3;border-radius:999px;padding:5px 12px;font-weight:800;font-size:13px}
@@ -207,11 +225,13 @@ button:focus-visible{outline-color:var(--accent)}
 .slot.good{border-color:var(--ok)}.slot.bad{border-color:var(--bad)}
 .who-big{color:var(--accent)}
 .fb .pts{color:var(--gold-d)}
+.vctl button{background:#fff;border:1px solid var(--line);color:var(--accent-d)}
+.vctl button:hover{background:#F4F8FA}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="churchbar" href="index.html">&#8249; <span id="backTxt">Tubod SDA Church</span></a>
+  <div class="barrow"><a class="churchbar" href="index.html">&#8249; Tubod SDA Church</a><div class="vctl"><button id="szDown" data-act="szdown" aria-label="Smaller">A&#8722;</button><button id="szUp" data-act="szup" aria-label="Bigger">A+</button><button id="fsBtn" data-act="full" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div></div>
   <div class="top">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 7c-2.6-2.2-6.6-3-11-2.2v18.4c4.4-.8 8.4 0 11 2.2 2.6-2.2 6.6-3 11-2.2V4.8C22.600 4 18.600 4.800 16 7z" fill="#1D6A8A"/><path d="M16 7v18.400" stroke="#EEF4F7" stroke-width="1.600" fill="none"/></svg>
@@ -532,7 +552,8 @@ const T = {
     points: 'points', correctL: 'Correct', bestStreakL: 'Best streak', yourBest: 'Your best', newBest: 'New personal best!',
     playAgain: 'Play again', winner: n => `${n} wins!`, tie: 'It’s a tie!',
     acts: '“These were more noble… in that they… searched the scriptures daily.” Acts 17:11',
-    verseNote: ''
+    verseNote: '',
+    fullscreen: 'Full screen', exitFull: 'Leave full screen', bigger: 'Bigger', smaller: 'Smaller'
   },
   ceb: {
     heroP: 'Sulayi ang imong nahibaloan sa Pulong sa Dios, gikan sa Genesis hangtod sa Pinadayag, uban ang pipila ka paborito sa mga Adventista.',
@@ -559,7 +580,8 @@ const T = {
     points: 'puntos', correctL: 'Husto', bestStreakL: 'Labing taas nga sunodsunod', yourBest: 'Imong labing taas', newBest: 'Bag-ong labing taas nga puntos!',
     playAgain: 'Duwa pag-usab', winner: n => `${n} ang midaog!`, tie: 'Patas!',
     acts: 'Ang mga taga-Berea nagsusi sa mga Kasulatan matag adlaw — Binuhatan 17:11',
-    verseNote: 'Ang mga bersikulo naa sa English (KJV).'
+    verseNote: 'Ang mga bersikulo naa sa English (KJV).',
+    fullscreen: 'Tibuok screen', exitFull: 'Gawas sa tibuok screen', bigger: 'Mas dako', smaller: 'Mas gamay'
   }
 };
 let LANG = store.get('lang', 'en'); if (LANG !== 'ceb') LANG = 'en';
@@ -588,7 +610,41 @@ function setChrome(view) {
   langBox.hidden = !onHome;
   langBox.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.lang === LANG));
   document.documentElement.lang = LANG === 'ceb' ? 'ceb' : 'en';
+  labelControls();
 }
+
+/* ---------- Fit to screen, bigger/smaller text, full screen ---------- */
+const wrapEl = document.querySelector('.wrap');
+const fsBtn = document.getElementById('fsBtn');
+const docEl = document.documentElement;
+const canFull = !!(docEl.requestFullscreen || docEl.webkitRequestFullscreen) && document.fullscreenEnabled !== false;
+const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+let ADJ = Number(store.get('adj', 1)); if (!(ADJ >= 0.8 && ADJ <= 1.6)) ADJ = 1;
+function fit() {
+  /* grow the whole game to fill big windows; phones stay as they are */
+  const wide = window.innerWidth >= 900;
+  const auto = Math.max(1, Math.min(window.innerWidth / (wide ? 960 : 700), window.innerHeight / 620, 2.2));
+  wrapEl.style.zoom = (auto * ADJ).toFixed(3);
+}
+function labelControls() {
+  const set = (id, key) => { const b = document.getElementById(id); if (b) { b.title = t(key); b.setAttribute('aria-label', t(key)); } };
+  set('szUp', 'bigger'); set('szDown', 'smaller'); set('fsBtn', isFull() ? 'exitFull' : 'fullscreen');
+}
+function toggleFull() {
+  try {
+    if (isFull()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    else { const p = (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl); if (p && p.catch) p.catch(() => {}); }
+  } catch (e) {}
+}
+function resize(step) {
+  ADJ = Math.min(1.6, Math.max(0.8, Math.round((ADJ + step) * 10) / 10));
+  store.set('adj', ADJ); fit();
+}
+if (fsBtn && !canFull) fsBtn.hidden = true;
+window.addEventListener('resize', fit);
+document.addEventListener('fullscreenchange', () => { labelControls(); fit(); });
+document.addEventListener('webkitfullscreenchange', () => { labelControls(); fit(); });
+fit();
 
 /* ---------- Home and setup ---------- */
 function renderHome() {
@@ -986,6 +1042,9 @@ document.addEventListener('click', e => {
   else if (a === 'check') checkBooks();
   else if (a === 'next') next();
   else if (a === 'again') startGame(S.mode, S.cat, S.names);
+  else if (a === 'szup') resize(0.1);
+  else if (a === 'szdown') resize(-0.1);
+  else if (a === 'full') toggleFull();
 });
 
 renderHome();
