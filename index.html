@@ -52,11 +52,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* top bar */
 .top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.top-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:20px}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);min-width:0}
-.mark{width:38px;height:38px;border-radius:11px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
-.brand b{display:block;font:700 1.25rem/1.1 var(--display);white-space:nowrap}
-.brand small{display:block;color:var(--muted);font-size:.78rem;line-height:1.2}
+.top-in{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);min-width:0}
+.mark{height:56px;display:block;flex:none}
+.mark img{height:100%;width:auto;display:block}
+.auth-brand .mark{height:72px}
+.brand b{display:block;font:700 1.4rem/1.1 var(--display);white-space:nowrap}
+.brand small{display:block;color:var(--muted);font-size:.85rem;line-height:1.2}
 .dnav{display:flex;gap:4px;margin-left:12px}
 .dnav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:500;font-size:.95rem}
 .dnav a:hover{background:#EEF4F7;color:var(--ink)}
@@ -99,7 +101,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .av.md{width:42px;height:42px;font-size:.9rem}
 .av.lg{width:64px;height:64px;font-size:1.2rem}
 .av.xl{width:104px;height:104px;font-size:2rem;border:4px solid #fff}
-.av.sys{background:var(--accent);color:#fff}
+.av.sys{background:#fff;border:1px solid var(--line)}
+.av.sys img{width:74%;height:74%;object-fit:contain}
 .av.sys .ic{width:55%;height:55%}
 
 /* composer */
@@ -273,6 +276,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   .side .more{display:none}
   .dnav{display:none}
   .brand small{display:none}
+  .mark{height:46px}
+  .auth-brand .mark{height:60px}
   .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
   .tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:.7rem;font-weight:500;color:var(--muted);text-decoration:none;border-radius:10px}
   .tabs a.on{color:var(--accent-dark);background:#E3F0F5}
@@ -297,7 +302,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* nearest worship bar */
 .ann-strip .rows{display:flex;flex-direction:column;gap:8px}
 .ann-strip .wr{display:flex;gap:10px;align-items:center;background:var(--accent);color:#fff;border-radius:12px;padding:8px 14px;box-shadow:0 2px 8px rgba(23,50,77,.12);font-size:.93rem;min-width:0}
-.ann-strip .wr .iw{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none;color:#fff}
+.ann-strip .wr .iw{width:30px;height:30px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;color:#fff}
+.ann-strip .wr .iw img{width:76%;height:76%;object-fit:contain}
 .ann-strip .wr .iw .ic{width:16px;height:16px}
 .ann-strip .wr b{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#fff;opacity:.85;margin-right:8px}
 .ann-strip .wr .line{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -412,6 +418,7 @@ const ICONS = {
   down:'M12 5v14M19 12l-7 7-7-7',
   church:'M12 2v4M10 4h4M12 6l5 5v11H7V11zM10 22v-5a2 2 0 0 1 4 0v5'
 };
+const LOGO = '<img src="logo-mark.png" alt="">';
 const icon = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 
 const CATS = {
@@ -459,7 +466,7 @@ const hue = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charC
 const initials = n => String(n).trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
 const nameOf = id => id === 'system' ? (S.settings.churchName || 'Tubod SDA Church') : (S.profiles[id] && S.profiles[id].name) || 'Church member';
 function av(id, size = 'md'){
-  if (id === 'system') return `<span class="av ${size} sys">${icon('church')}</span>`;
+  if (id === 'system') return `<span class="av ${size} sys">${LOGO}</span>`;
   const p = S.profiles[id], u = p && p.avatar ? imgUrl(p.avatar, 200) : '';
   if (u) return `<img class="av ${size}" src="${u}" alt="" loading="lazy">`;
   const h = hue(id);
@@ -642,7 +649,7 @@ function showAuth(mode, msg){
   let a = $('#auth');
   if (!a){ a = document.createElement('div'); a.id = 'auth'; a.className = 'auth'; document.body.appendChild(a); }
   const name = S.settings.churchName || 'Tubod SDA Church', tag = S.settings.tagline || 'Tubod, Isabel, Leyte';
-  const head = `<div class="auth-brand"><span class="mark">${icon('church')}</span><div><h1>${esc(name)}</h1><p class="muted">${esc(tag)}</p></div></div>`;
+  const head = `<div class="auth-brand"><span class="mark">${LOGO}</span><div><h1>${esc(name)}</h1><p class="muted">${esc(tag)}</p></div></div>`;
   let body;
   if (mode === 'setup'){
     body = `<p>This site is almost ready. Open <b>config.js</b> and paste your Google web app link, then reload this page. The steps are in SETUP.md.</p>`;
@@ -863,7 +870,7 @@ function renderStrip(){
   const list = S.posts.filter(p => p.cat === 'announcement').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const nw = nextWorships(), w = nw[0];
   let rows = '';
-  if (w) rows += `<div class="wr" role="status"><span class="iw">${icon('church')}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
+  if (w) rows += `<div class="wr" role="status"><span class="iw">${LOGO}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
   if (list.length && S.route !== 'news'){
     const p = list[0];
     rows += `<a href="#news" data-route="news" aria-label="Open announcements"><span class="iw">${icon('bell')}</span><span class="bd"><b>Announcement \u00b7 ${ago(p.createdAt)}</b><span class="t">${esc(p.text || 'Photo announcement')}</span></span>${list.length > 1 ? `<span class="more">+${list.length - 1} more</span>` : ''}</a>`;
@@ -1492,7 +1499,7 @@ async function bootSession(){
 function boot(){
   const setTop = () => { const t = $('.top'); if (t) document.documentElement.style.setProperty('--topH', t.offsetHeight + 'px'); };
   setTop(); window.addEventListener('resize', setTop); if (document.fonts && document.fonts.ready) document.fonts.ready.then(setTop);
-  $('#mark').innerHTML = icon('church'); $('#gearBtn').innerHTML = icon('gear');
+  $('#mark').innerHTML = LOGO; $('#gearBtn').innerHTML = icon('gear');
   const h = (location.hash || '').slice(1);
   if (['home','news','library','members'].includes(h)) S.route = h;
   S.token = loadToken();
