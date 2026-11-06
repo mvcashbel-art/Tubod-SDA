@@ -877,7 +877,7 @@ function mount(){
   const v = $('#view');
   const bannerHTML = '<div id="banner"></div>';
   if (S.route === 'home'){
-    v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><a class="card gamecard" href="bible-game.html"><span class="gi">${icon('book')}</span><span><b>Bible Game</b><small>Quiz, finish the verse, who am I? and more. Play alone or with a friend, in English or Bisaya.</small></span></a><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot">${S.token && !S.uid ? '<div class="card empty">Loading the church page…</div>' : ''}</div>`;
+    v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot">${S.token && !S.uid ? '<div class="card empty">Loading the church page…</div>' : ''}</div>`;
     buildComposer();
   } else if (S.route === 'news'){
     S.chatInit = false;
