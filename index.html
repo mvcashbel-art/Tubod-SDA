@@ -310,6 +310,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .urow{display:flex;flex-direction:column;gap:2px}
 .urow input{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff}
 .urow small{color:var(--muted);font-size:.74rem}
+.store{margin:4px 0 2px}
+.store .up-track{max-width:320px;margin-top:4px}
+.pf-gal{margin-bottom:6px}
 .vid-note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
 
 
@@ -542,6 +545,16 @@ function kindOf(f){
   const mime = String(f.mime || ''), ext = extOf(f.name);
   const w = /^video\//.test(mime) ? 'video' : /^audio\//.test(mime) ? 'audio' : /^image\//.test(mime) ? 'photo' : 'file';
   return (ext ? ext + ' ' : '') + w;
+}
+/* storage each member may use (admins have no limit) */
+const quotaB = () => { const v = S.settings && S.settings.memberQuotaGB; const g = v == null || v === '' ? 10 : Number(v); return g > 0 ? g * 1073741824 : 0; };
+const usedB = uid => S.files.reduce((n, f) => f.authorId === uid ? n + (Number(f.size) || 0) : n, 0);
+const unlimited = uid => { const p = S.profiles[uid]; return !quotaB() || (p && p.access === 'admin'); };
+function storageHTML(uid){
+  const used = usedB(uid);
+  if (unlimited(uid)) return `<p class="meta">Storage used: <b>${fmtSize(used)}</b> (no limit)</p>`;
+  const max = quotaB(), pct = Math.min(100, Math.round(used / max * 100));
+  return `<div class="store"><p class="meta">Storage used: <b>${fmtSize(used)}</b> of ${fmtSize(max)}${pct >= 90 ? ' · almost full' : ''}</p><div class="up-track"><div class="up-fill" style="width:${pct}%${pct >= 90 ? ';background:#B3382C' : ''}"></div></div></div>`;
 }
 function fmtSize(n){
   n = Number(n) || 0;
@@ -1333,6 +1346,7 @@ function onPickVideo(e){
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   if (!/^video\//.test(f.type) && !/\.(mp4|mov|m4v|mkv|webm|avi|3gp)$/i.test(f.name)){ toast('Please choose a video file.'); return; }
   if (f.size > MAX_BIG_GB * 1073741824){ toast(`That video is over ${MAX_BIG_GB} GB.`); return; }
+  if (!unlimited(S.uid) && usedB(S.uid) + f.size > quotaB()){ toast(`That video is bigger than the ${fmtSize(Math.max(0, quotaB() - usedB(S.uid)))} you have left of your ${fmtSize(quotaB())} storage.`); return; }
   S.draft.video = f; composerBits();
 }
 function postWithVideo(){
@@ -1441,6 +1455,8 @@ function renderProfile(){
   if (!p){ slot.innerHTML = `<div class="card empty">This member is no longer here.</div>`; return; }
   const posts = S.posts.filter(x => x.authorId === id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const files = S.files.filter(f => f.authorId === id);
+  const media = files.filter(f => /^(image|video)\//.test(String(f.mime || ''))), docs = files.filter(f => !/^(image|video)\//.test(String(f.mime || '')));
+  if (S.galFor !== id){ S.galFor = id; S.galLimit = 24; }
   const cover = p.cover ? imgUrl(p.cover, 1200) : '';
   keepInputs(slot, () => {
     slot.innerHTML = `<section class="card pf">
@@ -1452,8 +1468,9 @@ function renderProfile(){
         ${p.verse ? `<p class="quote">${esc(p.verse)}</p>` : ''}
         <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}</div>
       </div></section>
-      <h2 class="sec">Posts</h2><div id="feedSlot"></div>
-      ${files.length ? `<h2 class="sec">Shared in the library</h2><div class="grid">${files.map(fileHTML).join('')}</div>` : ''}`;
+      ${media.length || own ? `<h2 class="sec">Photos and videos</h2>${own || S.isAdmin ? storageHTML(id) : ''}${media.length ? `<div class="card pf-gal"><div class="alb-grid">${media.slice(0, S.galLimit).map(albItem).join('')}</div>${media.length > S.galLimit ? `<div style="text-align:center;margin-top:12px"><button class="btn" data-act="galmore">Show more (${media.length - S.galLimit} more)</button></div>` : ''}</div>` : `<div class="card empty">No photos or videos yet. Add some in the Library.</div>`}` : ''}
+      ${docs.length ? `<h2 class="sec">Files in the library</h2><div class="grid">${docs.map(fileHTML).join('')}</div>` : ''}
+      <h2 class="sec">Posts</h2><div id="feedSlot"></div>`;
   });
   renderFeed(posts, own ? 'You have not posted yet.' : 'No posts yet.');
 }
@@ -1666,6 +1683,7 @@ function openUploadModal(opts){
   const m = openModal(opts.album ? 'Add to album' : 'Add files', `
     <form id="uForm" class="m-body" style="padding:0">
       <label class="fld" for="uFile">Files<input id="uFile" type="file" multiple required><small>Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. Files are saved exactly as they are, with nothing compressed or resized. They upload one after another. Keep this page open and your phone awake until it finishes.</small></label>
+      ${S.uid ? storageHTML(S.uid) : ''}
       <div id="uInfo" class="muted" hidden></div>
       <div id="uList" hidden></div>
       <label class="fld" for="uTitle" id="uTitleWrap">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
@@ -1697,6 +1715,8 @@ function openUploadModal(opts){
     if (fs.length > 50){ toast('Choose up to 50 files at a time.'); return; }
     const big = fs.find(f => f.size > MAX_BIG_GB * 1073741824);
     if (big){ toast(`"${big.name}" is over ${MAX_BIG_GB} GB. Remove it and try again.`); return; }
+    const add = fs.reduce((n, f) => n + f.size, 0) + upQueue.reduce((n, j) => n + j.file.size, 0) + (upJob && !upJob.saved ? upJob.file.size : 0);
+    if (!unlimited(S.uid) && usedB(S.uid) + add > quotaB()){ toast(`That is more than your ${fmtSize(quotaB())} storage. You have ${fmtSize(Math.max(0, quotaB() - usedB(S.uid)))} left. Delete some of your files or ask a church admin.`); return; }
     let alb = $('#uAlbum', m).value.replace(/[\[\]\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
     const known = albums.find(a => a.k === albKey(alb)); if (known) alb = known.name;
     const note = $('#uDesc', m).value.trim(), desc = (alb ? `[[album:${alb}]] ${note}` : note).trim().slice(0, 300), c = cat.value;
@@ -1726,6 +1746,7 @@ function openSettingsModal(){
       <p class="muted">Text alerts: ${S.sms && S.sms.provider === 'SEMAPHORE' ? 'automatic through Semaphore.' : 'free manual mode. You get the numbers and your phone sends the texts. For automatic texts, see SETUP.md.'} ${S.sms ? S.sms.count : 0} member${S.sms && S.sms.count === 1 ? ' has' : 's have'} turned them on.</p>
       <label class="fld" for="sBg">Background photo<input id="sBg" type="file" accept="image/*"><small>Pick a church photo. It sits behind the whole site and you can change it any time.</small></label>
       ${st.bgId ? '<label class="pin-opt"><input type="checkbox" id="sBgReset"> Go back to the default background</label>' : ''}
+      <label class="fld" for="sQuota">Storage limit for each member (GB)<input id="sQuota" type="number" min="0" max="10000" step="1" inputmode="numeric" value="${esc(st.memberQuotaGB == null || st.memberQuotaGB === '' ? '10' : st.memberQuotaGB)}"><small>How much each member may upload to the Library. Admins have no limit. 0 means no limit. All files share the church Google Drive.</small></label>
       <button class="btn" type="button" data-act="members">Manage members</button>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="sSave">Save settings</button></div>
     </form>`, true);
@@ -1733,7 +1754,7 @@ function openSettingsModal(){
     e.preventDefault();
     const btn = $('#sSave', m); btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const body = {churchName:$('#sName', m).value, tagline:$('#sTag', m).value, schedule:$('#sSched', m).value, verse:$('#sVerse', m).value, joinCode:$('#sCode', m).value, services:svcRead(m).filter(x => x.time), autoRemind:$('#sAuto', m).checked, remindHours:$('#sHours', m).value, autoSms:$('#sAutoSms', m).checked};
+      const body = {churchName:$('#sName', m).value, tagline:$('#sTag', m).value, schedule:$('#sSched', m).value, verse:$('#sVerse', m).value, joinCode:$('#sCode', m).value, memberQuotaGB:$('#sQuota', m).value, services:svcRead(m).filter(x => x.time), autoRemind:$('#sAuto', m).checked, remindHours:$('#sHours', m).value, autoSms:$('#sAutoSms', m).checked};
       const f = $('#sBg', m).files[0];
       if (f) body.bg = await shrink(f, {w:1920, q:.8, maxChars:2800000});
       else if ($('#sBgReset', m) && $('#sBgReset', m).checked) body.resetBg = true;
@@ -1831,9 +1852,10 @@ document.addEventListener('click', e => {
     case 'libcat': S.libCat = el.dataset.c; renderLibrary(); break;
     case 'upload': if (guard()) openUploadModal(); break;
     case 'delfile': deleteFile(id); break;
+    case 'galmore': S.galLimit += 48; renderProfile(); break;
     case 'openalbum': openAlbum(el.dataset.k); break;
     case 'albadd': openUploadModal({album:el.dataset.name}); break;
-    case 'delalbfile': (async () => { const k = S.albumOpen; await deleteFile(el.dataset.id); openAlbum(k); })(); break;
+    case 'delalbfile': (async () => { const k = el.closest('.modal') ? S.albumOpen : ''; await deleteFile(el.dataset.id); if (k) openAlbum(k); else if (S.route === 'profile') renderProfile(); })(); break;
     case 'zoom': zoomDrive(el.src); break;
     case 'editprofile': openProfileModal(); break;
     case 'chpw': openPasswordModal(); break;
