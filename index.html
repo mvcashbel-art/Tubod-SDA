@@ -279,6 +279,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .up-fill{height:100%;width:0;background:var(--accent);transition:width .3s}
 #upbar .up-row{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 #upbar.err .up-fill{background:#B3382C}
+.prev .vfile{display:flex;align-items:center;gap:8px;background:#EAF3F7;border-radius:10px;padding:8px 34px 8px 12px;position:relative;font-size:.88rem;max-width:100%}
+.prev .vfile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vid-note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
 
 
@@ -459,7 +461,7 @@ const S = {
   route:'home', profileId:null, filter:'all', libCat:'all', libQ:'', memQ:'', limit:30,
   token:'', uid:null, isAdmin:false, offline:false, rev:'',
   posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{}, program:[],
-  loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false}, posting:false, chatInit:false
+  loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}, posting:false, chatInit:false
 };
 
 /* ---------- small utilities ---------- */
@@ -761,7 +763,7 @@ async function authSubmit(kind, form){
   } catch (e){ err.textContent = errMsg(e); btn.disabled = false; btn.textContent = old; }
 }
 function resetData(){
-  Object.assign(S, {uid:null, isAdmin:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false}});
+  Object.assign(S, {uid:null, isAdmin:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}});
 }
 function forceSignOut(msg){
   clearInterval(pollTimer); S.token = ''; saveToken(); clearCache(); resetData(); closeModal();
@@ -1200,12 +1202,15 @@ function buildComposer(){
       <label class="pin-opt" id="cPinWrap" hidden><input type="checkbox" id="cPin"> Pin to top</label>
       <button class="btn" type="button" data-act="attach">${icon('image')}Photo</button>
       <input type="file" id="cFile" accept="image/*" multiple hidden>
+      <button class="btn" type="button" data-act="attachvid">${icon('file')}Video</button>
+      <input type="file" id="cVid" accept="video/*" hidden>
       <button class="btn primary" type="button" id="cPost" data-act="post">Post</button>
     </div></section>`;
   const ta = $('#cText');
   const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 260) + 'px'; };
   ta.addEventListener('input', () => { S.draft.text = ta.value; grow(); composerBits(); });
   $('#cFile').addEventListener('change', onPickPhotos);
+  $('#cVid').addEventListener('change', onPickVideo);
   $('#cPin').addEventListener('change', e => { S.draft.pin = e.target.checked; });
   grow(); composerBits();
 }
@@ -1214,10 +1219,11 @@ function composerBits(){
   const keys = Object.keys(CATS).filter(k => k !== 'announcement' || S.isAdmin);
   if (!keys.includes(S.draft.cat)) S.draft.cat = 'share';
   cats.innerHTML = keys.map(k => `<button type="button" class="chip ${S.draft.cat === k ? 'on' : ''}" data-act="ccat" data-cat="${k}" aria-pressed="${S.draft.cat === k}">${esc(CATS[k].label)}</button>`).join('');
-  $('#cPrev').innerHTML = S.draft.photos.map((d, i) => `<div class="pv"><img src="${d}" alt="Photo ${i + 1} to post"><button type="button" data-act="rmphoto" data-i="${i}" aria-label="Remove photo ${i + 1}">${icon('x')}</button></div>`).join('');
+  $('#cPrev').innerHTML = S.draft.photos.map((d, i) => `<div class="pv"><img src="${d}" alt="Photo ${i + 1} to post"><button type="button" data-act="rmphoto" data-i="${i}" aria-label="Remove photo ${i + 1}">${icon('x')}</button></div>`).join('')
+    + (S.draft.video ? `<div class="pv vfile">${icon('file')}<span>${esc(S.draft.video.name)} · ${fmtSize(S.draft.video.size)}</span><button type="button" data-act="rmvid" aria-label="Remove video">${icon('x')}</button></div>` : '');
   $('#cPinWrap').hidden = !S.isAdmin;
   $('#cPin').checked = !!S.draft.pin;
-  const btn = $('#cPost'); btn.disabled = S.posting || (!S.draft.text.trim() && !S.draft.photos.length);
+  const btn = $('#cPost'); btn.disabled = S.posting || (!S.draft.text.trim() && !S.draft.photos.length && !S.draft.video);
   btn.textContent = S.posting ? 'Posting…' : 'Post';
 }
 function refreshComposer(){
@@ -1234,14 +1240,38 @@ async function onPickPhotos(e){
   }
   composerBits();
 }
+function onPickVideo(e){
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (!/^video\//.test(f.type) && !/\.(mp4|mov|m4v|mkv|webm|avi|3gp)$/i.test(f.name)){ toast('Please choose a video file.'); return; }
+  if (f.size > MAX_BIG_GB * 1073741824){ toast(`That video is over ${MAX_BIG_GB} GB.`); return; }
+  S.draft.video = f; composerBits();
+}
+async function postWithVideo(){
+  if (S.posting || !guard()) return;
+  if (upJob){ toast('Another upload is still running. Wait for it to finish first.'); return; }
+  const f = S.draft.video, d = S.draft; S.posting = true; composerBits();
+  try {
+    const s = await api('startUpload', {size:f.size, mime:f.type || 'video/mp4', origin:location.origin});
+    const text = d.text.trim();
+    upJob = {file:f, url:s.url, uploadId:s.uploadId, title:(text || f.name).slice(0, 100), cat:'media', desc:'', pos:0, sent:0,
+      post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.isAdmin && d.pin)}};
+    S.draft = {text:'', cat:d.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
+    const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
+    toast('Video upload started. Keep this page open.'); runUpload(upJob);
+  } catch (err){
+    toast(err.code === 'bad_action' ? 'The church server needs its update before it can take videos. See SETUP.md.' : errMsg(err));
+  }
+  S.posting = false; composerBits();
+}
 async function submitPost(){
+  if (S.draft.video) return postWithVideo();
   if (S.posting || !guard()) return;
   const text = S.draft.text.trim();
   if (!text && !S.draft.photos.length) return;
   S.posting = true; composerBits();
   try {
     await act('post', {cat:S.draft.cat, text, photos:S.draft.photos, pinned:!!(S.isAdmin && S.draft.pin)});
-    S.draft = {text:'', cat:S.draft.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false};
+    S.draft = {text:'', cat:S.draft.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
     const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
   } catch (err){}
   S.posting = false; composerBits();
@@ -1437,12 +1467,28 @@ async function runUpload(job){
   let lock = null; try { lock = navigator.wakeLock && await navigator.wakeLock.request('screen'); } catch (e) {}
   upShow(job);
   try {
-    if (job.pos > 0 || job.retry) { try { const w = await driveWhere(job); if (!w.done && w.pos != null) job.pos = job.sent = w.pos; if (w.done) job.pos = job.sent = job.file.size, job.driveId = w.id; } catch (e) { if (e.fatal || e.cancelled) throw e; } }
-    if (job.pos < job.file.size) { const r = await driveSend(job); if (r.id) job.driveId = r.id; }
-    job.finishing = true; upShow(job);
-    await api('finishUpload', {uploadId:job.uploadId, driveId:job.driveId || '', title:job.title, cat:job.cat, desc:job.desc, name:job.file.name, mime:job.file.type || 'application/octet-stream'});
-    await sync();
-    upJob = null; upShow(null); toast('Uploaded. A big video may need a little time on Google Drive before it can play.');
+    if (!job.saved){
+      if (job.pos > 0 || job.retry) { try { const w = await driveWhere(job); if (!w.done && w.pos != null) job.pos = job.sent = w.pos; if (w.done) job.pos = job.sent = job.file.size, job.driveId = w.id; } catch (e) { if (e.fatal || e.cancelled) throw e; } }
+      if (job.pos < job.file.size) { const r = await driveSend(job); if (r.id) job.driveId = r.id; }
+      job.finishing = true; upShow(job);
+      await api('finishUpload', {uploadId:job.uploadId, driveId:job.driveId || '', title:job.title, cat:job.cat, desc:job.desc, name:job.file.name, mime:job.file.type || 'application/octet-stream'});
+      job.saved = true;
+      await sync();
+    }
+    if (job.post && !job.posted){
+      job.finishing = true; upShow(job);
+      let id = job.driveId;
+      if (!idOk(id) || !id){
+        const mine = S.files.filter(x => x.authorId === S.uid && x.name === job.file.name).sort((p, q) => Number(q.createdAt) - Number(p.createdAt))[0];
+        id = mine && mine.driveId;
+      }
+      if (!id) throw new Error('The video is saved in the Library, but it could not be added to the post. Post it again with its link.');
+      const p = job.post, link = driveUrl(id);
+      await api('post', {cat:p.cat, text:(p.text ? p.text + '\n\n' : '') + link, photos:p.photos, pinned:p.pinned});
+      job.posted = true;
+      await sync();
+    }
+    upJob = null; upShow(null); toast(job.post ? 'Video posted. Google Drive may need a few minutes before it can play.' : 'Uploaded. A big video may need a little time on Google Drive before it can play.');
     if (S.route === 'library') renderLibrary();
   } catch (e){
     job.finishing = false;
@@ -1609,6 +1655,8 @@ document.addEventListener('click', e => {
     case 'more': S.limit += 30; refresh(); break;
     case 'ccat': S.draft.cat = el.dataset.cat; composerBits(); break;
     case 'attach': $('#cFile') && $('#cFile').click(); break;
+    case 'attachvid': $('#cVid') && $('#cVid').click(); break;
+    case 'rmvid': S.draft.video = null; composerBits(); break;
     case 'rmphoto': S.draft.photos.splice(Number(el.dataset.i), 1); composerBits(); break;
     case 'post': submitPost(); break;
     case 'react': toggleReact(id); break;
