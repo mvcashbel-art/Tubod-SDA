@@ -50,6 +50,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
 .ic{width:20px;height:20px;flex:none}
 
+/* shared videos */
+.vid{margin:10px 0 2px;border-radius:12px;overflow:hidden;background:#0d1b26;aspect-ratio:16/9;position:relative}
+.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vid-play{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;background:linear-gradient(135deg,#17324d,#1D6A8A);cursor:pointer;display:grid;place-items:center}
+.vid-play img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vid-btn{position:relative;width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.62);border:2px solid #fff}
+.vid-btn::after{content:"";position:absolute;left:25px;top:18px;border-left:20px solid #fff;border-top:14px solid transparent;border-bottom:14px solid transparent}
+.vid-play:hover .vid-btn,.vid-play:focus-visible .vid-btn{background:var(--accent)}
+.vid-src{position:absolute;left:10px;bottom:8px;color:#fff;font-size:.78rem;font-weight:600;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:999px}
+.p-text a,.tx a{color:var(--accent);word-break:break-all}
+
 /* top bar */
 .top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .top-in{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:20px}
@@ -260,6 +271,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 .lightbox img{max-width:100%;max-height:100%;border-radius:8px}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:70;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.on{opacity:1}
+#upbar{position:fixed;left:50%;bottom:132px;transform:translateX(-50%);width:min(440px,calc(100% - 24px));background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(23,50,77,.22);padding:12px 14px;z-index:60}
+#upbar[hidden]{display:none}
+#upbar b{display:block;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#upbar .up-meta{font-size:.82rem;color:var(--muted);margin:2px 0 8px}
+.up-track{height:8px;border-radius:99px;background:#E3ECF1;overflow:hidden}
+.up-fill{height:100%;width:0;background:var(--accent);transition:width .3s}
+#upbar .up-row{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+#upbar.err .up-fill{background:#B3382C}
+.vid-note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+
 
 .tabs{display:none}
 @media (max-width:900px){
@@ -378,6 +399,7 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
   <aside class="side" id="side"></aside>
 </div>
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
+<div id="upbar" hidden role="status" aria-live="polite"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <noscript><div class="note warn" style="margin:16px">This site needs JavaScript. Please turn it on in your browser.</div></noscript>
 
@@ -460,7 +482,8 @@ function fmtSize(n){
   n = Number(n) || 0;
   if (n < 1024) return n + ' B';
   if (n < 1048576) return Math.round(n / 1024) + ' KB';
-  return (n / 1048576).toFixed(1) + ' MB';
+  if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+  return (n / 1073741824).toFixed(2) + ' GB';
 }
 const hue = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
 const initials = n => String(n).trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
@@ -471,6 +494,53 @@ function av(id, size = 'md'){
   if (u) return `<img class="av ${size}" src="${u}" alt="" loading="lazy">`;
   const h = hue(id);
   return `<span class="av ${size}" style="background:hsl(${h} 42% 88%);color:hsl(${h} 45% 26%)">${esc(initials(nameOf(id)))}</span>`;
+}
+/* links and videos inside posts: no upload, the video stays on YouTube, Facebook or Google Drive */
+const URL_RX = /https?:\/\/[^\s<>"']+/gi;
+function richText(t){
+  return esc(t || '').replace(URL_RX, m => {
+    let url = m, tail = '';
+    const cut = url.match(/[.,;:!?)\]]+$/); if (cut){ tail = cut[0]; url = url.slice(0, -tail.length); }
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${tail}`;
+  });
+}
+function videoOf(text){
+  const found = String(text || '').match(URL_RX) || [];
+  for (let raw of found){
+    raw = raw.replace(/[.,;:!?)\]]+$/, '');
+    let u; try { u = new URL(raw); } catch (e) { continue; }
+    const host = u.hostname.replace(/^(www\.|m\.|web\.|mbasic\.)/, '');
+    if (host === 'youtu.be'){
+      const id = u.pathname.slice(1).split('/')[0]; if (/^[\w-]{6,20}$/.test(id)) return {k:'yt', id, url:raw};
+    }
+    if (host === 'youtube.com' || host === 'music.youtube.com'){
+      let id = u.searchParams.get('v'); const m = u.pathname.match(/^\/(?:shorts|live|embed)\/([\w-]{6,20})/); if (!id && m) id = m[1];
+      if (id && /^[\w-]{6,20}$/.test(id)) return {k:'yt', id, url:raw};
+    }
+    if (host === 'facebook.com' || host === 'fb.watch'){
+      if (host === 'fb.watch' || /\/(videos?|reel|watch)\b/.test(u.pathname) || u.searchParams.get('v')) return {k:'fb', url:raw};
+    }
+    if (host === 'drive.google.com'){
+      const m = u.pathname.match(/^\/file\/d\/([\w-]{10,60})/); if (m) return {k:'gd', id:m[1], url:raw};
+    }
+  }
+  return null;
+}
+function videoCard(text){
+  const v = videoOf(text); if (!v) return '';
+  const label = v.k === 'yt' ? 'YouTube' : v.k === 'fb' ? 'Facebook' : 'Google Drive';
+  const thumb = v.k === 'yt' ? `<img src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">` : '';
+  return `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="${v.k}" data-id="${esc(v.id || '')}" data-url="${esc(v.url)}" aria-label="Play video from ${label}">${thumb}<span class="vid-btn" aria-hidden="true"></span><span class="vid-src">${label}</span></button></div>`;
+}
+function playVideo(btn){
+  const k = btn.dataset.k, id = btn.dataset.id, url = btn.dataset.url; let src = '';
+  if (k === 'yt') src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;
+  else if (k === 'gd') src = `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+  else if (k === 'fb') src = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`;
+  if (!src) return;
+  const f = document.createElement('iframe');
+  f.src = src; f.title = 'Video'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
+  const box = btn.parentNode; box.innerHTML = ''; box.appendChild(f);
 }
 const photoImg = id => { const u = imgUrl(id, 1100); return u ? `<img src="${u}" alt="" loading="lazy">` : ''; };
 
@@ -947,7 +1017,7 @@ function msgHTML(p){
   const t = new Date(p.createdAt || 0).toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit'});
   return `<div class="msg ${me ? 'me' : ''}" data-id="${esc(p.id)}">${me ? '' : av(p.authorId, 'sm')}
     <div class="mcol">
-      <div class="bub"><div class="who">${esc(nameOf(p.authorId))}</div>${p.text ? `<div class="tx">${esc(p.text)}</div>` : ''}${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}${programBlock(p)}</div>
+      <div class="bub"><div class="who">${esc(nameOf(p.authorId))}</div>${p.text ? `<div class="tx">${richText(p.text)}</div>` : ''}${videoCard(p.text)}${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}${programBlock(p)}</div>
       <div class="m-info"><span>${t}</span>
         <button data-act="react" data-id="${esc(p.id)}" class="${iReact ? 'on' : ''}" aria-pressed="${!!iReact}">${icon('heart')}Amen${rx.length ? ' · ' + rx.length : ''}</button>
         <button data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}Reply${cms.length ? ' · ' + cms.length : ''}</button>
@@ -1093,7 +1163,8 @@ function postHTML(p){
       ${S.isAdmin ? `<button class="icon-btn" data-act="pin" data-id="${esc(p.id)}" aria-label="${p.pinned ? 'Unpin' : 'Pin'} post" title="${p.pinned ? 'Unpin' : 'Pin to top'}">${icon('pin')}</button>` : ''}
       ${mine(p.authorId) ? `<button class="icon-btn" data-act="delpost" data-id="${esc(p.id)}" aria-label="Delete post" title="Delete post">${icon('trash')}</button>` : ''}
     </div>
-    ${p.text ? `<p class="p-text">${esc(p.text)}</p>` : ''}
+    ${p.text ? `<p class="p-text">${richText(p.text)}</p>` : ''}
+    ${videoCard(p.text)}
     ${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}
     ${programBlock(p)}
     <div class="acts">
@@ -1122,7 +1193,7 @@ function buildComposer(){
   if (!S.uid){ slot.innerHTML = ''; return; }
   const first = (nameOf(S.uid) || '').split(' ')[0];
   slot.innerHTML = `<section class="card composer" aria-label="Write a post">
-    <div class="c-row"><span id="cAv">${av(S.uid)}</span><textarea id="cText" rows="2" maxlength="3000" placeholder="What is on your heart, ${esc(first)}?" aria-label="Write a post">${esc(S.draft.text)}</textarea></div>
+    <div class="c-row"><span id="cAv">${av(S.uid)}</span><textarea id="cText" rows="2" maxlength="3000" placeholder="What is on your heart, ${esc(first)}? You can paste a video link." aria-label="Write a post">${esc(S.draft.text)}</textarea></div>
     <div class="prev" id="cPrev"></div>
     <div class="c-bar">
       <div class="cats" id="cCats" role="group" aria-label="Post type"></div>
@@ -1179,14 +1250,20 @@ async function submitPost(){
 /* library */
 const isAV = m => /^(audio|video)\//.test(m);
 function fileIcon(mime){ return /^audio/.test(mime) ? 'music' : /^image/.test(mime) ? 'image' : 'file'; }
+function fileVideo(f){
+  const id = f.driveId; if (!idOk(id)) return '';
+  const t = imgUrl(id, 640);
+  return `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="gd" data-id="${esc(id)}" data-url="" aria-label="Play ${esc(f.title || 'video')}">${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span class="vid-btn" aria-hidden="true"></span><span class="vid-src">Google Drive</span></button></div><p class="vid-note">New or very big videos can take a while to get ready. If it says it is still processing, try again later.</p>`;
+}
 function fileHTML(f){
   const url = driveUrl(f.driveId), mime = String(f.mime || '');
   const cat = (LIB_CATS.find(c => c[0] === f.cat) || [0, 'Other'])[1];
-  const prev = /^image\//.test(mime) && !/svg/.test(mime) && imgUrl(f.driveId, 700) ? `<img class="f-img" src="${imgUrl(f.driveId, 700)}" alt="${esc(f.title)}" loading="lazy" data-act="zoom">` : '';
+  const vid = /^video\//.test(mime);
+  const prev = vid ? fileVideo(f) : /^image\//.test(mime) && !/svg/.test(mime) && imgUrl(f.driveId, 700) ? `<img class="f-img" src="${imgUrl(f.driveId, 700)}" alt="${esc(f.title)}" loading="lazy" data-act="zoom">` : '';
   return `<article class="card file" data-id="${esc(f.id)}">
     <div class="f-head"><span class="f-ico">${icon(fileIcon(mime))}</span><div><h3>${esc(f.title || f.name)}</h3><p class="meta">${esc(cat)} · ${fmtSize(f.size)} · ${esc(nameOf(f.authorId))} · ${ago(f.createdAt)}</p></div></div>
     ${f.desc ? `<p class="f-desc">${esc(f.desc)}</p>` : ''}${prev}
-    <div class="f-act">${url ? `<a class="btn" href="${url}" target="_blank" rel="noopener">${isAV(mime) ? 'Play' : 'Open or download'}</a>` : ''}${mine(f.authorId) ? `<button class="btn quiet danger" data-act="delfile" data-id="${esc(f.id)}">Delete</button>` : ''}</div></article>`;
+    <div class="f-act">${url ? `<a class="btn" href="${url}" target="_blank" rel="noopener">${vid ? 'Open in Google Drive' : isAV(mime) ? 'Play' : 'Open or download'}</a>` : ''}${mine(f.authorId) ? `<button class="btn quiet danger" data-act="delfile" data-id="${esc(f.id)}">Delete</button>` : ''}</div></article>`;
 }
 function renderLibrary(){
   const cats = $('#libCats'); if (!cats) return;
@@ -1281,10 +1358,105 @@ function openPasswordModal(){
 }
 
 /* ---------- library upload ---------- */
+/* Small files go through the church server. Big ones go straight from this device to the church
+   Google Drive in 8 MB pieces, so they can be many gigabytes and can pick up after a drop in signal. */
+const BIG_CHUNK = 8 * 1048576;                 // must be a multiple of 256 KB for Google Drive
+const MAX_BIG_GB = 50;
+let upJob = null;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fmtDur = s => !isFinite(s) || s < 0 ? '' : s < 90 ? Math.max(1, Math.round(s)) + ' sec' : s < 5400 ? Math.round(s / 60) + ' min' : (s / 3600).toFixed(1) + ' hours';
+function driveReq(url, headers, body, ctl){
+  return new Promise((res, rej) => {
+    const x = new XMLHttpRequest(); ctl.xhr = x;
+    x.open('PUT', url);
+    Object.keys(headers).forEach(k => x.setRequestHeader(k, headers[k]));
+    if (body && x.upload) x.upload.onprogress = e => ctl.onBytes && ctl.onBytes(e.loaded);
+    x.onload = () => res({status:x.status, range:x.getResponseHeader('Range'), text:x.responseText || ''});
+    x.onerror = () => { const e = new Error('Lost the connection.'); e.net = true; rej(e); };
+    x.ontimeout = x.onerror;
+    x.onabort = () => { const e = new Error('Upload cancelled.'); e.cancelled = true; rej(e); };
+    x.send(body || null);
+  });
+}
+const rangeEnd = r => { const m = /bytes=\d+-(\d+)/.exec(r || ''); return m ? Number(m[1]) + 1 : null; };
+function fatal(msg){ const e = new Error(msg); e.fatal = true; return e; }
+/* where does Google Drive think we are? returns {done, id} or {pos} */
+async function driveWhere(job){
+  const r = await driveReq(job.url, {'Content-Range': `bytes */${job.file.size}`}, null, job);
+  if (r.status === 200 || r.status === 201) return {done:true, id:idFrom(r.text)};
+  if (r.status === 308) { const p = rangeEnd(r.range); return {pos: p == null ? (r.range ? 0 : null) : p}; }
+  if (r.status === 404 || r.status === 410) throw fatal('This upload expired. Please start it again.');
+  throw new Error('Google Drive said ' + r.status);
+}
+function idFrom(text){ try { const j = JSON.parse(text); return j && j.id ? String(j.id) : ''; } catch (e) { return ''; } }
+async function driveSend(job){
+  const total = job.file.size; let fails = 0;
+  while (true){
+    if (job.cancelled) { const e = new Error('Upload cancelled.'); e.cancelled = true; throw e; }
+    const start = job.pos, end = Math.min(start + BIG_CHUNK, total);
+    job.onBytes = n => { job.sent = start + n; upShow(job); };
+    try {
+      const r = await driveReq(job.url, {'Content-Range': `bytes ${start}-${end - 1}/${total}`}, job.file.slice(start, end), job);
+      if (r.status === 200 || r.status === 201) { job.pos = job.sent = total; return {id:idFrom(r.text)}; }
+      if (r.status === 308) { const p = rangeEnd(r.range); job.pos = p == null ? end : p; job.sent = job.pos; fails = 0; upShow(job); continue; }
+      if (r.status === 404 || r.status === 410) throw fatal('This upload expired. Please start it again.');
+      if (r.status === 403 || r.status === 401) throw fatal('Google Drive refused the upload. The church Drive may be full, or the admin must re-authorize the church script.');
+      throw new Error('Google Drive said ' + r.status);
+    } catch (e){
+      if (e.cancelled || e.fatal) throw e;
+      if (++fails > 10) throw e;
+      job.note = 'Connection problem. Trying again…'; upShow(job);
+      await sleep(Math.min(30000, 1500 * 2 ** fails));
+      try {                                         // find out how much Drive really has
+        const w = await driveWhere(job);
+        if (w.done) { job.pos = job.sent = total; return {id:w.id}; }
+        if (w.pos != null) { job.pos = job.sent = w.pos; }
+      } catch (e2) { if (e2.cancelled || e2.fatal) throw e2; }
+      job.note = '';
+    }
+  }
+}
+function upShow(job){
+  const bar = $('#upbar'); if (!bar) return;
+  if (!job){ bar.hidden = true; bar.className = ''; bar.innerHTML = ''; return; }
+  const total = job.file.size, done = Math.min(job.sent || 0, total), pct = total ? Math.floor(done / total * 100) : 0;
+  const secs = (Date.now() - job.t0) / 1000, rate = secs > 3 && done > job.base ? (done - job.base) / secs : 0;
+  const left = rate ? fmtDur((total - done) / rate) : '';
+  bar.hidden = false; bar.className = job.error ? 'err' : '';
+  const meta = job.error ? esc(job.error)
+    : job.finishing ? 'Almost done. Saving to the library…'
+    : job.note ? esc(job.note)
+    : `${pct}% · ${fmtSize(done)} of ${fmtSize(total)}${left ? ' · about ' + left + ' left' : ''}`;
+  bar.innerHTML = `<b>${esc(job.title)}</b><div class="up-meta">${meta}</div><div class="up-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="up-fill" style="width:${pct}%"></div></div>
+    <div class="up-row">${job.error ? '<button type="button" class="btn sm" data-act="upretry">Try again</button>' : ''}${job.finishing ? '' : '<button type="button" class="btn sm" data-act="upcancel">Cancel</button>'}</div>`;
+}
+const upGuard = e => { if (upJob) { e.preventDefault(); e.returnValue = ''; } };
+async function runUpload(job){
+  job.error = ''; job.cancelled = false; job.note = ''; job.t0 = Date.now(); job.base = job.sent || 0;
+  window.addEventListener('beforeunload', upGuard);
+  let lock = null; try { lock = navigator.wakeLock && await navigator.wakeLock.request('screen'); } catch (e) {}
+  upShow(job);
+  try {
+    if (job.pos > 0 || job.retry) { try { const w = await driveWhere(job); if (!w.done && w.pos != null) job.pos = job.sent = w.pos; if (w.done) job.pos = job.sent = job.file.size, job.driveId = w.id; } catch (e) { if (e.fatal || e.cancelled) throw e; } }
+    if (job.pos < job.file.size) { const r = await driveSend(job); if (r.id) job.driveId = r.id; }
+    job.finishing = true; upShow(job);
+    await api('finishUpload', {uploadId:job.uploadId, driveId:job.driveId || '', title:job.title, cat:job.cat, desc:job.desc, name:job.file.name, mime:job.file.type || 'application/octet-stream'});
+    await sync();
+    upJob = null; upShow(null); toast('Uploaded. A big video may need a little time on Google Drive before it can play.');
+    if (S.route === 'library') renderLibrary();
+  } catch (e){
+    job.finishing = false;
+    if (e.cancelled){ upJob = null; upShow(null); toast('Upload cancelled.'); }
+    else { job.error = errMsg(e); job.retry = true; upShow(job); }
+  } finally {
+    window.removeEventListener('beforeunload', upGuard);
+    try { lock && lock.release(); } catch (e) {}
+  }
+}
 function openUploadModal(){
   const m = openModal('Add a file', `
     <form id="uForm" class="m-body" style="padding:0">
-      <label class="fld" for="uFile">File<input id="uFile" type="file" required><small>Up to ${MAX_FILE_MB} MB. Audio, video, PDF, Word, slides and photos all work.</small></label>
+      <label class="fld" for="uFile">File<input id="uFile" type="file" required><small>Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. Keep this page open and your phone awake until it finishes.</small></label>
       <label class="fld" for="uTitle">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
       <label class="fld" for="uCat">Category<select id="uCat">${LIB_CATS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
       <label class="fld" for="uDesc">Description<textarea id="uDesc" maxlength="300" placeholder="Optional"></textarea></label>
@@ -1299,11 +1471,26 @@ function openUploadModal(){
   $('#uForm', m).addEventListener('submit', async e => {
     e.preventDefault();
     const f = $('#uFile', m).files[0]; if (!f) return;
-    if (f.size > MAX_FILE_MB * 1048576){ toast(`That file is over ${MAX_FILE_MB} MB. Choose a smaller one.`); return; }
-    const btn = $('#uSave', m); btn.disabled = true; btn.textContent = 'Uploading… please wait';
+    const title = $('#uTitle', m).value, cat = $('#uCat', m).value, desc = $('#uDesc', m).value;
+    if (f.size > MAX_BIG_GB * 1073741824){ toast(`That file is over ${MAX_BIG_GB} GB. Choose a smaller one.`); return; }
+    const btn = $('#uSave', m); btn.disabled = true;
+    if (f.size > MAX_FILE_MB * 1048576){
+      if (upJob){ toast('Another upload is still running. Wait for it to finish first.'); btn.disabled = false; return; }
+      btn.textContent = 'Starting…';
+      try {
+        const s = await api('startUpload', {size:f.size, mime:f.type || 'application/octet-stream', origin:location.origin});
+        upJob = {file:f, url:s.url, uploadId:s.uploadId, title:(title || f.name).trim(), cat, desc, pos:0, sent:0};
+        closeModal(); toast('Upload started. Keep this page open.'); runUpload(upJob);
+      } catch (err){
+        toast(err.code === 'bad_action' ? 'The church server needs its update before it can take big files. See SETUP.md.' : errMsg(err));
+        btn.disabled = false; btn.textContent = 'Upload';
+      }
+      return;
+    }
+    btn.textContent = 'Uploading… please wait';
     try {
       const data = await fileToB64(f);
-      await api('uploadFile', {title:$('#uTitle', m).value, cat:$('#uCat', m).value, desc:$('#uDesc', m).value, name:f.name, mime:f.type || 'application/octet-stream', data});
+      await api('uploadFile', {title, cat, desc, name:f.name, mime:f.type || 'application/octet-stream', data});
       await sync(); closeModal(); toast('File added to the library.');
     } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Upload'; }
   });
@@ -1442,6 +1629,9 @@ document.addEventListener('click', e => {
     case 'copyann': copyAnn(id); break;
     case 'smsann': smsAnn(id); break;
     case 'smsinfo': smsInfo(id); break;
+    case 'playvid': playVideo(el); break;
+    case 'upcancel': if (upJob){ upJob.cancelled = true; try { upJob.xhr && upJob.xhr.abort(); } catch (e) {} if (upJob.error){ upJob = null; upShow(null); } } break;
+    case 'upretry': if (upJob && upJob.error) runUpload(upJob); break;
     case 'copytext': copyFrom(el.dataset.target); break;
     case 'shareann': shareAnn(id); break;
     case 'invite': shareInvite(); break;
