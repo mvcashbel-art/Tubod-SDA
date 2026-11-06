@@ -268,7 +268,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .fld small{font-weight:400;color:var(--muted)}
 .m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
 .lightbox{position:fixed;inset:0;z-index:60;background:rgba(10,24,38,.88);display:grid;place-items:center;padding:16px;cursor:zoom-out}
-.lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+.lightbox{flex-direction:column;gap:10px}
+.lightbox img{max-width:100%;max-height:calc(100% - 64px);border-radius:8px;object-fit:contain}
+.lb-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;color:#fff;font-size:.86rem;cursor:default}
+.lb-bar a{color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:5px 12px;text-decoration:none;font-weight:600}
+.lb-bar a:hover{background:rgba(255,255,255,.18)}
+.lb-meta{opacity:.9;overflow-wrap:anywhere;text-align:center}
+.shots.gn{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.shots.gn img{aspect-ratio:1;min-height:0}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:70;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.on{opacity:1}
 #upbar{position:fixed;left:50%;bottom:132px;transform:translateX(-50%);width:min(440px,calc(100% - 24px));background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(23,50,77,.22);padding:12px 14px;z-index:60}
@@ -522,6 +529,12 @@ function ago(ts){
   const d = new Date(ts);
   return d.toLocaleDateString('en-PH', {month:'short', day:'numeric', year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined});
 }
+const extOf = n => { const m = /\.([A-Za-z0-9]{1,5})$/.exec(String(n || '')); return m ? m[1].toUpperCase() : ''; };
+function kindOf(f){
+  const mime = String(f.mime || ''), ext = extOf(f.name);
+  const w = /^video\//.test(mime) ? 'video' : /^audio\//.test(mime) ? 'audio' : /^image\//.test(mime) ? 'photo' : 'file';
+  return (ext ? ext + ' ' : '') + w;
+}
 function fmtSize(n){
   n = Number(n) || 0;
   if (n < 1024) return n + ' B';
@@ -586,7 +599,7 @@ function playVideo(btn){
   f.src = src; f.title = 'Video'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
   const box = btn.parentNode; box.innerHTML = ''; box.appendChild(f);
 }
-const photoImg = id => { const u = imgUrl(id, 1100); return u ? `<img src="${u}" alt="" loading="lazy">` : ''; };
+const photoImg = id => { const u = imgUrl(id, 1600); return u ? `<img src="${u}" alt="" loading="lazy">` : ''; };
 
 /* ---------- talking to the church server ---------- */
 async function api(action, data = {}){
@@ -751,9 +764,21 @@ function confirmBox(title, text, okLabel){
     $('#cNo', m).focus();
   });
 }
-function openPhoto(src){
-  const l = document.createElement('div'); l.className = 'lightbox'; l.innerHTML = `<img src="${esc(src)}" alt="">`;
-  l.onclick = () => l.remove(); document.body.appendChild(l);
+function openPhoto(src, info){
+  info = info || {};
+  const l = document.createElement('div'); l.className = 'lightbox';
+  const open = idOk(info.id) && info.id ? driveUrl(info.id) : '', dl = idOk(info.id) && info.id ? `https://drive.google.com/uc?export=download&id=${info.id}` : '';
+  l.innerHTML = `<img src="${esc(src)}" alt="">${info.id ? `<div class="lb-bar"><span class="lb-meta">${esc(info.meta || '')}</span>${dl ? `<a href="${dl}" target="_blank" rel="noopener">Download original</a>` : ''}${open ? `<a href="${open}" target="_blank" rel="noopener">Open in Drive</a>` : ''}</div>` : ''}`;
+  const im = l.querySelector('img'), meta = l.querySelector('.lb-meta');
+  im.addEventListener('load', () => { if (meta) meta.textContent = [info.meta, im.naturalWidth + ' × ' + im.naturalHeight + ' pixels'].filter(Boolean).join(' · '); });
+  l.addEventListener('click', e => { if (e.target.closest('.lb-bar')) return; l.remove(); });
+  document.body.appendChild(l);
+}
+/* open a Drive picture at its real size, with its type and size shown */
+function zoomDrive(src){
+  const m = /\/d\/([\w-]+)=/.exec(src || ''); const id = m ? m[1] : '';
+  const f = id && S.files.find(x => x.driveId === id);
+  openPhoto(id ? `https://lh3.googleusercontent.com/d/${id}=s0` : src, {id, meta: f ? [f.title || f.name, kindOf(f), fmtSize(f.size)].join(' · ') : 'Original photo'});
 }
 const mine = authorId => S.isAdmin || (S.uid && S.uid === authorId);
 function guard(){ if (!S.token || !S.uid){ toast('Please sign in first.'); return false; } return true; }
@@ -1057,11 +1082,11 @@ function msgHTML(p){
   const me = !!S.uid && p.authorId === S.uid;
   const rx = S.reactions.filter(r => r.postId === p.id), iReact = S.uid && rx.some(r => r.uid === S.uid);
   const cms = S.comments.filter(c => c.postId === p.id), open = S.open.has(p.id);
-  const photos = Array.isArray(p.photos) ? p.photos.slice(0, 3) : [];
+  const photos = Array.isArray(p.photos) ? p.photos.slice(0, 10) : [];
   const t = new Date(p.createdAt || 0).toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit'});
   return `<div class="msg ${me ? 'me' : ''}" data-id="${esc(p.id)}">${me ? '' : av(p.authorId, 'sm')}
     <div class="mcol">
-      <div class="bub"><div class="who">${esc(nameOf(p.authorId))}</div>${p.text ? `<div class="tx">${richText(p.text)}</div>` : ''}${videoCard(p.text)}${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}${programBlock(p)}</div>
+      <div class="bub"><div class="who">${esc(nameOf(p.authorId))}</div>${p.text ? `<div class="tx">${richText(p.text)}</div>` : ''}${videoCard(p.text)}${photos.length ? `<div class="shots ${photos.length > 3 ? 'gn' : 'g' + photos.length}">${photos.map(photoImg).join('')}</div>` : ''}${programBlock(p)}</div>
       <div class="m-info"><span>${t}</span>
         <button data-act="react" data-id="${esc(p.id)}" class="${iReact ? 'on' : ''}" aria-pressed="${!!iReact}">${icon('heart')}Amen${rx.length ? ' · ' + rx.length : ''}</button>
         <button data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}Reply${cms.length ? ' · ' + cms.length : ''}</button>
@@ -1194,7 +1219,7 @@ function renderFilters(){
 }
 function postHTML(p){
   const cat = CATS[p.cat] ? p.cat : 'share';
-  const photos = Array.isArray(p.photos) ? p.photos.slice(0, 3) : [];
+  const photos = Array.isArray(p.photos) ? p.photos.slice(0, 10) : [];
   const cms = S.comments.filter(c => c.postId === p.id);
   const rx = S.reactions.filter(r => r.postId === p.id);
   const iReact = S.uid && rx.some(r => r.uid === S.uid);
@@ -1209,7 +1234,7 @@ function postHTML(p){
     </div>
     ${p.text ? `<p class="p-text">${richText(p.text)}</p>` : ''}
     ${videoCard(p.text)}
-    ${photos.length ? `<div class="shots g${photos.length}">${photos.map(photoImg).join('')}</div>` : ''}
+    ${photos.length ? `<div class="shots ${photos.length > 3 ? 'gn' : 'g' + photos.length}">${photos.map(photoImg).join('')}</div>` : ''}
     ${programBlock(p)}
     <div class="acts">
       <button class="btn quiet ${iReact ? 'on' : ''}" data-act="react" data-id="${esc(p.id)}" aria-pressed="${!!iReact}">${icon('heart')}${CATS[cat].react}${rx.length ? ' · ' + rx.length : ''}</button>
@@ -1261,7 +1286,7 @@ function composerBits(){
   const keys = Object.keys(CATS).filter(k => k !== 'announcement' || S.isAdmin);
   if (!keys.includes(S.draft.cat)) S.draft.cat = 'share';
   cats.innerHTML = keys.map(k => `<button type="button" class="chip ${S.draft.cat === k ? 'on' : ''}" data-act="ccat" data-cat="${k}" aria-pressed="${S.draft.cat === k}">${esc(CATS[k].label)}</button>`).join('');
-  $('#cPrev').innerHTML = S.draft.photos.map((d, i) => `<div class="pv"><img src="${d}" alt="Photo ${i + 1} to post"><button type="button" data-act="rmphoto" data-i="${i}" aria-label="Remove photo ${i + 1}">${icon('x')}</button></div>`).join('')
+  $('#cPrev').innerHTML = S.draft.photos.map((d, i) => `<div class="pv"><img src="${d.url}" alt="Photo ${i + 1} to post"><button type="button" data-act="rmphoto" data-i="${i}" aria-label="Remove photo ${i + 1}">${icon('x')}</button></div>`).join('')
     + (S.draft.video ? `<div class="pv vfile">${icon('file')}<span>${esc(S.draft.video.name)} · ${fmtSize(S.draft.video.size)}</span><button type="button" data-act="rmvid" aria-label="Remove video">${icon('x')}</button></div>` : '');
   $('#cPinWrap').hidden = !S.isAdmin;
   $('#cPin').checked = !!S.draft.pin;
@@ -1273,14 +1298,28 @@ function refreshComposer(){
   if (!$('#cText') && S.uid) buildComposer();
   else if ($('#cText')) composerBits();
 }
-async function onPickPhotos(e){
+const ORIG_TYPES = /^image\/(jpeg|png|webp|gif)$/;
+function onPickPhotos(e){
   const files = [...e.target.files]; e.target.value = '';
   for (const f of files){
-    if (S.draft.photos.length >= 3){ toast('You can add up to 3 photos.'); break; }
-    try { S.draft.photos.push(await shrink(f, {w:1100, q:.78, maxChars:300000})); }
-    catch (err){ toast(errMsg(err)); }
+    if (S.draft.photos.length >= 10){ toast('You can add up to 10 photos to one post. For more, make an album in the Library.'); break; }
+    if (f.size > 25 * 1048576){ toast(`"${f.name}" is over 25 MB. Add it to a Library album instead.`); continue; }
+    S.draft.photos.push({file:f, url:URL.createObjectURL(f)});
   }
   composerBits();
+}
+const readDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(new Error('Could not read that photo.')); r.readAsDataURL(f); });
+/* photos are sent exactly as they are. Only if the church server is the old version do we send smaller copies. */
+async function sendPost(cat, text, list, pinned){
+  const files = list.map(x => x.file);
+  let photos = await Promise.all(files.map(async f => ORIG_TYPES.test(f.type) ? readDataUrl(f) : shrink(f, {w:4000, q:.95, maxChars:30000000})));
+  try { return await api('post', {cat, text, photos, pinned}); }
+  catch (e){
+    if (e.code !== 'bad_image' || !files.length) throw e;
+    toast('The church server needs its update to post full-size photos. Posting smaller copies for now.');
+    photos = []; for (const f of files) photos.push(await shrink(f, {w:1600, q:.85, maxChars:2800000}));
+    return await api('post', {cat, text, photos, pinned});
+  }
 }
 function onPickVideo(e){
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
@@ -1304,10 +1343,10 @@ async function submitPost(){
   if (!text && !S.draft.photos.length) return;
   S.posting = true; composerBits();
   try {
-    await act('post', {cat:S.draft.cat, text, photos:S.draft.photos, pinned:!!(S.isAdmin && S.draft.pin)});
+    await sendPost(S.draft.cat, text, S.draft.photos, !!(S.isAdmin && S.draft.pin)); await sync();
     S.draft = {text:'', cat:S.draft.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
     const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
-  } catch (err){}
+  } catch (err){ toast(errMsg(err)); }
   S.posting = false; composerBits();
 }
 
@@ -1325,7 +1364,7 @@ function fileHTML(f){
   const vid = /^video\//.test(mime);
   const prev = vid ? fileVideo(f) : /^image\//.test(mime) && !/svg/.test(mime) && imgUrl(f.driveId, 700) ? `<img class="f-img" src="${imgUrl(f.driveId, 700)}" alt="${esc(f.title)}" loading="lazy" data-act="zoom">` : '';
   return `<article class="card file" data-id="${esc(f.id)}">
-    <div class="f-head"><span class="f-ico">${icon(fileIcon(mime))}</span><div><h3>${esc(f.title || f.name)}</h3><p class="meta">${esc(cat)} · ${fmtSize(f.size)} · ${esc(nameOf(f.authorId))} · ${ago(f.createdAt)}</p></div></div>
+    <div class="f-head"><span class="f-ico">${icon(fileIcon(mime))}</span><div><h3>${esc(f.title || f.name)}</h3><p class="meta">${esc(cat)} · ${esc(kindOf(f))} · ${fmtSize(f.size)} · ${esc(nameOf(f.authorId))} · ${ago(f.createdAt)}</p></div></div>
     ${descOf(f) ? `<p class="f-desc">${esc(descOf(f))}</p>` : ''}${prev}
     <div class="f-act">${url ? `<a class="btn" href="${url}" target="_blank" rel="noopener">${vid ? 'Open in Google Drive' : isAV(mime) ? 'Play' : 'Open or download'}</a>` : ''}${mine(f.authorId) ? `<button class="btn quiet danger" data-act="delfile" data-id="${esc(f.id)}">Delete</button>` : ''}</div></article>`;
 }
@@ -1363,7 +1402,7 @@ function albItem(f){
   if (/^image\//.test(mime) && imgUrl(id, 500)) body = `<img src="${imgUrl(id, 500)}" alt="${t}" loading="lazy" data-act="zoom">`;
   else if (/^video\//.test(mime) && idOk(id)) body = `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="gd" data-id="${esc(id)}" data-url="" aria-label="Play ${t}">${imgUrl(id, 400) ? `<img src="${imgUrl(id, 400)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:0;cursor:pointer" onerror="this.remove()">` : ''}<span class="vid-btn" aria-hidden="true"></span></button></div>`;
   else body = `<a class="alb-doc" href="${driveUrl(id)}" target="_blank" rel="noopener">${icon('file')}<br>${t}<br>Open</a>`;
-  return `<figure class="alb-it">${body}<figcaption><span>${t}</span>${del}</figcaption></figure>`;
+  return `<figure class="alb-it">${body}<figcaption><span>${t}<br><small>${esc(kindOf(f))} · ${fmtSize(f.size)}</small></span>${del}</figcaption></figure>`;
 }
 function openAlbum(key){
   const items = S.files.filter(f => albKey(albumOf(f)) === key).sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
@@ -1601,7 +1640,7 @@ async function runUpload(job){
       }
       if (!id) throw new Error('The video is saved in the Library, but it could not be added to the post. Post it again with its link.');
       const p = job.post, link = driveUrl(id);
-      await api('post', {cat:p.cat, text:(p.text ? p.text + '\n\n' : '') + link, photos:p.photos, pinned:p.pinned});
+      await sendPost(p.cat, (p.text ? p.text + '\n\n' : '') + link, p.photos, p.pinned);
       job.posted = true;
       await sync();
     }
@@ -1618,7 +1657,8 @@ function openUploadModal(opts){
   const albums = albumList(S.files);
   const m = openModal(opts.album ? 'Add to album' : 'Add files', `
     <form id="uForm" class="m-body" style="padding:0">
-      <label class="fld" for="uFile">Files<input id="uFile" type="file" multiple required><small>Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. They upload one after another. Keep this page open and your phone awake until it finishes.</small></label>
+      <label class="fld" for="uFile">Files<input id="uFile" type="file" multiple required><small>Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. Files are saved exactly as they are, with nothing compressed or resized. They upload one after another. Keep this page open and your phone awake until it finishes.</small></label>
+      <div id="uInfo" class="muted" hidden></div>
       <div id="uList" hidden></div>
       <label class="fld" for="uTitle" id="uTitleWrap">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
       <label class="fld" for="uAlbum">Album <small>(optional)</small><input id="uAlbum" maxlength="60" list="uAlbums" autocomplete="off" placeholder="Youth camp 2026" value="${esc(opts.album || '')}"><datalist id="uAlbums">${albums.map(a => `<option value="${esc(a.name)}">`).join('')}</datalist><small>Type a name to keep these files together in one album. Use the same name again to add more later.</small></label>
@@ -1633,13 +1673,15 @@ function openUploadModal(opts){
       title.value = ''; title.required = false; titleWrap.hidden = true;
       cat.querySelector('[value=auto]').hidden = false; cat.value = 'auto';
       list.hidden = false;
-      list.innerHTML = `<p class="muted" style="margin-bottom:6px"><b>${fs.length} files, ${esc(fmtSize(fs.reduce((n, f) => n + f.size, 0)))}.</b> You can change each title below.</p><div class="urows">${fs.map((f, i) => `<div class="urow"><input class="ut" maxlength="100" aria-label="Title for ${esc(f.name)}" value="${esc(f.name.replace(/\.[^.]+$/, ''))}"><small>${esc(f.name)} · ${esc(fmtSize(f.size))}</small></div>`).join('')}</div>`;
+      list.innerHTML = `<p class="muted" style="margin-bottom:6px"><b>${fs.length} files, ${esc(fmtSize(fs.reduce((n, f) => n + f.size, 0)))}.</b> You can change each title below.</p><div class="urows">${fs.map((f, i) => `<div class="urow"><input class="ut" maxlength="100" aria-label="Title for ${esc(f.name)}" value="${esc(f.name.replace(/\.[^.]+$/, ''))}"><small>${esc(f.name)} · ${esc(kindOf({name:f.name, mime:f.type}))} · ${esc(fmtSize(f.size))}</small></div>`).join('')}</div>`;
     } else {
       titleWrap.hidden = false; title.required = true; list.hidden = true; list.innerHTML = '';
       if (cat.value === 'auto') cat.value = 'sermons';
       const f = fs[0];
       if (f){ title.value = f.name.replace(/\.[^.]+$/, ''); cat.value = autoCat(f); }
     }
+    const info = $('#uInfo', m);
+    if (fs.length === 1){ info.hidden = false; info.textContent = `${kindOf({name:fs[0].name, mime:fs[0].type})} · ${fmtSize(fs[0].size)}`; } else { info.hidden = true; }
   });
   $('#uForm', m).addEventListener('submit', e => {
     e.preventDefault();
@@ -1759,7 +1801,7 @@ document.addEventListener('click', e => {
   const nav = e.target.closest('a[data-route]');
   if (nav){ e.preventDefault(); const r = nav.dataset.route; if (r === 'me'){ if (S.uid) go('profile', S.uid); } else go(r); return; }
   const img = e.target.closest('.shots img');
-  if (img && img.src){ openPhoto(img.src.replace(/=w\d+$/, '=w1600')); return; }
+  if (img && img.src){ zoomDrive(img.src); return; }
   const el = e.target.closest('[data-act]'); if (!el) return;
   const a = el.dataset.act, id = el.dataset.id;
   switch (a){
@@ -1784,7 +1826,7 @@ document.addEventListener('click', e => {
     case 'openalbum': openAlbum(el.dataset.k); break;
     case 'albadd': openUploadModal({album:el.dataset.name}); break;
     case 'delalbfile': (async () => { const k = S.albumOpen; await deleteFile(el.dataset.id); openAlbum(k); })(); break;
-    case 'zoom': openPhoto(el.src.replace(/=w\d+$/, '=w1600')); break;
+    case 'zoom': zoomDrive(el.src); break;
     case 'editprofile': openProfileModal(); break;
     case 'chpw': openPasswordModal(); break;
     case 'signout': signOut(); break;
