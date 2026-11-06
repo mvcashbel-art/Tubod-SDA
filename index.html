@@ -793,30 +793,10 @@ const named = items => items.filter(i => i.name);
 const partList = items => `<ul class="plist2">${items.map(i => `<li><span class="r">${esc(i.role)}</span><span class="n">${esc(i.name)}</span></li>`).join('')}</ul>`;
 const partText = items => items.filter(i => i.name).map(i => (i.role ? i.role + ': ' : '') + i.name).join(', ');
 /* the participants shown inside a worship announcement */
-function programBlock(p){
-  if (!p.svc) return '';
-  const [svcId, date] = String(p.svc).split('|');
-  const sv = services().find(x => x.id === svcId);
-  if (!sv || !/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return '';
-  const items = named(progItems(svcId, date));
-  const edit = (label) => S.isAdmin ? `<div><button type="button" class="btn sm" data-act="editprog" data-svc="${esc(svcId)}" data-date="${esc(date)}">${label}</button></div>` : '';
-  if (!items.length) return S.isAdmin ? `<div class="coming"><div>No participants listed yet.</div>${edit('Add participants')}</div>` : '';
-  return `<div class="coming"><div><b>${esc(sv.name)} · participants</b></div>${partList(items)}${edit('Edit participants')}</div>`;
-}
-const shareParticipants = p => {
-  if (!p || !p.svc) return '';
-  const [svcId, date] = String(p.svc).split('|'), t = partText(progItems(svcId, date));
-  return t ? '\nParticipants: ' + t : '';
-};
+function programBlock(p){ return ''; }
+const shareParticipants = p => '';
 /* the participants of the nearest worship, in the sidebar */
-function nextProgram(w){
-  if (!w.sv.id) return '';
-  const items = named(progItems(w.sv.id, dateOf(w)));
-  if (!items.length && !S.isAdmin) return '';
-  return `<div class="progside"><div class="when"><b>${esc(w.sv.name)}</b> · ${esc(whenText(w))}</div>
-    ${items.length ? partList(items) : '<div class="when">No participants listed yet.</div>'}
-    ${S.isAdmin ? `<div><button class="btn sm" data-act="editprog" data-svc="${esc(w.sv.id)}" data-date="${dateOf(w)}">${items.length ? 'Edit participants' : 'Add participants'}</button></div>` : ''}</div>`;
-}
+function nextProgram(w){ return ''; }
 /* editor (admins) */
 function lastProgram(svcId, date){
   const rows = S.program.filter(x => x.svcId === svcId && x.date < date && x.items.some(i => i.role || i.name)).sort((a, b) => b.date.localeCompare(a.date));
@@ -906,7 +886,7 @@ function mount(){
       <div class="msgs" id="msgs" tabindex="0" aria-label="Announcements"></div>
       ${S.isAdmin ? `<form class="chat-in wrap" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button>
           <label class="sms-opt" for="aSms"><input type="checkbox" id="aSms"><span>Also text members <span id="aSmsNote"></span></span></label>
-          ${services().length ? `<label class="sms-opt" for="aSvc"><span>Include participants for: <select id="aSvc"><option value="">No worship</option>${services().map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select> <button type="button" class="linkbtn" data-act="editprog" data-svc="" data-date="">Edit participants</button></span></label>` : ''}</form>`
+</form>`
         : `<div class="chat-in"><p class="muted">Only church leaders can send announcements. You can say Amen and reply to any message.</p></div>`}</section>`;
     const ta = $('#aText');
     if (ta){
