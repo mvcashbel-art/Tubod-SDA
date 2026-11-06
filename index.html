@@ -312,7 +312,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .urow small{color:var(--muted);font-size:.74rem}
 .store{margin:4px 0 2px}
 .store .up-track{max-width:320px;margin-top:4px}
-.pf-gal{margin-bottom:6px}
+.pf-gal{margin:10px 0 6px}
+.sec-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sec-row .sec{margin-right:auto}
 .vid-note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
 
 
@@ -1356,7 +1358,7 @@ function postWithVideo(){
   const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
   composerBits();
   toast('Video upload started. Keep this page open.');
-  enqueueUploads([{file:f, title:(text || f.name).slice(0, 100), cat:'media', desc:'', post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.isAdmin && d.pin)}}]);
+  enqueueUploads([{file:f, title:(text || f.name).slice(0, 100), cat:'media', desc:'[[profile]]', post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.isAdmin && d.pin)}}]);
 }
 async function submitPost(){
   if (S.draft.video) return postWithVideo();
@@ -1392,30 +1394,36 @@ function fileHTML(f){
 }
 /* albums: a file belongs to an album when its description starts with [[album:Name]]. This works with any server version. */
 const ALB_RX = /^\[\[album:([^\]]{1,60})\]\]\s*/;
-const albumOf = f => { const m = ALB_RX.exec(String(f.desc || '')); return m ? m[1].trim() : ''; };
-const descOf = f => String(f.desc || '').replace(ALB_RX, '');
+/* a member's own photos start with [[profile]]: they show only on that member's profile, never in the church Library */
+const PROF_RX = /^\[\[profile\]\]\s*/;
+const isPersonal = f => PROF_RX.test(String(f.desc || ''));
+const restOf = f => String(f.desc || '').replace(PROF_RX, '');
+const albumOf = f => { const m = ALB_RX.exec(restOf(f)); return m ? m[1].trim() : ''; };
+const descOf = f => restOf(f).replace(ALB_RX, '');
 const albKey = n => String(n || '').trim().toLowerCase();
+const albKeyOf = f => { const n = albumOf(f); return n ? (isPersonal(f) ? 'p:' + f.authorId + ':' : '') + albKey(n) : ''; };
+const libFiles = () => S.files.filter(f => !isPersonal(f));
 function albumList(files){
   const map = new Map();
-  files.forEach(f => { const n = albumOf(f); if (!n) return; const k = albKey(n); if (!map.has(k)) map.set(k, {k, name:n, items:[]}); map.get(k).items.push(f); });
+  files.forEach(f => { const k = albKeyOf(f); if (!k) return; if (!map.has(k)) map.set(k, {k, name:albumOf(f), items:[], personal:isPersonal(f), owner:f.authorId}); map.get(k).items.push(f); });
   return [...map.values()];
 }
 function albumCard(a){
   const imgs = a.items.filter(f => /^image\//.test(f.mime) && imgUrl(f.driveId, 400)).slice(0, 4);
   const cover = imgs.length ? `<div class="alb-cover n${imgs.length}">${imgs.map(f => `<img src="${imgUrl(f.driveId, 400)}" alt="" loading="lazy">`).join('')}</div>` : `<div class="alb-cover n0">${icon('folder')}</div>`;
   const authors = new Set(a.items.map(f => f.authorId)), newest = Math.max(...a.items.map(f => Number(f.createdAt) || 0));
-  return `<article class="card album"><button type="button" class="alb-open" data-act="openalbum" data-k="${esc(a.k)}" aria-label="Open album ${esc(a.name)}">${cover}<h3>${esc(a.name)}</h3><p class="meta">Album · ${a.items.length} item${a.items.length === 1 ? '' : 's'} · ${esc(nameOf(a.items[0].authorId))}${authors.size > 1 ? ' and others' : ''} · ${ago(newest)}</p></button></article>`;
+  return `<article class="card album"><button type="button" class="alb-open" data-act="openalbum" data-k="${esc(a.k)}" aria-label="Open album ${esc(a.name)}">${cover}<h3>${esc(a.name)}</h3><p class="meta">Album · ${a.items.length} item${a.items.length === 1 ? '' : 's'}${a.personal ? '' : ` · ${esc(nameOf(a.items[0].authorId))}${authors.size > 1 ? ' and others' : ''}`} · ${ago(newest)}</p></button></article>`;
 }
 function renderLibrary(){
   const cats = $('#libCats'); if (!cats) return;
   cats.innerHTML = [['all','All'], ...LIB_CATS].map(([k, l]) => `<button type="button" class="chip ${S.libCat === k ? 'on' : ''}" data-act="libcat" data-c="${k}" aria-pressed="${S.libCat === k}">${esc(l)}</button>`).join('');
   const q = S.libQ.trim().toLowerCase();
-  const list = S.files.filter(f => (S.libCat === 'all' || f.cat === S.libCat) && (!q || (f.title + ' ' + albumOf(f) + ' ' + descOf(f) + ' ' + (f.name || '')).toLowerCase().includes(q)));
+  const list = libFiles().filter(f => (S.libCat === 'all' || f.cat === S.libCat) && (!q || (f.title + ' ' + albumOf(f) + ' ' + descOf(f) + ' ' + (f.name || '')).toLowerCase().includes(q)));
   const entries = albumList(list).map(a => ({t:Math.max(...a.items.map(f => Number(f.createdAt) || 0)), html:albumCard(a)}))
     .concat(list.filter(f => !albumOf(f)).map(f => ({t:Number(f.createdAt) || 0, html:fileHTML(f)}))).sort((x, y) => y.t - x.t);
   $('#libList').innerHTML = !S.loaded.files ? '<div class="card empty" style="grid-column:1/-1">Loading files…</div>'
     : entries.length ? entries.map(e => e.html).join('')
-    : `<div class="card empty" style="grid-column:1/-1">${S.files.length ? 'No files match.' : 'The library is empty. Add the first sermon, lesson, hymn sheet or photo album.'}</div>`;
+    : `<div class="card empty" style="grid-column:1/-1">${libFiles().length ? 'No files match.' : 'The library is empty. Add the first sermon, lesson, hymn sheet or photo album.'}</div>`;
 }
 function albItem(f){
   const mime = String(f.mime || ''), id = f.driveId, t = esc(f.title || f.name || '');
@@ -1427,11 +1435,11 @@ function albItem(f){
   return `<figure class="alb-it">${body}<figcaption><span>${t}<br><small>${esc(kindOf(f))} · ${fmtSize(f.size)}</small></span>${del}</figcaption></figure>`;
 }
 function openAlbum(key){
-  const items = S.files.filter(f => albKey(albumOf(f)) === key).sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+  const items = S.files.filter(f => albKeyOf(f) === key).sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
   if (!items.length){ closeModal(); return; }
   const name = albumOf(items[0]); S.albumOpen = key;
   const m = openModal(name, `<p class="meta">${items.length} item${items.length === 1 ? '' : 's'} in this album</p><div class="alb-grid">${items.map(albItem).join('')}</div>
-    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button>${S.token ? `<button class="btn primary" type="button" data-act="albadd" data-name="${esc(name)}">${icon('upload')}Add to this album</button>` : ''}</div>`, true);
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button>${S.token && (!isPersonal(items[0]) || items[0].authorId === S.uid) ? `<button class="btn primary" type="button" data-act="albadd" data-name="${esc(name)}" data-personal="${isPersonal(items[0]) ? '1' : ''}">${icon('upload')}Add to this album</button>` : ''}</div>`, true);
   $('.sheet', m).classList.add('alb');
 }
 
@@ -1455,7 +1463,8 @@ function renderProfile(){
   if (!p){ slot.innerHTML = `<div class="card empty">This member is no longer here.</div>`; return; }
   const posts = S.posts.filter(x => x.authorId === id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const files = S.files.filter(f => f.authorId === id);
-  const media = files.filter(f => /^(image|video)\//.test(String(f.mime || ''))), docs = files.filter(f => !/^(image|video)\//.test(String(f.mime || '')));
+  const mine2 = files.filter(isPersonal), shared = files.filter(f => !isPersonal(f));
+  const pAlbums = albumList(mine2), loose = mine2.filter(f => !albumOf(f)).sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
   if (S.galFor !== id){ S.galFor = id; S.galLimit = 24; }
   const cover = p.cover ? imgUrl(p.cover, 1200) : '';
   keepInputs(slot, () => {
@@ -1468,8 +1477,11 @@ function renderProfile(){
         ${p.verse ? `<p class="quote">${esc(p.verse)}</p>` : ''}
         <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}</div>
       </div></section>
-      ${media.length || own ? `<h2 class="sec">Photos and videos</h2>${own || S.isAdmin ? storageHTML(id) : ''}${media.length ? `<div class="card pf-gal"><div class="alb-grid">${media.slice(0, S.galLimit).map(albItem).join('')}</div>${media.length > S.galLimit ? `<div style="text-align:center;margin-top:12px"><button class="btn" data-act="galmore">Show more (${media.length - S.galLimit} more)</button></div>` : ''}</div>` : `<div class="card empty">No photos or videos yet. Add some in the Library.</div>`}` : ''}
-      ${docs.length ? `<h2 class="sec">Files in the library</h2><div class="grid">${docs.map(fileHTML).join('')}</div>` : ''}
+      ${mine2.length || own ? `<div class="sec-row"><h2 class="sec">Photos and videos</h2>${own ? `<button class="btn primary sm" data-act="myupload">${icon('upload')}Add photos or videos</button>` : ''}</div>${own || S.isAdmin ? storageHTML(id) : ''}
+        ${pAlbums.length ? `<div class="grid">${pAlbums.sort((x, y) => Math.max(...y.items.map(f => +f.createdAt || 0)) - Math.max(...x.items.map(f => +f.createdAt || 0))).map(albumCard).join('')}</div>` : ''}
+        ${loose.length ? `<div class="card pf-gal"><div class="alb-grid">${loose.slice(0, S.galLimit).map(albItem).join('')}</div>${loose.length > S.galLimit ? `<div style="text-align:center;margin-top:12px"><button class="btn" data-act="galmore">Show more (${loose.length - S.galLimit} more)</button></div>` : ''}</div>` : ''}
+        ${!mine2.length ? `<div class="card empty">${own ? 'Add photos and videos of yourself and your family. They show only here on your profile, not in the church Library.' : 'No photos or videos yet.'}</div>` : ''}` : ''}
+      ${shared.length ? `<h2 class="sec">Shared in the church library</h2><div class="grid">${albumList(shared).map(albumCard).join('')}${shared.filter(f => !albumOf(f)).map(fileHTML).join('')}</div>` : ''}
       <h2 class="sec">Posts</h2><div id="feedSlot"></div>`;
   });
   renderFeed(posts, own ? 'You have not posted yet.' : 'No posts yet.');
@@ -1611,7 +1623,7 @@ function enqueueUploads(jobs){
   else upShow(upJob);
 }
 async function pumpUploads(){
-  upPumping = true; upDoneN = 0; let okN = 0, failN = 0, posted = 0;
+  upPumping = true; upDoneN = 0; let okN = 0, failN = 0, posted = 0, vids = 0;
   window.addEventListener('beforeunload', upGuard);
   let lock = null; try { lock = navigator.wakeLock && await navigator.wakeLock.request('screen'); } catch (e) {}
   while (upQueue.length){
@@ -1623,14 +1635,14 @@ async function pumpUploads(){
       const choice = await new Promise(r => { job.decide = r; });
       if (choice !== 'retry'){ res = 'skipped'; break; }
     }
-    if (res === 'ok'){ okN++; if (job.post) posted++; } else failN++;
+    if (res === 'ok'){ okN++; if (job.post) posted++; if (/^video\//.test(job.file.type) && job.file.size > 50 * 1048576) vids++; } else failN++;
     upDoneN++;
-    if (S.route === 'library') renderLibrary();
+    if (S.route === 'library') renderLibrary(); else if (S.route === 'profile') renderProfile();
   }
   upJob = null; upShow(null); upPumping = false; upCount = 0; upDoneN = 0;
   window.removeEventListener('beforeunload', upGuard);
   try { lock && lock.release(); } catch (e) {}
-  if (okN) toast(posted ? 'Video posted. Google Drive may need a few minutes before it can play.' : okN === 1 ? 'Uploaded. A big video may need a little time on Google Drive before it can play.' : `${okN} files uploaded.${failN ? ' ' + failN + ' skipped.' : ''}`);
+  if (okN) toast(posted ? 'Video posted. Google Drive may need a few minutes before it can play.' : (okN === 1 ? 'Uploaded.' : `${okN} files uploaded.${failN ? ' ' + failN + ' skipped.' : ''}`) + (vids ? ' A big video may need a little time on Google Drive before it can play.' : ''));
   else if (failN) toast('Nothing was uploaded.');
 }
 /* one file. returns 'ok', 'cancelled' or 'error' (the person then chooses to try again or skip) */
@@ -1679,16 +1691,18 @@ async function runUpload(job){
 }
 function openUploadModal(opts){
   opts = opts || {};
-  const albums = albumList(S.files);
-  const m = openModal(opts.album ? 'Add to album' : 'Add files', `
+  const personal = !!opts.personal;
+  const albums = albumList(personal ? S.files.filter(f => isPersonal(f) && f.authorId === S.uid) : libFiles());
+  const m = openModal(opts.album ? 'Add to album' : personal ? 'Add to your profile' : 'Add files to the church library', `
     <form id="uForm" class="m-body" style="padding:0">
-      <label class="fld" for="uFile">Files<input id="uFile" type="file" multiple required><small>Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. Files are saved exactly as they are, with nothing compressed or resized. They upload one after another. Keep this page open and your phone awake until it finishes.</small></label>
+      ${personal ? '<p class="muted" style="margin:0">These show only on your profile. To share something for the whole church, add it in the Library instead.</p>' : '<p class="muted" style="margin:0">The Library is for church files: sermons, lessons, documents and church event photos. For your own photos, use Add photos on your profile.</p>'}
+      <label class="fld" for="uFile">Files<input id="uFile" type="file" multiple required${personal ? ' accept="image/*,video/*"' : ''}><small>Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. Files are saved exactly as they are, with nothing compressed or resized. They upload one after another. Keep this page open and your phone awake until it finishes.</small></label>
       ${S.uid ? storageHTML(S.uid) : ''}
       <div id="uInfo" class="muted" hidden></div>
       <div id="uList" hidden></div>
       <label class="fld" for="uTitle" id="uTitleWrap">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
-      <label class="fld" for="uAlbum">Album <small>(optional)</small><input id="uAlbum" maxlength="60" list="uAlbums" autocomplete="off" placeholder="Youth camp 2026" value="${esc(opts.album || '')}"><datalist id="uAlbums">${albums.map(a => `<option value="${esc(a.name)}">`).join('')}</datalist><small>Type a name to keep these files together in one album. Use the same name again to add more later.</small></label>
-      <label class="fld" for="uCat">Category<select id="uCat"><option value="auto" hidden>Automatic, by file type</option>${LIB_CATS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
+      <label class="fld" for="uAlbum">Album <small>(optional)</small><input id="uAlbum" maxlength="60" list="uAlbums" autocomplete="off" placeholder="${personal ? 'Family, Birthday 2026' : 'Youth camp 2026'}" value="${esc(opts.album || '')}"><datalist id="uAlbums">${albums.map(a => `<option value="${esc(a.name)}">`).join('')}</datalist><small>Type a name to keep these files together in one album. Use the same name again to add more later.</small></label>
+      <label class="fld" for="uCat"${personal ? ' hidden' : ''}>Category<select id="uCat"><option value="auto" hidden>Automatic, by file type</option>${LIB_CATS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
       <label class="fld" for="uDesc">Description<textarea id="uDesc" maxlength="240" placeholder="Optional"></textarea></label>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="uSave">Upload</button></div>
     </form>`, true);
@@ -1719,10 +1733,10 @@ function openUploadModal(opts){
     if (!unlimited(S.uid) && usedB(S.uid) + add > quotaB()){ toast(`That is more than your ${fmtSize(quotaB())} storage. You have ${fmtSize(Math.max(0, quotaB() - usedB(S.uid)))} left. Delete some of your files or ask a church admin.`); return; }
     let alb = $('#uAlbum', m).value.replace(/[\[\]\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
     const known = albums.find(a => a.k === albKey(alb)); if (known) alb = known.name;
-    const note = $('#uDesc', m).value.trim(), desc = (alb ? `[[album:${alb}]] ${note}` : note).trim().slice(0, 300), c = cat.value;
+    const note = $('#uDesc', m).value.trim(), desc = ((personal ? '[[profile]] ' : '') + (alb ? `[[album:${alb}]] ` : '') + note).trim().slice(0, 300), c = personal ? 'media' : cat.value;
     const titles = $$('.ut', m).map(i => i.value);
     enqueueUploads(fs.map((f, i) => ({file:f, title:((fs.length === 1 ? title.value : titles[i]) || f.name.replace(/\.[^.]+$/, '')).trim().slice(0, 100) || f.name, cat:c === 'auto' ? autoCat(f) : c, desc})));
-    closeModal(); toast(fs.length === 1 ? 'Upload started.' : `${fs.length} files are uploading one after another. Keep this page open.`);
+    closeModal(); if (personal && S.route !== 'profile') go('profile', S.uid); toast(fs.length === 1 ? 'Upload started.' : `${fs.length} files are uploading one after another. Keep this page open.`);
   });
 }
 
@@ -1854,7 +1868,8 @@ document.addEventListener('click', e => {
     case 'delfile': deleteFile(id); break;
     case 'galmore': S.galLimit += 48; renderProfile(); break;
     case 'openalbum': openAlbum(el.dataset.k); break;
-    case 'albadd': openUploadModal({album:el.dataset.name}); break;
+    case 'albadd': openUploadModal({album:el.dataset.name, personal:!!el.dataset.personal}); break;
+    case 'myupload': openUploadModal({personal:true}); break;
     case 'delalbfile': (async () => { const k = el.closest('.modal') ? S.albumOpen : ''; await deleteFile(el.dataset.id); if (k) openAlbum(k); else if (S.route === 'profile') renderProfile(); })(); break;
     case 'zoom': zoomDrive(el.src); break;
     case 'editprofile': openProfileModal(); break;
