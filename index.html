@@ -19,9 +19,13 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="preconnect" href="https://lh3.googleusercontent.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{
   /* Layout idea: sticky top bar, one feed column beside a Sabbath sidebar; bottom tabs on phones.
@@ -487,7 +491,26 @@ function applySync(j){
   S.loaded = {posts:true, files:true, profiles:true}; S.offline = false;
   schedule();
 }
-async function sync(){ applySync(await api('sync')); }
+async function sync(){ const j = await api('sync'); applySync(j); saveCache(j); }
+
+/* last good copy of the church page, so the next visit shows something at once */
+const CACHE_KEY = 'tubodCache1';
+function saveCache(j){
+  try {
+    if (!S.token) return;
+    const members = (j.members || []).map(m => { const o = Object.assign({}, m); ['phone','mobile','sms','smsOk','smsOptIn'].forEach(k => delete o[k]); return o; });
+    localStorage.setItem(CACHE_KEY, JSON.stringify({t: S.token.slice(-10), at: Date.now(),
+      j: {program: j.program, rev: j.rev, me: j.me, settings: j.settings, posts: j.posts, comments: j.comments, reactions: j.reactions, files: j.files, members}}));
+  } catch (e) { clearCache(); }
+}
+function loadCache(){
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (c && S.token && c.t === S.token.slice(-10) && c.j && c.j.me && Date.now() - c.at < 14 * 864e5) return c.j;
+  } catch (e) {}
+  return null;
+}
+function clearCache(){ try { localStorage.removeItem(CACHE_KEY); } catch (e) {} }
 async function act(action, data){
   try { const j = await api(action, data); await sync(); return j; }
   catch (e){ toast(errMsg(e)); throw e; }
@@ -504,7 +527,7 @@ async function pollNow(){
   catch (e){ if (e.code === 'network'){ S.offline = true; schedule(); } }
   polling = false;
 }
-function startPolling(){ clearInterval(pollTimer); pollTimer = setInterval(pollNow, 20000); }
+function startPolling(){ clearInterval(pollTimer); pollTimer = setInterval(pollNow, 30000); }
 
 /* ---------- image shrinking ---------- */
 function loadImg(file){
@@ -664,7 +687,7 @@ function resetData(){
   Object.assign(S, {uid:null, isAdmin:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false}});
 }
 function forceSignOut(msg){
-  clearInterval(pollTimer); S.token = ''; saveToken(); resetData(); closeModal();
+  clearInterval(pollTimer); S.token = ''; saveToken(); clearCache(); resetData(); closeModal();
   S.route = 'home'; S.profileId = null;
   try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   showAuth('login', msg || ''); mount();
@@ -699,7 +722,8 @@ function renderChrome(){
   $('#brandName').textContent = st.churchName || 'Tubod SDA Church';
   $('#brandTag').textContent = st.tagline || 'Tubod, Isabel, Leyte';
   document.title = st.churchName || 'Tubod SDA Church';
-  const u = imgUrl(st.bgId, 1920);
+  const sw = Math.round((window.screen.width || 1280) * Math.min(window.devicePixelRatio || 1, 2));
+  const u = imgUrl(st.bgId, sw <= 800 ? 800 : sw <= 1280 ? 1280 : 1920);
   $('#bg').style.backgroundImage = u ? `url("${u}")` : '';
   $('#dnav').innerHTML = navHTML('top');
   $('#tabs').innerHTML = navHTML('tabs');
@@ -873,7 +897,7 @@ function mount(){
   const v = $('#view');
   const bannerHTML = '<div id="banner"></div>';
   if (S.route === 'home'){
-    v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><a class="card gamecard" href="bible-game.html"><span class="gi">${icon('book')}</span><span><b>Bible Game</b><small>Quiz, finish the verse, who am I? and more. Play alone or with a friend, in English or Bisaya.</small></span></a><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot"></div>`;
+    v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><a class="card gamecard" href="bible-game.html"><span class="gi">${icon('book')}</span><span><b>Bible Game</b><small>Quiz, finish the verse, who am I? and more. Play alone or with a friend, in English or Bisaya.</small></span></a><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot">${S.token && !S.uid ? '<div class="card empty">Loading the church page…</div>' : ''}</div>`;
     buildComposer();
   } else if (S.route === 'news'){
     S.chatInit = false;
@@ -1465,15 +1489,25 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) poll
 /* ---------- start ---------- */
 async function bootSession(){
   if (!API_URL){ showAuth('setup'); return; }
-  try {
-    const info = await api('publicInfo');
-    S.settings = {...S.settings, ...info.church};
-  } catch (e){
-    if (e.code === 'network' || e.code === 'bad_reply'){ showAuth('offline', errMsg(e)); return; }
+  if (!S.token){
+    try { const info = await api('publicInfo'); S.settings = {...S.settings, ...info.church}; }
+    catch (e){ if (e.code === 'network' || e.code === 'bad_reply'){ showAuth('offline', errMsg(e)); return; } }
+    showAuth('login'); return;
   }
-  if (!S.token){ showAuth('login'); return; }
+  /* signed in before: show the last copy straight away, then refresh from the server */
+  const cached = loadCache();
+  if (cached){
+    applySync(cached); S.offline = false; hideAuth(); startPolling(); mount(); fromHash();
+    try { await sync(); }
+    catch (e){ if (e.code === 'network' || e.code === 'bad_reply'){ S.offline = true; schedule(); } }
+    return;
+  }
+  /* no saved copy yet: one request is enough, the data already includes the church settings */
   try { await sync(); hideAuth(); startPolling(); mount(); fromHash(); }
-  catch (e){ if (e.code !== 'auth') showAuth('offline', errMsg(e)); }
+  catch (e){
+    if (e.code === 'auth') api('publicInfo').then(info => { S.settings = {...S.settings, ...info.church}; renderChrome(); }).catch(() => {});
+    else showAuth('offline', errMsg(e));
+  }
 }
 function boot(){
   const setTop = () => { const t = $('.top'); if (t) document.documentElement.style.setProperty('--topH', t.offsetHeight + 'px'); };
