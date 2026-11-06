@@ -285,6 +285,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 
 .tabs{display:none}
+.tabs .sh{display:none}
 @media (max-width:900px){
   .ann-strip .t{-webkit-line-clamp:1}
   .ann-strip .wr .cd{display:none}
@@ -305,6 +306,25 @@ button,input,select,textarea{font:inherit;color:inherit}
   .tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:.7rem;font-weight:500;color:var(--muted);text-decoration:none;border-radius:10px}
   .tabs a.on{color:var(--accent-dark);background:#E3F0F5}
   #toast{bottom:90px}
+}
+@media (max-width:900px){
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{font-size:16px}
+}
+@media (max-width:420px){
+  .top-in{padding:10px 12px;gap:8px}
+  .brand{gap:8px;flex:1 1 auto}
+  .brand > span,.brand > div{min-width:0}
+  .brand b{font-size:1.12rem;overflow:hidden;text-overflow:ellipsis}
+  .mark{height:40px}
+  .top-r{gap:6px}
+  .tabs{padding-left:2px;padding-right:2px}
+  .tabs a{font-size:.62rem;padding:6px 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .shell{padding-left:12px;padding-right:12px}
+  #upbar{bottom:120px}
+  .tabs .sh{display:inline}
+  .tabs .lg{display:none}
+  .modal .sheet{max-height:92dvh}
 }
 @media (max-width:480px){
   .page-head h1{font-size:1.6rem}
@@ -791,7 +811,7 @@ function navHTML(kind){
   return NAV.filter(n => !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[3])).map(([r, label, ic, href]) => {
     if (href) return `<a href="${href}">${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : S.route === r);
-    return `<a href="#${r}" data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}<span>${esc(label)}</span></a>`;
+    return `<a href="#${r}" data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${kind === 'tabs' && label === 'Announcements' ? '<span class="lg">Announcements</span><span class="sh">News</span>' : `<span>${esc(label)}</span>`}</a>`;
   }).join('');
 }
 
@@ -1246,22 +1266,14 @@ function onPickVideo(e){
   if (f.size > MAX_BIG_GB * 1073741824){ toast(`That video is over ${MAX_BIG_GB} GB.`); return; }
   S.draft.video = f; composerBits();
 }
-async function postWithVideo(){
+function postWithVideo(){
   if (S.posting || !guard()) return;
-  if (upJob){ toast('Another upload is still running. Wait for it to finish first.'); return; }
-  const f = S.draft.video, d = S.draft; S.posting = true; composerBits();
-  try {
-    const s = await api('startUpload', {size:f.size, mime:f.type || 'video/mp4', origin:location.origin});
-    const text = d.text.trim();
-    upJob = {file:f, url:s.url, uploadId:s.uploadId, title:(text || f.name).slice(0, 100), cat:'media', desc:'', pos:0, sent:0,
-      post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.isAdmin && d.pin)}};
-    S.draft = {text:'', cat:d.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
-    const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
-    toast('Video upload started. Keep this page open.'); runUpload(upJob);
-  } catch (err){
-    toast(err.code === 'bad_action' ? 'The church server needs its update before it can take videos. See SETUP.md.' : errMsg(err));
-  }
-  S.posting = false; composerBits();
+  const f = S.draft.video, d = S.draft, text = d.text.trim();
+  S.draft = {text:'', cat:d.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
+  const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
+  composerBits();
+  toast('Video upload started. Keep this page open.');
+  enqueueUploads([{file:f, title:(text || f.name).slice(0, 100), cat:'media', desc:'', post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.isAdmin && d.pin)}}]);
 }
 async function submitPost(){
   if (S.draft.video) return postWithVideo();
@@ -1446,39 +1458,87 @@ async function driveSend(job){
     }
   }
 }
+const upQueue = [];
+let upPumping = false, upCount = 0, upDoneN = 0;
 function upShow(job){
   const bar = $('#upbar'); if (!bar) return;
   if (!job){ bar.hidden = true; bar.className = ''; bar.innerHTML = ''; return; }
-  const total = job.file.size, done = Math.min(job.sent || 0, total), pct = total ? Math.floor(done / total * 100) : 0;
+  const total = job.file.size, done = Math.min(job.sent || 0, total), pct = job.small ? 0 : (total ? Math.floor(done / total * 100) : 0);
   const secs = (Date.now() - job.t0) / 1000, rate = secs > 3 && done > job.base ? (done - job.base) / secs : 0;
   const left = rate ? fmtDur((total - done) / rate) : '';
   bar.hidden = false; bar.className = job.error ? 'err' : '';
   const meta = job.error ? esc(job.error)
     : job.finishing ? 'Almost done. Saving to the library…'
     : job.note ? esc(job.note)
+    : job.small ? `Uploading ${fmtSize(total)}…`
     : `${pct}% · ${fmtSize(done)} of ${fmtSize(total)}${left ? ' · about ' + left + ' left' : ''}`;
-  bar.innerHTML = `<b>${esc(job.title)}</b><div class="up-meta">${meta}</div><div class="up-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="up-fill" style="width:${pct}%"></div></div>
-    <div class="up-row">${job.error ? '<button type="button" class="btn sm" data-act="upretry">Try again</button>' : ''}${job.finishing ? '' : '<button type="button" class="btn sm" data-act="upcancel">Cancel</button>'}</div>`;
+  const more = upQueue.length, many = upCount > 1;
+  const head = many ? `File ${Math.min(upDoneN + 1, upCount)} of ${upCount}: ` : '';
+  const fill = job.small && !job.error ? `<div class="up-fill" style="width:100%;opacity:.35"></div>` : `<div class="up-fill" style="width:${pct}%"></div>`;
+  const btns = job.error ? `<button type="button" class="btn sm" data-act="upretry">Try again</button><button type="button" class="btn sm" data-act="upcancel">${more ? 'Skip this file' : 'Cancel'}</button>`
+    : job.finishing || job.small ? ''
+    : `<button type="button" class="btn sm" data-act="upcancel">${more ? 'Skip this file' : 'Cancel'}</button>`;
+  bar.innerHTML = `<b>${esc(head + job.title)}</b><div class="up-meta">${meta}${more ? ` · ${more} more waiting` : ''}</div><div class="up-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">${fill}</div>
+    <div class="up-row">${more ? '<button type="button" class="btn sm quiet" data-act="upcancelall">Cancel all</button>' : ''}${btns}</div>`;
 }
-const upGuard = e => { if (upJob) { e.preventDefault(); e.returnValue = ''; } };
-async function runUpload(job){
-  job.error = ''; job.cancelled = false; job.note = ''; job.t0 = Date.now(); job.base = job.sent || 0;
+const upGuard = e => { if (upPumping) { e.preventDefault(); e.returnValue = ''; } };
+const autoCat = f => /^audio/.test(f.type) ? 'sermons' : /^(image|video)/.test(f.type) ? 'media' : /\.(pdf|docx?|pptx?|xlsx?|txt)$/i.test(f.name) ? 'documents' : 'other';
+/* put files in the line; they upload one after another */
+function enqueueUploads(jobs){
+  jobs.forEach(j => { j.small = !j.post && j.file.size <= MAX_FILE_MB * 1048576; j.pos = 0; j.sent = 0; upQueue.push(j); upCount++; });
+  if (!upPumping) pumpUploads();
+  else upShow(upJob);
+}
+async function pumpUploads(){
+  upPumping = true; upDoneN = 0; let okN = 0, failN = 0, posted = 0;
   window.addEventListener('beforeunload', upGuard);
   let lock = null; try { lock = navigator.wakeLock && await navigator.wakeLock.request('screen'); } catch (e) {}
+  while (upQueue.length){
+    const job = upJob = upQueue.shift();
+    let res;
+    while (true){
+      res = await runUpload(job);
+      if (res !== 'error') break;
+      const choice = await new Promise(r => { job.decide = r; });
+      if (choice !== 'retry'){ res = 'skipped'; break; }
+    }
+    if (res === 'ok'){ okN++; if (job.post) posted++; } else failN++;
+    upDoneN++;
+    if (S.route === 'library') renderLibrary();
+  }
+  upJob = null; upShow(null); upPumping = false; upCount = 0; upDoneN = 0;
+  window.removeEventListener('beforeunload', upGuard);
+  try { lock && lock.release(); } catch (e) {}
+  if (okN) toast(posted ? 'Video posted. Google Drive may need a few minutes before it can play.' : okN === 1 ? 'Uploaded. A big video may need a little time on Google Drive before it can play.' : `${okN} files uploaded.${failN ? ' ' + failN + ' skipped.' : ''}`);
+  else if (failN) toast('Nothing was uploaded.');
+}
+/* one file. returns 'ok', 'cancelled' or 'error' (the person then chooses to try again or skip) */
+async function runUpload(job){
+  job.error = ''; job.cancelled = false; job.note = ''; job.finishing = false; job.t0 = Date.now(); job.base = job.sent || 0;
   upShow(job);
   try {
     if (!job.saved){
-      if (job.pos > 0 || job.retry) { try { const w = await driveWhere(job); if (!w.done && w.pos != null) job.pos = job.sent = w.pos; if (w.done) job.pos = job.sent = job.file.size, job.driveId = w.id; } catch (e) { if (e.fatal || e.cancelled) throw e; } }
-      if (job.pos < job.file.size) { const r = await driveSend(job); if (r.id) job.driveId = r.id; }
-      job.finishing = true; upShow(job);
-      await api('finishUpload', {uploadId:job.uploadId, driveId:job.driveId || '', title:job.title, cat:job.cat, desc:job.desc, name:job.file.name, mime:job.file.type || 'application/octet-stream'});
-      job.saved = true;
-      await sync();
+      if (job.small){
+        const data = await fileToB64(job.file);
+        await api('uploadFile', {title:job.title, cat:job.cat, desc:job.desc, name:job.file.name, mime:job.file.type || 'application/octet-stream', data});
+        job.saved = true; await sync();
+      } else {
+        if (!job.url){
+          try { const s = await api('startUpload', {size:job.file.size, mime:job.file.type || 'application/octet-stream', origin:location.origin}); job.url = s.url; job.uploadId = s.uploadId; job.pos = job.sent = 0; }
+          catch (e){ if (e.code === 'bad_action') throw new Error('The church server needs its update before it can take big files. See SETUP.md.'); throw e; }
+        }
+        if (job.pos > 0 || job.retry) { try { const w = await driveWhere(job); if (!w.done && w.pos != null) job.pos = job.sent = w.pos; if (w.done) job.pos = job.sent = job.file.size, job.driveId = w.id; } catch (e) { if (e.fatal || e.cancelled) throw e; } }
+        if (job.pos < job.file.size) { const r = await driveSend(job); if (r.id) job.driveId = r.id; }
+        job.finishing = true; upShow(job);
+        await api('finishUpload', {uploadId:job.uploadId, driveId:job.driveId || '', title:job.title, cat:job.cat, desc:job.desc, name:job.file.name, mime:job.file.type || 'application/octet-stream'});
+        job.saved = true;
+        await sync();
+      }
     }
     if (job.post && !job.posted){
       job.finishing = true; upShow(job);
       let id = job.driveId;
-      if (!idOk(id) || !id){
+      if (!id || !idOk(id)){
         const mine = S.files.filter(x => x.authorId === S.uid && x.name === job.file.name).sort((p, q) => Number(q.createdAt) - Number(p.createdAt))[0];
         id = mine && mine.driveId;
       }
@@ -1488,57 +1548,49 @@ async function runUpload(job){
       job.posted = true;
       await sync();
     }
-    upJob = null; upShow(null); toast(job.post ? 'Video posted. Google Drive may need a few minutes before it can play.' : 'Uploaded. A big video may need a little time on Google Drive before it can play.');
-    if (S.route === 'library') renderLibrary();
+    return 'ok';
   } catch (e){
     job.finishing = false;
-    if (e.cancelled){ upJob = null; upShow(null); toast('Upload cancelled.'); }
-    else { job.error = errMsg(e); job.retry = true; upShow(job); }
-  } finally {
-    window.removeEventListener('beforeunload', upGuard);
-    try { lock && lock.release(); } catch (e) {}
+    if (e.cancelled) return 'cancelled';
+    job.error = errMsg(e); job.retry = true; upShow(job);
+    return 'error';
   }
 }
 function openUploadModal(){
-  const m = openModal('Add a file', `
+  const m = openModal('Add files', `
     <form id="uForm" class="m-body" style="padding:0">
-      <label class="fld" for="uFile">File<input id="uFile" type="file" required><small>Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. Keep this page open and your phone awake until it finishes.</small></label>
-      <label class="fld" for="uTitle">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
-      <label class="fld" for="uCat">Category<select id="uCat">${LIB_CATS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
+      <label class="fld" for="uFile">Files<input id="uFile" type="file" multiple required><small>Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over ${MAX_FILE_MB} MB (big videos too, up to ${MAX_BIG_GB} GB) go straight to the church Google Drive. They upload one after another. Keep this page open and your phone awake until it finishes.</small></label>
+      <div id="uList" class="muted" hidden></div>
+      <label class="fld" for="uTitle" id="uTitleWrap">Title<input id="uTitle" required maxlength="100" placeholder="Sabbath School Lesson, Week 5"></label>
+      <label class="fld" for="uCat">Category<select id="uCat"><option value="auto" hidden>Automatic, by file type</option>${LIB_CATS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
       <label class="fld" for="uDesc">Description<textarea id="uDesc" maxlength="300" placeholder="Optional"></textarea></label>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="uSave">Upload</button></div>
-    </form>`);
+    </form>`, true);
+  const cat = $('#uCat', m), title = $('#uTitle', m), list = $('#uList', m);
   $('#uFile', m).addEventListener('change', e => {
-    const f = e.target.files[0]; const t = $('#uTitle', m);
-    if (f && !t.value) t.value = f.name.replace(/\.[^.]+$/, '');
-    if (f && /^audio/.test(f.type)) $('#uCat', m).value = 'sermons';
-    if (f && /^(image|video)/.test(f.type)) $('#uCat', m).value = 'media';
-  });
-  $('#uForm', m).addEventListener('submit', async e => {
-    e.preventDefault();
-    const f = $('#uFile', m).files[0]; if (!f) return;
-    const title = $('#uTitle', m).value, cat = $('#uCat', m).value, desc = $('#uDesc', m).value;
-    if (f.size > MAX_BIG_GB * 1073741824){ toast(`That file is over ${MAX_BIG_GB} GB. Choose a smaller one.`); return; }
-    const btn = $('#uSave', m); btn.disabled = true;
-    if (f.size > MAX_FILE_MB * 1048576){
-      if (upJob){ toast('Another upload is still running. Wait for it to finish first.'); btn.disabled = false; return; }
-      btn.textContent = 'Starting…';
-      try {
-        const s = await api('startUpload', {size:f.size, mime:f.type || 'application/octet-stream', origin:location.origin});
-        upJob = {file:f, url:s.url, uploadId:s.uploadId, title:(title || f.name).trim(), cat, desc, pos:0, sent:0};
-        closeModal(); toast('Upload started. Keep this page open.'); runUpload(upJob);
-      } catch (err){
-        toast(err.code === 'bad_action' ? 'The church server needs its update before it can take big files. See SETUP.md.' : errMsg(err));
-        btn.disabled = false; btn.textContent = 'Upload';
-      }
-      return;
+    const fs = [...e.target.files];
+    if (fs.length > 1){
+      title.value = ''; title.required = false; title.disabled = true; title.placeholder = 'Each file uses its own name';
+      cat.querySelector('[value=auto]').hidden = false; cat.value = 'auto';
+      list.hidden = false;
+      const tot = fs.reduce((n, f) => n + f.size, 0);
+      list.innerHTML = `<b>${fs.length} files, ${esc(fmtSize(tot))}</b><br>` + fs.slice(0, 8).map(f => esc(f.name) + ' · ' + fmtSize(f.size)).join('<br>') + (fs.length > 8 ? `<br>and ${fs.length - 8} more` : '');
+    } else {
+      title.disabled = false; title.required = true; title.placeholder = 'Sabbath School Lesson, Week 5'; list.hidden = true;
+      if (cat.value === 'auto') cat.value = 'sermons';
+      const f = fs[0];
+      if (f){ title.value = f.name.replace(/\.[^.]+$/, ''); cat.value = autoCat(f); }
     }
-    btn.textContent = 'Uploading… please wait';
-    try {
-      const data = await fileToB64(f);
-      await api('uploadFile', {title, cat, desc, name:f.name, mime:f.type || 'application/octet-stream', data});
-      await sync(); closeModal(); toast('File added to the library.');
-    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Upload'; }
+  });
+  $('#uForm', m).addEventListener('submit', e => {
+    e.preventDefault();
+    const fs = [...$('#uFile', m).files]; if (!fs.length) return;
+    if (fs.length > 50){ toast('Choose up to 50 files at a time.'); return; }
+    const big = fs.find(f => f.size > MAX_BIG_GB * 1073741824);
+    if (big){ toast(`"${big.name}" is over ${MAX_BIG_GB} GB. Remove it and try again.`); return; }
+    const desc = $('#uDesc', m).value, c = cat.value;
+    enqueueUploads(fs.map(f => ({file:f, title:(fs.length === 1 ? title.value : f.name.replace(/\.[^.]+$/, '')).trim().slice(0, 100) || f.name, cat:c === 'auto' ? autoCat(f) : c, desc})));
+    closeModal(); toast(fs.length === 1 ? 'Upload started.' : `${fs.length} files are uploading one after another. Keep this page open.`);
   });
 }
 
@@ -1678,8 +1730,9 @@ document.addEventListener('click', e => {
     case 'smsann': smsAnn(id); break;
     case 'smsinfo': smsInfo(id); break;
     case 'playvid': playVideo(el); break;
-    case 'upcancel': if (upJob){ upJob.cancelled = true; try { upJob.xhr && upJob.xhr.abort(); } catch (e) {} if (upJob.error){ upJob = null; upShow(null); } } break;
-    case 'upretry': if (upJob && upJob.error) runUpload(upJob); break;
+    case 'upcancel': if (upJob){ if (upJob.error && upJob.decide) upJob.decide('skip'); else { upJob.cancelled = true; try { upJob.xhr && upJob.xhr.abort(); } catch (e) {} } } break;
+    case 'upcancelall': upQueue.length = 0; upCount = upDoneN + 1; if (upJob){ if (upJob.error && upJob.decide) upJob.decide('skip'); else { upJob.cancelled = true; try { upJob.xhr && upJob.xhr.abort(); } catch (e) {} } } break;
+    case 'upretry': if (upJob && upJob.error && upJob.decide) upJob.decide('retry'); break;
     case 'copytext': copyFrom(el.dataset.target); break;
     case 'shareann': shareAnn(id); break;
     case 'invite': shareInvite(); break;
