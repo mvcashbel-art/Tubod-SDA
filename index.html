@@ -315,6 +315,37 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pf-gal{margin:10px 0 6px}
 .sec-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .sec-row .sec{margin-right:auto}
+.this-sab dl{display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr);gap:4px 10px;margin:6px 0 0;font-size:.9rem}
+.this-sab dt{color:var(--muted)}
+.this-sab dd{margin:0;overflow-wrap:anywhere}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.card-h h3{margin:0}
+.evlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.ev{display:flex;gap:10px;align-items:flex-start}
+.ev-d{flex:none;width:46px;text-align:center;border-radius:10px;background:#EAF3F7;color:var(--accent-dark);padding:4px 0;line-height:1.1}
+.ev-d b{display:block;font-size:1.15rem}
+.ev-d small{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em}
+.ev-b{min-width:0;flex:1}
+.ev-b b{display:block;overflow-wrap:anywhere}
+.ev-b span{font-size:.84rem;color:var(--muted);overflow-wrap:anywhere}
+.ev-b p{font-size:.86rem;margin:3px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.ev-act{display:flex;gap:6px;margin-top:4px}
+.bday li{display:flex;align-items:center;gap:8px;margin:6px 0}
+.bday .today{font-weight:700}
+.ann-strip a.live-row{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#B3382C;border-color:#9C2F25;color:#fff;text-decoration:none;font-weight:700}
+.ann-strip a.live-row:hover{background:#9C2F25}
+.live-dot{width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:livep 1.6s infinite;flex:none}
+@keyframes livep{70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+@media (prefers-reduced-motion:reduce){.live-dot{animation:none}}
+.live-row .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-row button{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:999px;padding:3px 10px;font-weight:600;cursor:pointer}
+.wait-list .mrow{background:#FFF8E6;border-radius:10px;padding:6px}
+.bd-sel{display:flex;gap:8px}
+.bd-sel select{flex:1}
+@media (max-width:900px){.side .mob-hide{display:none}}
+.lang-btn{border:1px solid var(--line);background:#fff;color:var(--accent-dark);border-radius:999px;padding:6px 12px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+.lang-btn:hover{background:#EAF3F7}
+.lang-btn .sh{display:none}
 .vid-note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
 
 
@@ -365,6 +396,9 @@ button,input,select,textarea{font:inherit;color:inherit}
   .shell{padding-left:12px;padding-right:12px}
   #upbar{bottom:120px}
   .tabs .sh{display:inline}
+  .lang-btn{padding:5px 9px;font-size:.78rem}
+  .lang-btn .lg{display:none}
+  .lang-btn .sh{display:inline}
   .tabs .lg{display:none}
   .modal .sheet{max-height:92dvh}
 }
@@ -452,6 +486,7 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
   </a>
   <nav class="dnav" id="dnav" aria-label="Main"></nav>
   <div class="top-r">
+    <button class="lang-btn" id="langBtn" type="button" data-act="lang" data-notr></button>
     <button class="icon-btn" id="gearBtn" data-act="settings" aria-label="Church settings" hidden></button>
     <button class="me-btn" id="meBtn" data-act="me" aria-label="My profile" hidden></button>
   </div>
@@ -644,11 +679,16 @@ function applySync(j){
   S.program = j.program || [];
   S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin';
   S.settings = j.settings || {}; S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
-  S.profiles = Object.fromEntries(j.members.map(m => [m.id, m]));
+  S.events = j.events || [];
+  S.waiting = j.members.filter(m => m.access === 'pending');
+  S.profiles = Object.fromEntries(j.members.filter(m => m.access !== 'pending').map(m => [m.id, m]));
   S.loaded = {posts:true, files:true, profiles:true}; S.offline = false;
+  const wasPending = S.pending; S.pending = !!j.pending;
+  if (S.pending) setTimeout(() => showAuth('pending'), 0);
+  else if (wasPending && $('#auth')){ const a = $('#auth'); a.remove(); setTimeout(() => { mount(); fromHash(); toast('Your account is approved. Welcome to the church family!'); }, 0); }
   schedule();
 }
-async function sync(){ const j = await api('sync'); applySync(j); saveCache(j); }
+async function sync(){ const j = await api('sync'); applySync(j); if (!j.pending) saveCache(j); }
 
 /* last good copy of the church page, so the next visit shows something at once */
 const CACHE_KEY = 'tubodCache1';
@@ -657,7 +697,7 @@ function saveCache(j){
     if (!S.token) return;
     const members = (j.members || []).map(m => { const o = Object.assign({}, m); ['phone','mobile','sms','smsOk','smsOptIn'].forEach(k => delete o[k]); return o; });
     localStorage.setItem(CACHE_KEY, JSON.stringify({t: S.token.slice(-10), at: Date.now(),
-      j: {program: j.program, rev: j.rev, me: j.me, settings: j.settings, posts: j.posts, comments: j.comments, reactions: j.reactions, files: j.files, members}}));
+      j: {program: j.program, events: j.events, rev: j.rev, me: j.me, settings: j.settings, posts: j.posts, comments: j.comments, reactions: j.reactions, files: j.files, members}}));
   } catch (e) { clearCache(); }
 }
 function loadCache(){
@@ -815,6 +855,9 @@ function showAuth(mode, msg){
   let body;
   if (mode === 'setup'){
     body = `<p>This site is almost ready. Open <b>config.js</b> and paste your Google web app link, then reload this page. The steps are in SETUP.md.</p>`;
+  } else if (mode === 'pending'){
+    body = `<p><b>Thank you for joining${S.me && S.me.name ? ', ' + esc(S.me.name) : ''}!</b></p><p>A church admin needs to approve your account before you can see the church page. This keeps our church family safe. This page opens by itself once you are approved.</p>
+      <div class="m-actions" style="justify-content:flex-start"><button class="btn primary" type="button" data-act="retry">Check again</button><button class="btn" type="button" data-act="signout">Sign out</button></div>`;
   } else if (mode === 'offline'){
     body = `<p>${esc(msg || 'Cannot reach the church server.')}</p><button class="btn primary" type="button" data-act="retry">Try again</button>`;
   } else {
@@ -834,11 +877,11 @@ function showAuth(mode, msg){
         <div class="err" id="authErr" role="alert">${esc(msg || '')}</div>
         <button class="btn primary" type="submit">Join</button></form>`}`;
   }
-  a.innerHTML = `<div class="card auth-card">${head}${body}</div>`;
+  a.innerHTML = `<div class="card auth-card"><div style="display:flex;justify-content:flex-end;margin:-8px -6px -8px 0"><button class="lang-btn" type="button" data-act="lang" data-notr>${LANG === 'ceb' ? 'English' : 'Bisaya'}</button></div>${head}${body}</div>`;
   const f = $('input', a); if (f && mode !== 'offline') f.focus();
   renderChrome();
 }
-function hideAuth(){ const a = $('#auth'); if (a) a.remove(); }
+function hideAuth(){ if (S.pending){ showAuth('pending'); return; } const a = $('#auth'); if (a) a.remove(); }
 async function authSubmit(kind, form){
   const err = $('#authErr'), btn = $('button[type=submit]', form), old = btn.textContent;
   err.textContent = ''; btn.disabled = true; btn.textContent = 'Please wait…';
@@ -849,11 +892,11 @@ async function authSubmit(kind, form){
       : await api('register', {name:v('jnName'), username:v('jnUser'), password:v('jnPass'), code:v('jnCode')});
     S.token = j.token; saveToken();
     await sync(); hideAuth(); startPolling(); mount();
-    if (kind === 'join') toast('Welcome to the church family! Add your photo on My profile.');
+    if (kind === 'join' && !S.pending) toast('Welcome to the church family! Add your photo on My profile.');
   } catch (e){ err.textContent = errMsg(e); btn.disabled = false; btn.textContent = old; }
 }
 function resetData(){
-  Object.assign(S, {uid:null, isAdmin:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}});
+  Object.assign(S, {uid:null, isAdmin:false, pending:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], events:[], waiting:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}});
 }
 function forceSignOut(msg){
   clearInterval(pollTimer); S.token = ''; saveToken(); clearCache(); resetData(); closeModal();
@@ -900,17 +943,115 @@ function renderChrome(){
   $('#meBtn').innerHTML = S.uid ? av(S.uid, 'md') : '';
   $('#meBtn').hidden = !S.uid;
 }
+/* ---------- this Sabbath, events, birthdays, livestream ---------- */
+const phNow = () => new Date(Date.now() + TZ * 36e5);
+const phISO = (ms = Date.now()) => new Date(ms + TZ * 36e5).toISOString().slice(0, 10);
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmtDate = iso => { const [y, m, d] = iso.split('-').map(Number); const dt = new Date(Date.UTC(y, m - 1, d)); return `${DAYS[dt.getUTCDay()]}, ${MONTHS[m - 1]} ${d}`; };
+function nextSabbathISO(){ const n = phNow(); const add = (6 - n.getUTCDay() + 7) % 7; return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + add)).toISOString().slice(0, 10); }
+function sabInfo(){ try { const v = JSON.parse(S.settings.sabbath || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; } }
+function thisSabbathCard(){
+  const v = sabInfo(), show = v.date && v.date >= phISO();
+  if (!show && !S.isAdmin) return '';
+  if (!show) return `<div class="card this-sab"><div class="card-h"><h3>This Sabbath</h3></div><p class="muted">Share this week's lesson, speaker and reading with everyone.</p><p style="margin-top:8px"><button class="btn sm primary" data-act="editsab">Fill in this Sabbath</button></p></div>`;
+  const rows = [['Lesson', v.lesson ? (v.link ? `<a href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.lesson)}</a>` : esc(v.lesson)) : ''], ['Sabbath School', esc(v.ssTeacher || '')], ['Speaker', esc(v.speaker || '')], ['Reading', esc(v.reading || '')]].filter(r => r[1]);
+  return `<div class="card this-sab"><div class="card-h"><h3>This Sabbath</h3>${S.isAdmin ? '<button class="btn sm quiet" data-act="editsab">Edit</button>' : ''}</div>
+    <p class="meta">${esc(fmtDate(v.date))}</p>${rows.length ? `<dl>${rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl>` : ''}
+    ${v.link && !v.lesson ? `<p style="margin-top:6px"><a href="${esc(v.link)}" target="_blank" rel="noopener">Open the lesson</a></p>` : ''}${v.note ? `<p style="margin-top:6px;white-space:pre-wrap">${esc(v.note)}</p>` : ''}</div>`;
+}
+function openSabbathModal(){
+  const v = sabInfo(), fresh = !(v.date && v.date >= phISO());
+  const m = openModal('This Sabbath', `
+    <form id="sbForm" class="m-body" style="padding:0">
+      <label class="fld" for="sbDate">Sabbath date<input id="sbDate" type="date" required value="${esc(fresh ? nextSabbathISO() : v.date)}"></label>
+      <label class="fld" for="sbLesson">Sabbath School lesson title<input id="sbLesson" maxlength="120" value="${esc(fresh ? '' : v.lesson || '')}" placeholder="Lesson 7: The Sanctuary"></label>
+      <label class="fld" for="sbLink">Link to the lesson (optional)<input id="sbLink" type="url" maxlength="400" value="${esc(v.link || '')}" placeholder="https://"><small>Paste the web address of this week's lesson study guide.</small></label>
+      <label class="fld" for="sbTeach">Sabbath School teacher or leader<input id="sbTeach" maxlength="80" value="${esc(fresh ? '' : v.ssTeacher || '')}"></label>
+      <label class="fld" for="sbSpeak">Divine Service speaker<input id="sbSpeak" maxlength="80" value="${esc(fresh ? '' : v.speaker || '')}"></label>
+      <label class="fld" for="sbRead">Scripture reading<input id="sbRead" maxlength="120" value="${esc(fresh ? '' : v.reading || '')}" placeholder="Hebrews 8:1-2"></label>
+      <label class="fld" for="sbNote">Other notes<textarea id="sbNote" maxlength="400" placeholder="Communion, potluck, visitors' day">${esc(fresh ? '' : v.note || '')}</textarea></label>
+      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="sbSave">Save</button></div>
+    </form>`);
+  $('#sbForm', m).addEventListener('submit', async e => {
+    e.preventDefault(); const b = $('#sbSave', m); b.disabled = true;
+    try {
+      await api('saveSabbath', {date:$('#sbDate', m).value, lesson:$('#sbLesson', m).value, link:$('#sbLink', m).value.trim(), ssTeacher:$('#sbTeach', m).value, speaker:$('#sbSpeak', m).value, reading:$('#sbRead', m).value, note:$('#sbNote', m).value});
+      await sync(); closeModal(); toast('This Sabbath is updated.');
+    } catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first. See SETUP.md.' : errMsg(err)); b.disabled = false; }
+  });
+}
+const upcomingEvents = () => (S.events || []).filter(e => e.date >= phISO());
+function evItem(e, full){
+  const [y, mo, d] = e.date.split('-').map(Number);
+  const sub = [e.date === phISO() ? 'Today' : e.date === phISO(Date.now() + 864e5) ? 'Tomorrow' : DAYS[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()], e.time ? time12(e.time) : '', e.place].filter(Boolean).join(' · ');
+  return `<li class="ev"><div class="ev-d"><small>${MONTHS[mo - 1].slice(0, 3)}</small><b>${d}</b></div><div class="ev-b"><b>${esc(e.title)}</b><span>${esc(sub)}</span>${full && e.desc ? `<p>${esc(e.desc)}</p>` : ''}
+    ${full && S.isAdmin ? `<div class="ev-act"><button class="btn sm" data-act="editev" data-id="${esc(e.id)}">Edit</button><button class="btn sm danger" data-act="delev" data-id="${esc(e.id)}">Remove</button></div>` : ''}</div></li>`;
+}
+function eventsCard(){
+  const up = upcomingEvents();
+  if (!up.length && !S.isAdmin) return '';
+  return `<div class="card"><div class="card-h"><h3>Upcoming events</h3>${S.isAdmin ? '<button class="btn sm quiet" data-act="addev">Add</button>' : ''}</div>
+    ${up.length ? `<ul class="evlist">${up.slice(0, 3).map(e => evItem(e, false)).join('')}</ul><p style="margin-top:10px"><button class="btn sm" data-act="allev">See all events${up.length > 3 ? ` (${up.length})` : ''}</button></p>` : '<p class="muted">No events yet. Add camps, baptisms, Pathfinders, visitations and more.</p>'}</div>`;
+}
+function openEventsModal(){
+  const up = upcomingEvents();
+  const m = openModal('Church events', `${up.length ? `<ul class="evlist">${up.map(e => evItem(e, true)).join('')}</ul>` : '<p class="muted">No upcoming events.</p>'}
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button>${S.isAdmin ? '<button class="btn primary" type="button" data-act="addev">Add an event</button>' : ''}</div>`, true);
+}
+function openEventForm(id){
+  const e = (S.events || []).find(x => x.id === id) || {remind:true};
+  const m = openModal(id ? 'Edit event' : 'Add an event', `
+    <form id="evForm" class="m-body" style="padding:0">
+      <label class="fld" for="evTitle">Event<input id="evTitle" required maxlength="100" value="${esc(e.title || '')}" placeholder="Youth camp, Baptism, Pathfinder Day"></label>
+      <div class="bd-sel"><label class="fld" for="evDate" style="flex:1">Date<input id="evDate" type="date" required value="${esc(e.date || phISO())}"></label>
+      <label class="fld" for="evTime" style="flex:1">Time (optional)<input id="evTime" type="time" value="${esc(e.time || '')}"></label></div>
+      <label class="fld" for="evPlace">Place (optional)<input id="evPlace" maxlength="100" value="${esc(e.place || '')}" placeholder="Church hall"></label>
+      <label class="fld" for="evDesc">Details (optional)<textarea id="evDesc" maxlength="600" placeholder="What to bring, who can join">${esc(e.desc || '')}</textarea></label>
+      <label class="pin-opt"><input type="checkbox" id="evRem" ${e.remind ? 'checked' : ''}> Post a reminder announcement before it starts</label>
+      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="evSave">Save event</button></div>
+    </form>`);
+  $('#evForm', m).addEventListener('submit', async ev => {
+    ev.preventDefault(); const b = $('#evSave', m); b.disabled = true;
+    try {
+      await api('saveEvent', {id:id || '', title:$('#evTitle', m).value, date:$('#evDate', m).value, time:$('#evTime', m).value, place:$('#evPlace', m).value, desc:$('#evDesc', m).value, remind:$('#evRem', m).checked});
+      await sync(); openEventsModal(); toast('Event saved.');
+    } catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first. See SETUP.md.' : errMsg(err)); b.disabled = false; }
+  });
+}
+async function deleteEvent(id){
+  const e = (S.events || []).find(x => x.id === id); if (!e) return;
+  if (!(await confirmBox('Remove event', `Remove "${e.title}" from the calendar?`, 'Remove'))) { openEventsModal(); return; }
+  try { await api('deleteEvent', {id}); await sync(); openEventsModal(); toast('Event removed.'); } catch (err){ toast(errMsg(err)); }
+}
+function birthdaysCard(){
+  const n = phNow(), list = [];
+  for (let i = 0; i < 8; i++){
+    const d = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + i)), md = d.toISOString().slice(5, 10);
+    Object.values(S.profiles).filter(p => p.bday === md).forEach(p => list.push({p, i, d}));
+  }
+  if (!list.length) return '';
+  return `<div class="card bday"><h3>Birthdays</h3><ul style="list-style:none;margin:0;padding:0">${list.map(({p, i, d}) => `<li class="${i ? '' : 'today'}">${av(p.id, 'sm')}<span>${i ? `${esc(p.name)} · ${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}` : `Happy birthday, ${esc(p.name)}! 🎂`}</span></li>`).join('')}</ul></div>`;
+}
+function liveNow(){
+  const url = S.settings.liveUrl; if (!url) return null;
+  if (Number(S.settings.liveUntil) > Date.now()) return {url, manual:true};
+  const w = nextWorships()[0];
+  return w && w.on ? {url, manual:false, name:w.sv.name} : null;
+}
 function renderSide(){
   const st = S.settings, n = Object.keys(S.profiles).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${sched}${verse}
-    <div class="card more"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
-    <div class="card more"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
+  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${thisSabbathCard()}${eventsCard()}${birthdaysCard()}${sched}${verse}
+    <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
+    <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
 }
 function renderBanner(){
   const b = $('#banner'); if (!b) return;
-  b.innerHTML = S.offline ? `<div class="note warn">Cannot reach the church server right now. You are seeing the last posts that loaded.</div>` : '';
+  const wait = S.isAdmin && S.waiting && S.waiting.length ? `<div class="note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between"><span><b>${S.waiting.length}</b> new ${S.waiting.length === 1 ? 'person is' : 'people are'} waiting for your approval.</span><button class="btn sm primary" data-act="members">Review</button></div>` : '';
+  const off = navigator.onLine === false ? `<div class="note warn">You are offline. You are seeing the posts saved on this phone. New posts load when the signal comes back.</div>`
+    : S.offline ? `<div class="note warn">Cannot reach the church server right now. You are seeing the last posts that loaded.</div>` : '';
+  b.innerHTML = off + wait;
 }
 /* worship times (weekly, Philippine time) */
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -1032,6 +1173,8 @@ function renderStrip(){
   const list = S.posts.filter(p => p.cat === 'announcement').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const nw = nextWorships(), w = nw[0];
   let rows = '';
+  const live = liveNow();
+  if (live) rows += `<a class="live-row" href="${esc(live.url)}" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span><span class="grow">LIVE now${live.name ? ' · ' + esc(live.name) : ''} · Tap to watch</span>${S.isAdmin && live.manual ? '<button type="button" data-act="endlive">End</button>' : ''}</a>`;
   if (w) rows += `<div class="wr" role="status"><span class="iw">${LOGO}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
   if (list.length && S.route !== 'news'){
     const p = list[0];
@@ -1475,7 +1618,7 @@ function renderProfile(){
       <div class="pf-body">
         ${p.bio ? `<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.bio)}</p>` : own ? `<p class="muted">Add your photo and a few words so the church family can get to know you.</p>` : ''}
         ${p.verse ? `<p class="quote">${esc(p.verse)}</p>` : ''}
-        <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}</div>
+        <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}${p.bday ? `<span>Birthday <b>${MONTHS[Number(p.bday.slice(0, 2)) - 1]} ${Number(p.bday.slice(3))}</b></span>` : ''}</div>
       </div></section>
       ${mine2.length || own ? `<div class="sec-row"><h2 class="sec">Photos and videos</h2>${own ? `<button class="btn primary sm" data-act="myupload">${icon('upload')}Add photos or videos</button>` : ''}</div>${own || S.isAdmin ? storageHTML(id) : ''}
         ${pAlbums.length ? `<div class="grid">${pAlbums.sort((x, y) => Math.max(...y.items.map(f => +f.createdAt || 0)) - Math.max(...x.items.map(f => +f.createdAt || 0))).map(albumCard).join('')}</div>` : ''}
@@ -1498,6 +1641,7 @@ function openProfileModal(){
       <label class="fld" for="pSince">Member since<input id="pSince" maxlength="4" inputmode="numeric" value="${esc(p.since || '')}" placeholder="Year"></label>
       <label class="fld" for="pBio">About you<textarea id="pBio" maxlength="500" placeholder="A few words about you and your family">${esc(p.bio || '')}</textarea></label>
       <label class="fld" for="pVerse">Favorite verse<textarea id="pVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(p.verse || '')}</textarea></label>
+      <div class="fld"><span>Birthday (optional)</span><div class="bd-sel"><select id="pBdM" aria-label="Birthday month"><option value="">Month</option>${MONTHS.map((x, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${(p.bday || '').slice(0, 2) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${x}</option>`).join('')}</select><select id="pBdD" aria-label="Birthday day"><option value="">Day</option>${Array.from({length:31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => `<option value="${d}" ${(p.bday || '').slice(3) === d ? 'selected' : ''}>${Number(d)}</option>`).join('')}</select></div><small>Only the month and day are shown, so the church can greet you. Leave it empty to keep it private.</small></div>
       <label class="fld" for="pPhone">Mobile number for text alerts<input id="pPhone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" value="${esc((S.me && S.me.phone) || '')}" placeholder="09171234567"><small>Only church leaders can see this. It is never shown to other members.</small></label>
       <label class="pin-opt"><input type="checkbox" id="pSms" ${S.me && S.me.sms ? 'checked' : ''}> Text me church announcements</label>
       <label class="fld" for="pAv">Profile photo<input id="pAv" type="file" accept="image/*"><small>Optional. A face photo works best.</small></label>
@@ -1509,6 +1653,9 @@ function openProfileModal(){
     const btn = $('#pSave', m); btn.disabled = true; btn.textContent = 'Saving…';
     try {
       const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value, phone:$('#pPhone', m).value, sms:$('#pSms', m).checked};
+      const bm = $('#pBdM', m).value, bd = $('#pBdD', m).value;
+      if ((bm && !bd) || (!bm && bd)){ toast('Choose both the month and the day of your birthday, or neither.'); btn.disabled = false; btn.textContent = 'Save profile'; return; }
+      body.bday = bm && bd ? bm + '-' + bd : '';
       const af = $('#pAv', m).files[0], cf = $('#pCover', m).files[0];
       if (af) body.avatar = await shrink(af, {w:240, h:240, crop:true, q:.82, maxChars:300000});
       if (cf) body.cover = await shrink(cf, {w:1200, h:400, crop:true, q:.78, maxChars:900000});
@@ -1760,6 +1907,10 @@ function openSettingsModal(){
       <p class="muted">Text alerts: ${S.sms && S.sms.provider === 'SEMAPHORE' ? 'automatic through Semaphore.' : 'free manual mode. You get the numbers and your phone sends the texts. For automatic texts, see SETUP.md.'} ${S.sms ? S.sms.count : 0} member${S.sms && S.sms.count === 1 ? ' has' : 's have'} turned them on.</p>
       <label class="fld" for="sBg">Background photo<input id="sBg" type="file" accept="image/*"><small>Pick a church photo. It sits behind the whole site and you can change it any time.</small></label>
       ${st.bgId ? '<label class="pin-opt"><input type="checkbox" id="sBgReset"> Go back to the default background</label>' : ''}
+      <label class="pin-opt"><input type="checkbox" id="sApprove" ${st.requireApproval === '0' ? '' : 'checked'}> New members need approval from an admin before they can see the church page</label>
+      <label class="fld" for="sLive">Livestream link (optional)<input id="sLive" type="url" maxlength="400" value="${esc(st.liveUrl || '')}" placeholder="https://www.facebook.com/yourchurch/live"><small>A red "LIVE now" bar appears during every worship time. You can also start it yourself:</small></label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${Number(st.liveUntil) > Date.now() ? '<button class="btn sm danger" type="button" data-act="endlive">End live now</button>' : '<button class="btn sm" type="button" data-act="golive">Go live now (3 hours)</button>'}<button class="btn sm" type="button" data-act="backup">Back up the church data now</button></div>
+      <p class="muted" style="margin-top:-4px">A backup copy of the church sheet is also saved every week in Google Drive, in the Backups folder.</p>
       <label class="fld" for="sQuota">Storage limit for each member (GB)<input id="sQuota" type="number" min="0" max="10000" step="1" inputmode="numeric" value="${esc(st.memberQuotaGB == null || st.memberQuotaGB === '' ? '10' : st.memberQuotaGB)}"><small>How much each member may upload to the Library. Admins have no limit. 0 means no limit. All files share the church Google Drive.</small></label>
       <button class="btn" type="button" data-act="members">Manage members</button>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="sSave">Save settings</button></div>
@@ -1768,7 +1919,7 @@ function openSettingsModal(){
     e.preventDefault();
     const btn = $('#sSave', m); btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const body = {churchName:$('#sName', m).value, tagline:$('#sTag', m).value, schedule:$('#sSched', m).value, verse:$('#sVerse', m).value, joinCode:$('#sCode', m).value, memberQuotaGB:$('#sQuota', m).value, services:svcRead(m).filter(x => x.time), autoRemind:$('#sAuto', m).checked, remindHours:$('#sHours', m).value, autoSms:$('#sAutoSms', m).checked};
+      const body = {churchName:$('#sName', m).value, tagline:$('#sTag', m).value, schedule:$('#sSched', m).value, verse:$('#sVerse', m).value, joinCode:$('#sCode', m).value, memberQuotaGB:$('#sQuota', m).value, requireApproval:$('#sApprove', m).checked, liveUrl:$('#sLive', m).value.trim(), services:svcRead(m).filter(x => x.time), autoRemind:$('#sAuto', m).checked, remindHours:$('#sHours', m).value, autoSms:$('#sAutoSms', m).checked};
       const f = $('#sBg', m).files[0];
       if (f) body.bg = await shrink(f, {w:1920, q:.8, maxChars:2800000});
       else if ($('#sBgReset', m) && $('#sBgReset', m).checked) body.resetBg = true;
@@ -1792,10 +1943,11 @@ function openMembersModal(){
   const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => `
     <div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${p.access === 'admin' ? 'Church admin' : 'Member'}${p.role ? ' · ' + esc(p.role) : ''}</span></div>
     ${p.id === S.uid ? '<span class="meta">You</span>' : `<button class="btn sm" data-act="macc" data-uid="${esc(p.id)}" data-to="${p.access === 'admin' ? 'member' : 'admin'}">${p.access === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>`}</div>`).join('');
-  openModal('Manage members', `<p class="muted">Admins can post announcements, pin and delete any post, and manage members.</p><div class="mlist">${rows}</div><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
+  const wait = (S.waiting || []).map(p => `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">Joined ${ago(p.createdAt)} · waiting for approval</span></div><button class="btn sm primary" data-act="macc" data-uid="${esc(p.id)}" data-to="member">Approve</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Decline</button></div>`).join('');
+  openModal('Manage members', `${wait ? `<h3 style="margin-bottom:6px">Waiting for approval</h3><div class="mlist wait-list">${wait}</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">` : ''}<p class="muted">Admins can post announcements, pin and delete any post, and manage members.</p><div class="mlist">${rows}</div><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
 }
 async function memberAction(a, uid, to){
-  const p = S.profiles[uid]; if (!p) return;
+  const p = S.profiles[uid] || (S.waiting || []).find(x => x.id === uid); if (!p) return;
   try {
     if (a === 'macc'){ await api('setAccess', {uid, access:to}); await sync(); openMembersModal(); toast(to === 'admin' ? `${p.name} is now an admin.` : `${p.name} is now a member.`); }
     else if (a === 'mdel'){
@@ -1866,6 +2018,14 @@ document.addEventListener('click', e => {
     case 'libcat': S.libCat = el.dataset.c; renderLibrary(); break;
     case 'upload': if (guard()) openUploadModal(); break;
     case 'delfile': deleteFile(id); break;
+    case 'editsab': openSabbathModal(); break;
+    case 'addev': openEventForm(''); break;
+    case 'editev': openEventForm(el.dataset.id); break;
+    case 'delev': deleteEvent(el.dataset.id); break;
+    case 'allev': openEventsModal(); break;
+    case 'golive': case 'endlive': e.preventDefault(); (async () => { try { await api('goLive', {on:a === 'golive'}); await sync(); if ($('#sForm')) closeModal(); toast(a === 'golive' ? 'The LIVE bar is on for 3 hours.' : 'Live ended.'); } catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first.' : errMsg(err)); } })(); break;
+    case 'backup': (async () => { el.disabled = true; try { const r = await api('backupNow'); toast('Backup saved: ' + r.name); } catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first.' : errMsg(err)); } el.disabled = false; })(); break;
+    case 'lang': setLang(LANG === 'ceb' ? 'en' : 'ceb'); break;
     case 'galmore': S.galLimit += 48; renderProfile(); break;
     case 'openalbum': openAlbum(el.dataset.k); break;
     case 'albadd': openUploadModal({album:el.dataset.name, personal:!!el.dataset.personal}); break;
@@ -1939,15 +2099,229 @@ async function bootSession(){
     else showAuth('offline', errMsg(e));
   }
 }
+/* ---------- Bisaya (Cebuano) ---------- */
+const LANG_KEY = 'tubodLang';
+let LANG = (() => { try { return localStorage.getItem(LANG_KEY) === 'ceb' ? 'ceb' : 'en'; } catch (e) { return 'en'; } })();
+function setLang(l){
+  try { localStorage.setItem(LANG_KEY, l); localStorage.setItem('sq_lang', JSON.stringify(l)); } catch (e) {}
+  location.reload();
+}
+const BIS_DAYS = {Sunday:'Domingo', Monday:'Lunes', Tuesday:'Martes', Wednesday:'Miyerkules', Thursday:'Huwebes', Friday:'Biyernes', Saturday:'Sabado'};
+const BIS_MONTHS = {January:'Enero', February:'Pebrero', March:'Marso', April:'Abril', May:'Mayo', June:'Hunyo', July:'Hulyo', August:'Agosto', September:'Septiyembre', October:'Oktubre', November:'Nobyembre', December:'Disyembre'};
+const BIS_MON3 = {Jan:'Ene', Feb:'Peb', Mar:'Mar', Apr:'Abr', May:'May', Jun:'Hun', Jul:'Hul', Aug:'Ago', Sep:'Sep', Oct:'Okt', Nov:'Nob', Dec:'Dis'};
+const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
+  // navigation and header
+  'Home':'Balay', 'Announcements':'Mga pahibalo', 'News':'Pahibalo', 'Library':'Librarya', 'Members':'Mga miyembro', 'Bible Game':'Dula sa Bibliya',
+  'My profile':'Akong profile', 'Church settings':'Mga setting sa simbahan', 'Main':'Panguna',
+  // sign in and join
+  'Sign in':'Mosulod', 'Join':'Moapil', 'Sign out':'Mogawas', 'Username':'Username', 'Password':'Password',
+  'Your full name':'Imong tibuok ngalan', 'Choose a username':'Pagpili og username', 'Choose a password':'Pagpili og password',
+  'Letters and numbers only, no spaces. You will use it to sign in.':'Mga letra ug numero lang, walay espasyo. Gamiton nimo kini sa pagsulod.',
+  'At least 6 characters.':'Labing menos 6 ka letra o numero.', 'Church join code':'Code sa pag-apil sa simbahan',
+  'Ask the church admin or pastor for the code.':'Pangayoa ang code sa admin sa simbahan o sa pastor.',
+  'Please wait…':'Palihug paghulat…', 'Try again':'Sulayi pag-usab', 'Check again':'Susiha pag-usab',
+  'Wrong username or password.':'Sayop ang username o password.', 'Please sign in again.':'Palihug sulod pag-usab.',
+  'That church join code is not right. Ask the church admin for it.':'Sayop ang code sa pag-apil. Pangayoa kini sa admin sa simbahan.',
+  'That username is taken. Try another one.':'Naa nay naggamit ana nga username. Sulayi ang lain.',
+  'Your account is waiting for a church admin to approve it.':'Naghulat pa ang imong account nga aprobahan sa admin sa simbahan.',
+  'A church admin needs to approve your account before you can see the church page. This keeps our church family safe. This page opens by itself once you are approved.':'Kinahanglan una nga aprobahan sa admin sa simbahan ang imong account sa dili pa nimo makita ang panid sa simbahan. Aron luwas ang atong pamilya sa simbahan. Moabli ra kini nga panid inig ka-aprobahan ka na.',
+  // Sabbath
+  'Next Sabbath':'Sunod nga Igpapahulay', 'Sabbath hours':'Oras sa Igpapahulay', 'Happy Sabbath':'Malipayong Igpapahulay',
+  'Sunset estimate for Tubod. Check your local time.':'Banabana sa pagsalop sa adlaw sa Tubod. Susiha ang oras sa inyong lugar.',
+  'This Sabbath':'Karong Igpapahulay', 'Lesson':'Leksyon', 'Sabbath School':'Tulunghaan sa Igpapahulay', 'Speaker':'Mamumulong', 'Reading':'Pagbasa',
+  'Fill in this Sabbath':'Isulat ang alang niining Igpapahulay', "Share this week's lesson, speaker and reading with everyone.":'Ipaambit sa tanan ang leksyon, mamumulong ug pagbasa karong semanaha.',
+  'Open the lesson':'Ablihi ang leksyon', 'Sabbath date':'Petsa sa Igpapahulay', 'Sabbath School lesson title':'Titulo sa leksyon sa Tulunghaan sa Igpapahulay',
+  'Link to the lesson (optional)':'Link sa leksyon (kon gusto)', "Paste the web address of this week's lesson study guide.":'Idikit ang web address sa leksyon karong semanaha.',
+  'Sabbath School teacher or leader':'Magtutudlo o lider sa Tulunghaan sa Igpapahulay', 'Divine Service speaker':'Mamumulong sa pagsimba',
+  'Scripture reading':'Pagbasa sa Kasulatan', 'Other notes':'Ubang sulat', 'This Sabbath is updated.':'Na-update na ang Karong Igpapahulay.',
+  // worship
+  'Worship schedule':'Iskedyul sa pagsimba', 'Worship times':'Mga oras sa pagsimba', 'Next':'Sunod', 'Happening now':'Nagsugod na', 'Wednesday worship':'Pagsimba sa Miyerkules', 'Friday worship':'Pagsimba sa Biyernes',
+  'Verse of the week':'Bersikulo sa semana', 'Add a worship time':'Pagdugang og oras sa pagsimba',
+  // live
+  'LIVE now':'LIVE karon', 'Tap to watch':'Tuploka aron motan-aw', 'End':'Tapuson', 'End live now':'Tapuson ang live', 'Go live now (3 hours)':'Mag-live karon (3 ka oras)',
+  'The LIVE bar is on for 3 hours.':'Naka-on ang LIVE sulod sa 3 ka oras.', 'Live ended.':'Nahuman na ang live.',
+  // events
+  'Upcoming events':'Umaabot nga mga kalihokan', 'Church events':'Mga kalihokan sa simbahan', 'See all events':'Tan-awa ang tanang kalihokan',
+  'Add an event':'Pagdugang og kalihokan', 'Edit event':'Usba ang kalihokan', 'Event':'Kalihokan', 'Date':'Petsa', 'Time (optional)':'Oras (kon gusto)',
+  'Place (optional)':'Lugar (kon gusto)', 'Details (optional)':'Detalye (kon gusto)', 'Save event':'I-save ang kalihokan',
+  'Post a reminder announcement before it starts':'Pag-post og pahinumdom sa dili pa kini magsugod', 'No upcoming events.':'Walay umaabot nga kalihokan.',
+  'No events yet. Add camps, baptisms, Pathfinders, visitations and more.':'Wala pay kalihokan. Idugang ang mga camp, bunyag, Pathfinders, pagbisita ug uban pa.',
+  'Event saved.':'Na-save ang kalihokan.', 'Event removed.':'Natangtang ang kalihokan.', 'Remove event':'Tangtangon ang kalihokan',
+  'Today':'Karong adlawa', 'Tomorrow':'Ugma',
+  // birthdays
+  'Birthdays':'Mga adlaw nga natawhan', 'Birthday':'Adlaw nga natawhan', 'Birthday (optional)':'Adlaw nga natawhan (kon gusto)', 'Month':'Bulan', 'Day':'Adlaw',
+  'Only the month and day are shown, so the church can greet you. Leave it empty to keep it private.':'Ang bulan ug adlaw lang ang ipakita, aron makabati ang simbahan kanimo. Biyai nga blangko kon dili nimo gusto ipakita.',
+  'Choose both the month and the day of your birthday, or neither.':'Pilia ang bulan ug adlaw sa imong adlaw nga natawhan, o ayaw pagpili sa duha.',
+  // posts
+  'Share':'Ambit', 'Prayer request':'Hangyo sa pag-ampo', 'Testimony':'Pagpamatuod', 'Announcement':'Pahibalo', 'All':'Tanan',
+  'Shares':'Mga ambit', 'Prayer requests':'Mga hangyo sa pag-ampo', 'Testimonies':'Mga pagpamatuod',
+  'Post':'I-post', 'Photo':'Litrato', 'Video':'Video', 'Pin to top':'Ibutang sa ibabaw', 'Pinned':'Naa sa ibabaw', 'Amen':'Amen', 'Comment':'Komento', 'Reply':'Tubag',
+  'Copy':'Kopyaha', 'Send':'Ipadala', 'Write a post':'Pagsulat og post', 'Write an announcement':'Pagsulat og pahibalo', 'Post type':'Klase sa post',
+  'Filter posts':'Salaa ang mga post', 'Pin post':'Ibutang sa ibabaw', 'Unpin post':'Kuhaa sa ibabaw', 'Unpin':'Kuhaa sa ibabaw', 'Delete post':'Papasa ang post',
+  'Church announcements':'Mga pahibalo sa simbahan', 'Messages from the church leaders':'Mga mensahe gikan sa mga lider sa simbahan',
+  'Also text members':'I-text usab ang mga miyembro', 'Text members':'I-text ang mga miyembro',
+  'Only church leaders can send announcements. You can say Amen and reply to any message.':'Ang mga lider ra sa simbahan ang makapadala og pahibalo. Makaingon ka og Amen ug makatubag sa bisan unsang mensahe.',
+  'No posts here yet. Be the first to share something.':'Wala pay post dinhi. Ikaw na ang mag-una pag-ambit.', 'You have not posted yet.':'Wala ka pay na-post.', 'No posts yet.':'Wala pay post.',
+  'Video upload started. Keep this page open.':'Nagsugod na ang pag-upload sa video. Ayaw isira kini nga panid.',
+  'Video posted. Google Drive may need a few minutes before it can play.':'Na-post na ang video. Basin kinahanglan og pipila ka minuto sa Google Drive una kini ma-play.',
+  // side cards
+  'Invite your family':'Dapita ang imong pamilya', 'Send the church page to Messenger, Facebook or a text.':'Ipadala ang panid sa simbahan sa Messenger, Facebook o text.',
+  'Share the page':'Ipaambit ang panid', 'Our church family':'Atong pamilya sa simbahan', 'Invite family':'Dapita ang pamilya',
+  'Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.':'Tip: sa imong cellphone, ablihi ang menu sa browser ug pilia ang Add to Home screen aron mahimo kining sama sa app.',
+  'Review':'Tan-awa',
+  // library
+  'Church library':'Librarya sa simbahan', 'Sermons, Sabbath School lessons, hymns and documents kept for the whole church family.':'Mga wali, leksyon sa Tulunghaan sa Igpapahulay, mga himno ug dokumento alang sa tibuok pamilya sa simbahan.',
+  'Search the library':'Pangitaa sa librarya', 'Library categories':'Mga klase sa librarya', 'Add files or album':'Pagdugang og file o album',
+  'Add files to the church library':'Pagdugang og file sa librarya sa simbahan', 'Add files':'Pagdugang og file', 'Add to album':'Idugang sa album', 'Add to this album':'Idugang niini nga album',
+  'Sermons & audio':'Mga wali ug audio', 'Hymns & music':'Mga himno ug musika', 'Documents':'Mga dokumento', 'Photos & videos':'Mga litrato ug video', 'Other':'Uban pa',
+  'Files':'Mga file', 'Title':'Titulo', 'Album':'Album', 'Category':'Klase', 'Description':'Paghulagway', 'Upload':'I-upload', 'Optional':'Kon gusto', '(optional)':'(kon gusto)',
+  'Automatic, by file type':'Awtomatiko, sumala sa klase sa file', 'Open or download':'Ablihi o i-download', 'Open in Google Drive':'Ablihi sa Google Drive', 'Play':'Patugtoga',
+  'Download original':'I-download ang orihinal', 'Open in Drive':'Ablihi sa Drive', 'Show more':'Ipakita pa', 'Loading files…':'Nagkarga sa mga file…',
+  'The library is empty. Add the first sermon, lesson, hymn sheet or photo album.':'Wala pay sulod ang librarya. Idugang ang unang wali, leksyon, himno o album sa litrato.',
+  'No files match.':'Walay file nga nakit-an.',
+  'The Library is for church files: sermons, lessons, documents and church event photos. For your own photos, use Add photos on your profile.':'Ang librarya alang sa mga file sa simbahan: mga wali, leksyon, dokumento ug litrato sa mga kalihokan sa simbahan. Para sa imong kaugalingong litrato, gamita ang Add photos sa imong profile.',
+  'These show only on your profile. To share something for the whole church, add it in the Library instead.':'Sa imong profile ra kini makita. Kon gusto nimo ipaambit sa tibuok simbahan, idugang kini sa librarya.',
+  'Type a name to keep these files together in one album. Use the same name again to add more later.':'Pagsulat og ngalan aron magkauban kini nga mga file sa usa ka album. Gamita pag-usab ang samang ngalan aron makadugang unya.',
+  'Upload started.':'Nagsugod na ang pag-upload.', 'Nothing was uploaded.':'Walay na-upload.', 'Cancel all':'Kanselaha tanan', 'Skip this file':'Laktawi kini nga file',
+  'Almost done. Saving to the library…':'Hapit na mahuman. Gi-save sa librarya…', 'Connection problem. Trying again…':'Naay problema sa koneksyon. Gisulayan pag-usab…',
+  // profile
+  'Edit profile':'Usba ang profile', 'Your name':'Imong ngalan', 'Role in the church':'Katungdanan sa simbahan', 'Ministries':'Mga ministeryo', 'Member since':'Miyembro sukad',
+  'About you':'Mahitungod kanimo', 'Favorite verse':'Paboritong bersikulo', 'Mobile number for text alerts':'Numero sa cellphone para sa text',
+  'Only church leaders can see this. It is never shown to other members.':'Ang mga lider ra sa simbahan ang makakita niini. Dili kini ipakita sa ubang miyembro.',
+  'Text me church announcements':'I-text ko sa mga pahibalo sa simbahan', 'Profile photo':'Litrato sa profile', 'Cover photo':'Cover nga litrato',
+  'Optional. A face photo works best.':'Kon gusto. Mas maayo ang litrato sa nawong.', 'Optional. A wide photo, such as your family or a church event.':'Kon gusto. Usa ka lapad nga litrato, sama sa imong pamilya o kalihokan sa simbahan.',
+  'Save profile':'I-save ang profile', 'Profile saved.':'Na-save ang profile.', 'Saving…':'Gi-save…',
+  'Add your photo and a few words so the church family can get to know you.':'Idugang ang imong litrato ug pipila ka pulong aron makaila kanimo ang pamilya sa simbahan.',
+  'Photos and videos':'Mga litrato ug video', 'Add photos or videos':'Pagdugang og litrato o video', 'Add to your profile':'Idugang sa imong profile',
+  'Add photos and videos of yourself and your family. They show only here on your profile, not in the church Library.':'Idugang ang mga litrato ug video nimo ug sa imong pamilya. Dinhi ra kini makita sa imong profile, dili sa librarya sa simbahan.',
+  'No photos or videos yet.':'Wala pay litrato o video.', 'Shared in the church library':'Gipaambit sa librarya sa simbahan', 'Posts':'Mga post',
+  'Member':'Miyembro', 'Church admin':'Admin sa simbahan', 'You':'Ikaw', 'Elder':'Elder', 'Pastor':'Pastor', 'Deacon':'Diyakono', 'Deaconess':'Diyakonesa',
+  'Change password':'Usba ang password', 'Current password':'Karon nga password', 'New password':'Bag-ong password', 'Password changed.':'Nausab na ang password.',
+  // members
+  'Everyone who has joined the church family page.':'Tanang miapil sa panid sa pamilya sa simbahan.', 'Search by name or ministry':'Pangitaa pinaagi sa ngalan o ministeryo',
+  'Search members':'Pangitaa ang mga miyembro', 'Manage members':'Atimana ang mga miyembro', 'Make admin':'Himoang admin', 'Remove admin':'Kuhaa ang pagka-admin',
+  'Remove':'Tangtangon', 'Approve':'Aprobahan', 'Decline':'Dili aprobahan', 'Waiting for approval':'Naghulat sa pag-aprobar', 'waiting for approval':'naghulat sa pag-aprobar',
+  'Admins can post announcements, pin and delete any post, and manage members.':'Ang mga admin makapost og pahibalo, makabutang sa ibabaw ug makapapas sa bisan unsang post, ug makaatiman sa mga miyembro.',
+  'Your account is approved. Welcome to the church family!':'Na-aprobahan na ang imong account. Maayong pag-abot sa pamilya sa simbahan!',
+  'Welcome to the church family! Add your photo on My profile.':'Maayong pag-abot sa pamilya sa simbahan! Idugang ang imong litrato sa Akong profile.',
+  // settings (admins)
+  'Church name':'Ngalan sa simbahan', 'Tagline or location':'Lugar', 'Save settings':'I-save ang mga setting', 'Settings saved.':'Na-save ang mga setting.',
+  'Announce each worship automatically':'Ipahibalo kada pagsimba sa kaugalingon', 'Post the announcement':'I-post ang pahibalo',
+  'More about worship (optional)':'Dugang bahin sa pagsimba (kon gusto)', 'Background photo':'Litrato sa likod',
+  'Livestream link (optional)':'Link sa livestream (kon gusto)', 'Back up the church data now':'I-backup karon ang datos sa simbahan',
+  'New members need approval from an admin before they can see the church page':'Kinahanglan aprobahan sa admin ang bag-ong miyembro sa dili pa nila makita ang panid sa simbahan',
+  'Storage limit for each member (GB)':'Limitasyon sa storage kada miyembro (GB)', 'Storage used:':'Nagamit nga storage:',
+  // common buttons
+  'Join the church page':'Moapil', 'A few words about you and your family':'Pipila ka pulong bahin nimo ug sa imong pamilya',
+  'Choir, Pathfinders, Deacons':'Koro, Pathfinders, Diyakono', "Communion, potluck, visitors' day":'Komunyon, potluck, adlaw sa mga bisita', 'Family, Birthday 2026':'Pamilya, Birthday 2026',
+  'Lesson 7: The Sanctuary':'Leksyon 7: Ang Santuwaryo', 'Sabbath School Lesson, Week 5':'Leksyon sa Tulunghaan sa Igpapahulay, Semana 5', 'Write the verse and its reference':'Isulat ang bersikulo ug asa kini makita',
+  'Year':'Tuig', 'Youth camp 2026':'Youth camp 2026', 'Birthday day':'Adlaw sa pagkatawo', 'Birthday month':'Bulan sa pagkatawo', 'Open announcements':'Ablihi ang mga pahibalo',
+  'Youth camp, Baptism, Pathfinder Day':'Youth camp, Bunyag, Adlaw sa Pathfinder', 'Church hall':'Church hall', 'What to bring, who can join':'Unsay dad-on, kinsa ang makaapil',
+  'Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over 15 MB (big videos too, up to 50 GB) go straight to the church Google Drive. Files are saved exactly as they are, with nothing compressed or resized. They upload one after another. Keep this page open and your phone awake until it finishes.':'Pagpili og usa o daghang file dungan (kupti ang Ctrl o Shift, o tuploka ang pipila sa imong cellphone). Mahimo ang audio, video, PDF, Word, slides ug litrato. Ang file nga labaw sa 15 MB (apil ang dagkong video, hangtod 50 GB) diretso sa Google Drive sa simbahan. Gi-save ang file sama gyud sa orihinal, walay gi-compress o gigamay. Usa-usa kini nga ma-upload. Ayaw isira kini nga panid ug ayaw papalonga ang screen hangtod mahuman.',
+  'Thank you for joining':'Salamat sa pag-apil',
+  'Cancel':'Kanselahon', 'Save':'I-save', 'Close':'Isira', 'Done':'Human na', 'Edit':'Usba', 'Add':'Idugang', 'Delete':'Papasa', 'Yes':'Oo', 'No':'Dili',
+  'Copied.':'Nakopya na.', 'Copied. Paste it into Messenger or a text message.':'Nakopya na. Idikit kini sa Messenger o text.',
+  'Loading…':'Nagkarga…', 'Loading posts…':'Nagkarga sa mga post…', 'Loading members…':'Nagkarga sa mga miyembro…', 'just now':'karon lang', 'Uploaded.':'Na-upload na.',
+  'Cannot reach the church server right now. You are seeing the last posts that loaded.':'Dili makaabot sa server sa simbahan karon. Ang imong nakita mao ang katapusang mga post nga nakarga.',
+  'You are offline. You are seeing the posts saved on this phone. New posts load when the signal comes back.':'Wala kay internet. Ang imong nakita mao ang mga post nga na-save niini nga cellphone. Mokarga ang bag-ong post inig balik sa signal.'
+});
+const BIS_DAY_RX = '(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)';
+const BIS_MON_RX = '(January|February|March|April|May|June|July|August|September|October|November|December)';
+const bisUnits = t => t.replace(/(\d+) days?/g, '$1 ka adlaw').replace(/(\d+) hrs?/g, '$1 ka oras').replace(/(\d+) min/g, '$1 ka minuto');
+const BIS_RX = [
+  [/^(\d+) min ago$/, '$1 ka minuto na'], [/^(\d+) hr ago$/, '$1 ka oras na'], [/^(\d+) days? ago$/, '$1 ka adlaw na'],
+  [/^in (.+)$/, (m, x) => 'sa ' + bisUnits(x)],
+  [/^Sabbath begins in (.+)$/, (m, x) => 'Magsugod ang Igpapahulay sa ' + bisUnits(x)],
+  [/^Sabbath ends at about (.+) on (.+)\.$/, (m, t, d) => `Matapos ang Igpapahulay mga ${t} sa ${bisDate(d)}.`],
+  [new RegExp('^' + BIS_DAY_RX + ', ' + BIS_MON_RX + ' (\\d+), at about (.+)\\.$'), (m, d, mo, n, t) => `${BIS_DAYS[d]}, ${BIS_MONTHS[mo]} ${n}, mga ${t}.`],
+  [new RegExp('^' + BIS_DAY_RX + ', ' + BIS_MON_RX + ' (\\d+)$'), (m, d, mo, n) => `${BIS_DAYS[d]}, ${BIS_MONTHS[mo]} ${n}`],
+  [new RegExp('^' + BIS_MON_RX + ' (\\d+)$'), (m, mo, n) => `${BIS_MONTHS[mo]} ${n}`],
+  [/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d+)$/, (m, mo, n) => `${BIS_MON3[mo]} ${n}`],
+  [new RegExp('^' + BIS_DAY_RX + ' (\\d.*)$'), (m, d, t) => `${BIS_DAYS[d]} ${t}`],
+  [new RegExp('^' + BIS_DAY_RX + 's (\\d.*)$'), (m, d, t) => `Kada ${BIS_DAYS[d]} ${t}`],
+  [/^(\d+) members?$/, '$1 ka miyembro'], [/^(\d+) posts? shared$/, '$1 ka post ang gipaambit'], [/^(\d+) items?$/, '$1 ka butang'],
+  [/^(\d+) (hours?) before$/, (m, n) => `${n} ka oras sa una`],
+  [/^Happy birthday, (.+)! 🎂$/, 'Malipayong adlaw nga natawhan, $1! 🎂'],
+  [/^new (person is|people are) waiting for your approval\.$/, 'ka bag-ong miyembro ang naghulat sa imong pag-aprobar.'],
+  [/^Joined (.+)$/, (m, x) => 'Ni-apil ' + (bisSeg(x) || x)],
+  [/^Announcement$/, 'Pahibalo'],
+  [/^What is on your heart, (.+)\? You can paste a video link\.$/, 'Unsa ang anaa sa imong kasingkasing, $1? Makadikit ka og link sa video.'],
+  [/^of (.+?)( · almost full)?$/, (m, x, f) => 'sa ' + x + (f ? ' · hapit na mapuno' : '')],
+  [/^\(no limit\)$/, '(walay limitasyon)'],
+  [/^(\d+) files uploaded\.(.*)$/, (m, n, r) => `${n} ka file ang na-upload.` + r.replace(/(\d+) skipped\./, '$1 ang gilaktawan.')],
+  [/^Thank you for joining, (.+)!$/, 'Salamat sa pag-apil, $1!'], [/^Thank you for joining!$/, 'Salamat sa pag-apil!'],
+  [/^Show more \((\d+) more\)$/, 'Ipakita pa ($1 pa)'], [/^See all events \((\d+)\)$/, 'Tan-awa ang tanang kalihokan ($1)']
+];
+function bisDate(d){ const r = bisSeg(d); return r == null ? d : r; }
+function bisSeg(t){
+  if (Object.prototype.hasOwnProperty.call(BIS, t)) return BIS[t];
+  for (const [re, r] of BIS_RX) if (re.test(t)) return t.replace(re, r);
+  return null;
+}
+function bis(v){
+  const core = v.trim(); if (!core) return null;
+  const lead = v.slice(0, v.indexOf(core)), trail = v.slice(v.indexOf(core) + core.length);
+  let r = bisSeg(core);
+  if (r == null && core.includes(' · ')){
+    let changed = false;
+    const out = core.split(' · ').map(p => { const x = bisSeg(p); if (x != null){ changed = true; return x; } return p; });
+    if (changed) r = out.join(' · ');
+  }
+  return r == null ? null : lead + r + trail;
+}
+/* translate what is on screen, leaving members' own words (posts, comments, names) as they wrote them */
+const BIS_SKIP = 'script,style,textarea,.p-text,.tx,.cm-b p,.f-desc,[data-notr]';
+const bisDone = new WeakMap();
+const BIS_TABS = {'Members':'Miyembro', 'My profile':'Ako', 'Announcements':'Pahibalo', 'News':'Pahibalo'};
+function bisText(n){
+  const v = n.nodeValue; if (bisDone.get(n) === v) return;
+  const p = n.parentElement; if (!p || p.closest(BIS_SKIP)) { bisDone.set(n, v); return; }
+  const r = p.closest('.tabs') && BIS_TABS[v.trim()] ? BIS_TABS[v.trim()] : bis(v); if (r != null && r !== v) n.nodeValue = r;
+  bisDone.set(n, n.nodeValue);
+}
+function bisAttrs(el){
+  if (el.closest(BIS_SKIP + ',input[type=hidden]') && el.tagName !== 'TEXTAREA') return;
+  ['placeholder', 'aria-label', 'title'].forEach(a => {
+    const v = el.getAttribute(a); if (!v || el['_bis_' + a] === v) return;
+    const r = bis(v); if (r != null && r !== v) el.setAttribute(a, r);
+    el['_bis_' + a] = el.getAttribute(a);
+  });
+}
+function bisTree(root){
+  if (root.nodeType === 3){ bisText(root); return; }
+  if (root.nodeType !== 1) return;
+  if (root.hasAttribute('placeholder') || root.hasAttribute('aria-label') || root.hasAttribute('title')) bisAttrs(root);
+  root.querySelectorAll('[placeholder],[aria-label],[title]').forEach(bisAttrs);
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+  while ((n = w.nextNode())) bisText(n);
+}
+function startBisaya(){
+  if (LANG !== 'ceb') return;
+  document.documentElement.lang = 'ceb';
+  bisTree(document.body);
+  new MutationObserver(ms => {
+    for (const m of ms){
+      if (m.type === 'characterData') bisText(m.target);
+      else if (m.type === 'attributes') bisAttrs(m.target);
+      else m.addedNodes.forEach(bisTree);
+    }
+  }).observe(document.body, {childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:['placeholder', 'aria-label', 'title']});
+}
+
 function boot(){
   const setTop = () => { const t = $('.top'); if (t) document.documentElement.style.setProperty('--topH', t.offsetHeight + 'px'); };
   setTop(); window.addEventListener('resize', setTop); if (document.fonts && document.fonts.ready) document.fonts.ready.then(setTop);
+  $('#langBtn').innerHTML = LANG === 'ceb' ? '<span class="lg">English</span><span class="sh">EN</span>' : '<span class="lg">Bisaya</span><span class="sh">BIS</span>'; $('#langBtn').setAttribute('aria-label', LANG === 'ceb' ? 'Switch to English' : 'Ilisan sa Bisaya');
   $('#mark').innerHTML = LOGO; $('#gearBtn').innerHTML = icon('gear');
+  startBisaya();
   const h = (location.hash || '').slice(1);
   if (['home','news','library','members'].includes(h)) S.route = h;
   S.token = loadToken();
   mount();
   setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard(); if (S.uid) renderStrip(); }, 60000);
+  window.addEventListener('online', () => { renderBanner(); if (S.uid) sync().catch(() => {}); });
+  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('offline', renderBanner);
   bootSession();
 }
 boot();
