@@ -478,9 +478,26 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
 .mlist{display:flex;flex-direction:column}
 .mrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
 .mrow .mi{flex:1;min-width:140px;display:flex;flex-direction:column;line-height:1.3}
+
+/* ---------- loading screen ---------- */
+#splash{position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:linear-gradient(180deg,#DCEBF2 0,#EEF4F7 60%);transition:opacity .45s ease,visibility .45s}
+#splash.out{opacity:0;visibility:hidden}
+.sp-in{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:24px;animation:spIn .6s ease both}
+.sp-in img{width:clamp(96px,26vw,140px);height:auto;margin-bottom:10px;animation:spGlow 2.4s ease-in-out infinite}
+.sp-in b{font-family:var(--serif,'Alegreya',Georgia,serif);font-size:clamp(1.5rem,6vw,2rem);color:#17324D}
+.sp-in span{color:#5B7083;font-size:.95rem}
+.sp-dots{display:flex;gap:7px;margin-top:18px}
+.sp-dots i{width:8px;height:8px;border-radius:50%;background:#1D6A8A;opacity:.25;animation:spDot 1.2s infinite}
+.sp-dots i:nth-child(2){animation-delay:.2s}.sp-dots i:nth-child(3){animation-delay:.4s}
+@keyframes spIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes spGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes spDot{0%,100%{opacity:.25}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sp-in,.sp-in img,.sp-dots i{animation:none}.sp-dots i{opacity:.6}}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="sp-in"><img src="logo-mark.png" alt="" width="140" height="140"><b>Tubod SDA Church</b><span>Tubod, Isabel, Leyte</span><div class="sp-dots"><i></i><i></i><i></i></div></div></div>
+<script>window.__sp0 = Date.now(); setTimeout(function () { var s = document.getElementById('splash'); if (s) s.remove(); }, 8000);</script>
 <div class="bg" id="bg"></div><div class="veil"></div>
 
 <header class="top"><div class="top-in">
@@ -853,6 +870,7 @@ function guard(){ if (!S.token || !S.uid){ toast('Please sign in first.'); retur
 
 /* ---------- sign in, join, sign out ---------- */
 function showAuth(mode, msg){
+  hideSplash();
   let a = $('#auth');
   if (!a){ a = document.createElement('div'); a.id = 'auth'; a.className = 'auth'; document.body.appendChild(a); }
   const name = S.settings.churchName || 'Tubod SDA Church', tag = S.settings.tagline || 'Tubod, Isabel, Leyte';
@@ -2102,6 +2120,12 @@ window.addEventListener('hashchange', fromHash);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) pollNow(); });
 
 /* ---------- start ---------- */
+/* the loading screen stays at least half a second (so it does not flash), then fades away */
+function hideSplash(){
+  const sp = document.getElementById('splash'); if (!sp || sp.dataset.going) return;
+  sp.dataset.going = '1';
+  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 600 - (Date.now() - (window.__sp0 || 0))));
+}
 async function bootSession(){
   if (!API_URL){ showAuth('setup'); return; }
   if (!S.token){
@@ -2112,13 +2136,13 @@ async function bootSession(){
   /* signed in before: show the last copy straight away, then refresh from the server */
   const cached = loadCache();
   if (cached){
-    applySync(cached); S.offline = false; hideAuth(); startPolling(); mount(); fromHash();
+    applySync(cached); S.offline = false; hideAuth(); startPolling(); mount(); fromHash(); hideSplash();
     try { await sync(); }
     catch (e){ if (e.code === 'network' || e.code === 'bad_reply'){ S.offline = true; schedule(); } }
     return;
   }
   /* no saved copy yet: one request is enough, the data already includes the church settings */
-  try { await sync(); hideAuth(); startPolling(); mount(); fromHash(); }
+  try { await sync(); hideAuth(); startPolling(); mount(); fromHash(); hideSplash(); }
   catch (e){
     if (e.code === 'auth') api('publicInfo').then(info => { S.settings = {...S.settings, ...info.church}; renderChrome(); }).catch(() => {});
     else showAuth('offline', errMsg(e));
@@ -2349,7 +2373,7 @@ function boot(){
   window.addEventListener('online', () => { renderBanner(); if (S.uid) sync().catch(() => {}); });
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   window.addEventListener('offline', renderBanner);
-  bootSession();
+  bootSession().finally(hideSplash);
 }
 boot();
 })();
