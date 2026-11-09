@@ -8,6 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -227,6 +228,114 @@ button:focus-visible{outline-color:var(--accent)}
 .fb .pts{color:var(--gold-d)}
 .vctl button{background:#fff;border:1px solid var(--line);color:var(--accent-d)}
 .vctl button:hover{background:#F4F8FA}
+/* ---- new games ---- */
+.sec-t{font-size:20px;margin:22px 2px 10px;color:var(--ink)}
+.mode.admin .ico{background:linear-gradient(135deg,#D79A22,#8A6212)}
+.eyebrow{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-d);margin:0 0 8px}
+.note-s{font-size:13.5px;color:var(--muted);margin:8px 0 0}
+.note-s.ok{color:var(--ok);font-weight:700}
+.save-slot{min-height:8px;margin-top:6px}
+.newbadge{display:flex;gap:10px;align-items:center;justify-content:center;background:#FBF1D9;border:1px solid var(--gold);border-radius:12px;padding:8px 12px;margin-top:8px;font-size:15px}
+.newbadge span{font-size:26px}
+.chal{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;border:2px solid var(--line)}
+.chal.live{border-color:var(--gold);background:linear-gradient(180deg,#FFF9EA,#fff)}
+.chal-ico{font-size:34px;line-height:1}
+.chal-b{flex:1;min-width:0}
+.chal-b h2{font-size:21px}
+.chal-b p{margin:4px 0 0;color:var(--muted);font-size:14.5px;line-height:1.4}
+.chal-b .chal-l{color:var(--ink);font-weight:700;margin:8px 0 10px}
+.pause{text-align:center}
+.pause-ico{font-size:44px;margin-bottom:6px}
+.pause .primary,.res .primary,.card a.primary{text-decoration:none;display:inline-block}
+.lb{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lb li{display:flex;align-items:center;gap:10px;background:#F7FAFB;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.lb li.me{border-color:var(--accent);background:#EAF3F7}
+.lb-n{width:30px;text-align:center;font-weight:800;color:var(--muted)}
+.lb-name{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:700}
+.lb-name small{color:var(--muted);font-weight:600}
+.lb b{color:var(--accent-d);white-space:nowrap}
+.lb.big li{font-size:22px;padding:12px 16px}
+.lb-sub{font-size:16px;margin-top:16px;color:var(--muted)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+.badge{border:1px dashed var(--line);border-radius:14px;padding:10px;text-align:center;opacity:.5;filter:grayscale(1)}
+.badge.on{opacity:1;filter:none;border:1px solid var(--gold);background:#FFF9EA}
+.badge span{font-size:30px;display:block}
+.badge b{display:block;font-size:14px;margin-top:4px}
+.badge small{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
+.pz-line{min-height:64px;font-family:'Alegreya',Georgia,serif;font-size:21px;line-height:1.5;padding:10px 12px;border-radius:12px;background:#F7FAFB;border:1px solid var(--line);margin-bottom:10px}
+.pz-caret{display:inline-block;width:2px;height:1.1em;background:var(--accent);vertical-align:middle;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.pz-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:700;font-size:17px}
+.chip:hover{border-color:var(--accent)}
+.shake{animation:shake .35s;border-color:var(--bad)!important;background:var(--bad-bg)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.vq{margin:12px 0;padding:12px 14px;border-left:4px solid var(--accent);background:#F7FAFB;border-radius:0 12px 12px 0;font-family:'Alegreya',Georgia,serif;font-size:19px;line-height:1.5;text-align:left}
+.vq cite{display:block;font-style:normal;font-family:'Public Sans',sans-serif;font-size:13.5px;font-weight:800;color:var(--accent-d);margin-top:6px}
+.vq u.miss{text-decoration:underline wavy var(--bad);text-underline-offset:4px;color:var(--bad)}
+.ws-grid{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:3px;margin:8px 0;touch-action:none;user-select:none;-webkit-user-select:none}
+.ws-c{aspect-ratio:1;border:1px solid var(--line);background:#fff;border-radius:6px;font-weight:800;font-size:clamp(13px,3.6vw,20px);padding:0;display:grid;place-items:center;color:var(--ink)}
+.ws-c.sel,.ws-c.drag{background:#FBF1D9;border-color:var(--gold)}
+.ws-c.found{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ws-c.shown{background:#E3F0F5;border-color:var(--accent)}
+.ws-count{font-weight:800;margin:6px 0}
+.ws-words{display:flex;flex-wrap:wrap;gap:6px}
+.ws-words span{background:#F7FAFB;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:14px;font-weight:700}
+.ws-words span.done{text-decoration:line-through;color:var(--muted);background:#E3F2EA;border-color:#b7e0c9}
+.mv-text{font-family:'Alegreya',Georgia,serif;font-size:22px;line-height:1.6;margin:6px 0 12px}
+.mv-text.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:.04em}
+.mvb{border:0;border-bottom:3px solid var(--accent);background:#EAF3F7;border-radius:4px 4px 0 0;padding:0 4px;font:inherit;color:var(--accent-d);min-width:2.5em}
+.mv-in{width:100%;border:2px solid var(--line);border-radius:12px;padding:12px;font:inherit;font-size:17px;line-height:1.5;resize:vertical}
+.mv-in:focus{outline:none;border-color:var(--accent)}
+.kids{text-align:center}
+.kids-menu{display:grid;gap:12px;margin-top:14px}
+.kbig{display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;border:2px solid var(--line);border-radius:18px;padding:18px}
+.kbig:hover{border-color:var(--accent)}
+.kbig span{font-size:40px}
+.kbig b{font-size:20px}
+.kbig small{color:var(--muted)}
+.kq{font-size:clamp(22px,5.5vw,28px);line-height:1.35;margin:8px 0 16px}
+.kopts{display:grid;gap:12px}
+.kopt{background:#fff;border:3px solid var(--line);border-radius:18px;padding:18px;font-size:clamp(19px,5vw,23px);font-weight:800}
+.kopt:hover:not(:disabled){border-color:var(--accent)}
+.kopt.right{border-color:var(--ok);background:var(--ok-bg)}
+.kopt.wrong{border-color:var(--bad);background:var(--bad-bg);opacity:.7}
+.kmsg{font-size:21px;font-weight:800;margin:14px 0 8px;color:var(--bad)}
+.kmsg.ok{color:var(--ok)}
+.kstars{font-size:34px;letter-spacing:4px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.mcard{aspect-ratio:3/4;border-radius:14px;border:2px solid var(--line);background:linear-gradient(135deg,#2C8AAE,#1D6A8A);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px}
+.mcard .back{font-size:26px;opacity:.85}
+.mcard.up{background:#fff;color:var(--ink)}
+.mcard.up span{font-size:clamp(26px,8vw,40px)}
+.mcard.up small{font-size:clamp(10px,2.8vw,13px);font-weight:700;line-height:1.1}
+.mcard.got{border-color:var(--ok);background:var(--ok-bg)}
+.lbl{font-weight:800;margin:14px 0 6px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{min-width:52px;background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-weight:800}
+.seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hchk{display:flex;gap:8px;align-items:center;margin-top:12px;font-weight:700}
+.hchk input{width:20px;height:20px}
+body.hosting .wrap{max-width:1200px}
+.hboard{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.hboard div{flex:1;min-width:120px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hboard b{overflow-wrap:anywhere}
+.hboard span{font-family:'Alegreya',serif;font-size:clamp(22px,3vw,34px);color:var(--accent);font-weight:700}
+.host .hq{font-size:clamp(24px,3.6vw,46px);line-height:1.25;margin:6px 0 16px}
+.host .eyebrow{font-size:clamp(13px,1.5vw,18px)}
+.host .eyebrow .low,.eyebrow.low{color:var(--bad)}
+.hopts{display:grid;gap:10px}
+@media (min-width:720px){.hopts{grid-template-columns:1fr 1fr}}
+.hopt{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px 16px;font-size:clamp(18px,2.4vw,30px);font-weight:700}
+.hopt b{flex:none;width:1.6em;height:1.6em;border-radius:50%;display:grid;place-items:center;background:#E3F0F5;color:var(--accent-d)}
+.hopt.right{border-color:var(--ok);background:var(--ok-bg)}
+.hopt.right b{background:var(--ok);color:#fff}
+.hopt.dim{opacity:.4}
+.href{font-weight:800;color:var(--accent-d);font-size:clamp(15px,1.8vw,22px);margin:12px 0 0}
+.hteams{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.hteams button{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 16px;font-weight:800;font-size:clamp(15px,1.8vw,22px)}
+.hteams button.on{background:var(--ok);border-color:var(--ok);color:#fff}
+@media (prefers-reduced-motion:reduce){.shake,.pz-caret{animation:none}}
 </style>
 </head>
 <body>
@@ -1160,6 +1269,629 @@ function renderDuelResults() {
       </div>
     </div>`;
 }
+
+/* ===================== Church link, Sabbath Challenge, leaderboards and more games ===================== */
+const CFG = window.CHURCH_CONFIG || {};
+const TOKEN = (() => { try { return localStorage.getItem('tubodToken') || ''; } catch (e) { return ''; } })();
+let VIEW = 'home';
+async function gapi(action, data = {}) {
+  if (!CFG.API_URL || !TOKEN) { const e = new Error('signin'); e.code = 'auth'; throw e; }
+  let res;
+  try { res = await fetch(CFG.API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ action, token: TOKEN }, data)) }); }
+  catch (e) { const err = new Error('network'); err.code = 'network'; throw err; }
+  const j = await res.json().catch(() => ({ ok: false, error: 'bad reply' }));
+  if (!j.ok) { const err = new Error(j.error || 'error'); err.code = j.code; throw err; }
+  return j;
+}
+let GI = store.get('gi', null);
+if (!TOKEN) GI = null;
+const isAdmin = () => !!(GI && GI.me && GI.me.access === 'admin');
+async function loadGI(rerender) {
+  if (!TOKEN || !CFG.API_URL) return;
+  try {
+    GI = await gapi('gameInfo'); GI.at = Date.now(); store.set('gi', GI);
+    if (rerender && VIEW === 'home') renderHome();
+    if (rerender && VIEW === 'board') renderBoard();
+  } catch (e) {
+    if (e.code === 'auth' || e.code === 'pending') { GI = null; store.set('gi', null); }
+  }
+}
+
+/* ---------- text for the new parts ---------- */
+const X = {
+  en: {
+    chT: 'Sabbath Challenge', chD: 'Ten questions, the same for everyone. One try each Sabbath afternoon.',
+    chOpen: end => `Open now until about ${end}. Good luck!`, chSoon: when => `Opens Sabbath at 1:00 PM (${when}).`,
+    chDone: s => `You scored ${s} this week. See how everyone did.`, chOver: 'This week\'s challenge is finished. See the results.',
+    chPlay: 'Start the challenge', chSee: 'See results', chSign: 'Sign in on the church page to join the leaderboard.',
+    pauseT: 'Worship is happening now', pauseD: (n, t) => `${n} is going on. The games open again at about ${t}. See you after the service!`,
+    pauseBack: 'Back to the church page',
+    moreT: 'More ways to play', boardT: 'Leaderboard and badges', boardD: 'Top players this week, Sabbath Challenge results and your badges.',
+    m_puzzle_t: 'Daily Verse Puzzle', m_puzzle_d: 'Put the words of today\'s verse in order. A new verse every day.',
+    m_wordsearch_t: 'Bible Word Search', m_wordsearch_d: 'Find the hidden names and places in the letters.',
+    m_memory_t: 'Memory Verse', m_memory_d: 'Learn a verse step by step until you can say it by heart.',
+    m_kids_t: 'Kids Corner', m_kids_d: 'Easy questions with no timer, and a memory card game.',
+    m_host_t: 'Host a Team Quiz', m_host_d: 'For admins: show questions on a TV or projector and keep team scores.',
+    saved: 'Saved to the leaderboard.', notSaved: 'Sign in on the church page to save your score.', saveFail: 'Could not save your score. Check your internet.',
+    already: 'You already played this week\'s Sabbath Challenge.', newBadge: 'New badge!',
+    thisWeek: 'Top players this week', chThis: 'Sabbath Challenge this week', chLast: 'Last week\'s winners', myBadges: 'My badges',
+    noOne: 'No one yet. Be the first!', pts: 'pts', you: 'You', signBoard: 'Sign in on the church page to see the leaderboard and earn badges.',
+    openChurch: 'Open the church page', loading: 'Loading…',
+    // puzzle
+    pzTap: 'Tap the words in the right order.', pzDone: 'Well done!', pzMist: n => n === 1 ? '1 mistake' : `${n} mistakes`,
+    pzBack: 'Come back tomorrow for a new verse.', pzAgain: 'Practice again', pzToday: 'Today\'s verse',
+    // word search
+    wsPick: 'Choose a theme', wsHow: 'Tap the first letter of a word, then the last letter. You can also drag.',
+    wsFound: (a, b) => `${a} of ${b} found`, wsDone: 'You found them all!', wsGiveUp: 'Show the answers', wsNew: 'New puzzle',
+    // memory verse
+    mvWeek: 'This week\'s verse', mvOther: 'Another verse', mvStep: n => `Step ${n} of 4`,
+    mvRead: 'Read it out loud two or three times.', mvHide1: 'Some words are hidden. Say the verse and tap a blank to peek.',
+    mvHide2: 'Only the first letters are left. Can you still say it?', mvType: 'Now type the verse from memory.',
+    mvNext: 'Next step', mvCheck: 'Check', mvScore: p => `You remembered ${p}% of the words.`,
+    mvGreat: 'Wonderful! "Thy word have I hid in mine heart." Psalm 119:11', mvKeep: 'Keep practicing. Try the steps again.', mvRetry: 'Try again',
+    mvPlaceholder: 'Type the verse here', mvMissing: 'Words you missed are underlined.',
+    // kids
+    kidsT: 'Kids Corner', kidsQuiz: 'Easy Bible Quiz', kidsQuizD: 'No timer. Take your time!', kidsCards: 'Memory Cards', kidsCardsD: 'Find the matching Bible friends.',
+    kGood: ['Great job!', 'You got it!', 'Wonderful!', 'Amen, that is right!'], kTry: 'Almost! Try again.', kStars: n => `You earned ${n} stars!`,
+    cMoves: n => `${n} moves`, cDone: 'You matched them all!',
+    // host
+    hostOnly: 'Host mode is for church admins. Sign in on the church page as an admin.',
+    hostT: 'Host a Team Quiz', hostD: 'Show this screen on a TV or projector. Teams answer out loud, and you tap who got it right.',
+    hTeams: 'How many teams?', hNames: 'Team names', hTeam: n => `Team ${n}`, hCount: 'How many questions?', hTimer: 'Show a 30-second timer',
+    hCat: 'Choose a category to start:', hShow: 'Show the answer', hWho: 'Who got it right? Tap each team.', hNext: 'Next question',
+    hFinal: 'Final scores', hWin: n => `${n} wins!`, hTie: 'It\'s a tie!', hNew: 'New team quiz', hQ: (a, b) => `Question ${a} of ${b}`, hEnd: 'End quiz'
+  },
+  ceb: {
+    chT: 'Hagit sa Igpapahulay', chD: 'Napulo ka pangutana, parehas sa tanan. Usa ka higayon matag hapon sa Igpapahulay.',
+    chOpen: end => `Bukas karon hangtod mga ${end}. Maayong swerte!`, chSoon: when => `Moabli sa Igpapahulay sa 1:00 PM (${when}).`,
+    chDone: s => `${s} ang imong puntos karong semanaha. Tan-awa ang uban.`, chOver: 'Nahuman na ang hagit karong semanaha. Tan-awa ang resulta.',
+    chPlay: 'Sugdi ang hagit', chSee: 'Tan-awa ang resulta', chSign: 'Sulod sa panid sa simbahan aron maapil sa leaderboard.',
+    pauseT: 'Nagsimba pa karon', pauseD: (n, t) => `Nagpadayon pa ang ${n}. Moabli pag-usab ang mga dula mga ${t}. Magkita ta human sa pagsimba!`,
+    pauseBack: 'Balik sa panid sa simbahan',
+    moreT: 'Uban pang dula', boardT: 'Leaderboard ug mga badge', boardD: 'Mga nanguna karong semanaha, resulta sa Hagit sa Igpapahulay ug imong mga badge.',
+    m_puzzle_t: 'Puzzle sa Bersikulo', m_puzzle_d: 'Han-aya ang mga pulong sa bersikulo karong adlawa. Bag-ong bersikulo matag adlaw.',
+    m_wordsearch_t: 'Pangitaa ang Pulong', m_wordsearch_d: 'Pangitaa ang mga ngalan ug lugar nga natago sa mga letra.',
+    m_memory_t: 'Pagsag-ulo og Bersikulo', m_memory_d: 'Tun-i ang bersikulo lakang sa lakang hangtod masag-ulo nimo.',
+    m_kids_t: 'Alang sa mga Bata', m_kids_d: 'Sayon nga pangutana nga walay timer, ug dula sa memory cards.',
+    m_host_t: 'Quiz sa mga Grupo', m_host_d: 'Alang sa admin: ipakita ang pangutana sa TV o projector ug ihap ang puntos sa grupo.',
+    saved: 'Na-save sa leaderboard.', notSaved: 'Sulod sa panid sa simbahan aron ma-save ang imong puntos.', saveFail: 'Wala ma-save ang imong puntos. Susiha ang internet.',
+    already: 'Nakadula ka na sa Hagit sa Igpapahulay karong semanaha.', newBadge: 'Bag-ong badge!',
+    thisWeek: 'Mga nanguna karong semanaha', chThis: 'Hagit sa Igpapahulay karong semanaha', chLast: 'Mga mananaog sa miaging semana', myBadges: 'Akong mga badge',
+    noOne: 'Wala pay nakadula. Ikaw na ang mag-una!', pts: 'puntos', you: 'Ikaw', signBoard: 'Sulod sa panid sa simbahan aron makita ang leaderboard ug makadawat og badge.',
+    openChurch: 'Ablihi ang panid sa simbahan', loading: 'Nagkarga…',
+    pzTap: 'Tuploka ang mga pulong sumala sa husto nga han-ay.', pzDone: 'Maayo kaayo!', pzMist: n => `${n} ka sayop`,
+    pzBack: 'Balik ugma para sa bag-ong bersikulo.', pzAgain: 'Sulayi pag-usab', pzToday: 'Bersikulo karong adlawa',
+    wsPick: 'Pagpili og tema', wsHow: 'Tuploka ang unang letra sa pulong, dayon ang katapusang letra. Mahimo usab nimo kining i-drag.',
+    wsFound: (a, b) => `${a} sa ${b} ang nakit-an`, wsDone: 'Nakit-an nimo silang tanan!', wsGiveUp: 'Ipakita ang tubag', wsNew: 'Bag-ong puzzle',
+    mvWeek: 'Bersikulo karong semanaha', mvOther: 'Laing bersikulo', mvStep: n => `Lakang ${n} sa 4`,
+    mvRead: 'Basaha kini og kusog makaduha o makatulo.', mvHide1: 'Gitago ang pipila ka pulong. Isulti ang bersikulo ug tuploka ang blangko aron makita.',
+    mvHide2: 'Ang unang letra na lang ang nabilin. Masulti pa ba nimo?', mvType: 'Karon isulat ang bersikulo gikan sa imong panumdoman.',
+    mvNext: 'Sunod nga lakang', mvCheck: 'Susiha', mvScore: p => `Nahinumduman nimo ang ${p}% sa mga pulong.`,
+    mvGreat: 'Nindot kaayo! "Ang imong pulong gitipigan ko sa akong kasingkasing." Salmo 119:11', mvKeep: 'Padayon sa pagpraktis. Sulayi pag-usab ang mga lakang.', mvRetry: 'Sulayi pag-usab',
+    mvPlaceholder: 'Isulat dinhi ang bersikulo', mvMissing: 'Gilinyahan ang mga pulong nga nalimtan nimo.',
+    kidsT: 'Alang sa mga Bata', kidsQuiz: 'Sayon nga Bible Quiz', kidsQuizD: 'Walay timer. Hinay-hinay lang!', kidsCards: 'Memory Cards', kidsCardsD: 'Pangitaa ang managsamang higala sa Bibliya.',
+    kGood: ['Maayo kaayo!', 'Husto!', 'Nindot!', 'Amen, husto kana!'], kTry: 'Hapit na! Sulayi pag-usab.', kStars: n => `Nakakuha ka og ${n} ka bitoon!`,
+    cMoves: n => `${n} ka lihok`, cDone: 'Na-match nimo silang tanan!',
+    hostOnly: 'Alang ra sa mga admin sa simbahan kini. Sulod sa panid sa simbahan isip admin.',
+    hostT: 'Quiz sa mga Grupo', hostD: 'Ipakita kini sa TV o projector. Motubag og kusog ang mga grupo, ug tuplokon nimo kinsa ang husto.',
+    hTeams: 'Pila ka grupo?', hNames: 'Ngalan sa mga grupo', hTeam: n => `Grupo ${n}`, hCount: 'Pila ka pangutana?', hTimer: 'Ipakita ang 30 segundos nga timer',
+    hCat: 'Pagpili og kategorya aron magsugod:', hShow: 'Ipakita ang tubag', hWho: 'Kinsa ang husto? Tuploka ang matag grupo.', hNext: 'Sunod nga pangutana',
+    hFinal: 'Katapusang puntos', hWin: n => `Midaog ang ${n}!`, hTie: 'Tabla!', hNew: 'Bag-ong quiz', hQ: (a, b) => `Pangutana ${a} sa ${b}`, hEnd: 'Tapuson ang quiz'
+  }
+};
+const x = k => { const v = X[LANG][k]; return v !== undefined ? v : X.en[k]; };
+
+/* ---------- time in Tubod (Philippine time) ---------- */
+const phd = (ms = Date.now()) => new Date(ms + 8 * 36e5);
+const dayKey = (ms = Date.now()) => phd(ms).toISOString().slice(0, 10);
+function weekKey(ms = Date.now()) { const d = phd(ms), add = (6 - d.getUTCDay() + 7) % 7; return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + add)).toISOString().slice(0, 10); }
+function sunsetMs(y, m, d) {
+  const LAT = 10.93, LNG = 124.42;
+  const day = Date.UTC(y, m, d), n = Math.round((day - Date.UTC(y, 0, 0)) / 864e5);
+  const g = 2 * Math.PI / 365 * (n - 1), rad = Math.PI / 180;
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * rad) / (Math.cos(LAT * rad) * Math.cos(de)) - Math.tan(LAT * rad) * Math.tan(de)) / rad;
+  return day + (720 - 4 * (LNG - ha) - eq) * 60000;
+}
+const clock = ms => { const d = phd(ms); let h = d.getUTCHours(); const m = d.getUTCMinutes(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(m).padStart(2, '0')} ${ap}`; };
+function challengeWin(now = Date.now()) {
+  const d = phd(now), add = (6 - d.getUTCDay() + 7) % 7;
+  const y = d.getUTCFullYear(), m = d.getUTCMonth(), dd = d.getUTCDate() + add;
+  const open = Date.UTC(y, m, dd, 13) - 8 * 36e5;
+  const close = Math.min(sunsetMs(y, m, dd), Date.UTC(y, m, dd, 18, 40) - 8 * 36e5);
+  return { open, close, on: now >= open && now < close, before: now < open };
+}
+function worshipNow(now = Date.now()) {
+  const list = (GI && GI.services && GI.services.length) ? GI.services : [{ name: 'Wednesday worship', day: 3, time: '19:00' }, { name: 'Friday worship', day: 5, time: '19:00' }];
+  const d = phd(now), mins = d.getUTCHours() * 60 + d.getUTCMinutes(), day = d.getUTCDay();
+  const at = mm => clock(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, mm) - 8 * 36e5);
+  for (const s of list) {
+    if (Number(s.day) !== day) continue;
+    const [h, m] = String(s.time).split(':').map(Number), st = h * 60 + m;
+    if (mins >= st - 10 && mins < st + 100) return { name: s.name, until: at(st + 100) };
+  }
+  if (day === 6 && mins >= 8 * 60 && mins < 12 * 60 + 30) return { name: LANG === 'ceb' ? 'ang Tulunghaan sa Igpapahulay ug pagsimba' : 'Sabbath School and the Divine Service', until: at(12 * 60 + 30) };
+  return null;
+}
+
+/* ---------- the same random order for everyone (for the challenge, daily puzzle and weekly verse) ---------- */
+function seeded(str) { let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; } return () => { h = Math.imul(h ^ h >>> 16, 2246822507); h = Math.imul(h ^ h >>> 13, 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; }; }
+const seededShuffle = (arr, key) => { const r = seeded(key), a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------- saving scores ---------- */
+const BOARD_MODES = { quiz: 1, verse: 1, who: 1, books: 1, challenge: 1, puzzle: 1, wordsearch: 1, memory: 1, kids: 1, cards: 1 };
+async function saveScore(mode, score, correct, total, slotId) {
+  const slot = () => document.getElementById(slotId);
+  if (!TOKEN || !CFG.API_URL) { if (slot()) slot().innerHTML = `<p class="note-s">${x('notSaved')}</p>`; return; }
+  const before = GI ? earned(GI.stats).map(b => b.k) : null;
+  try {
+    await gapi('saveScore', { mode, score: Math.round(score), correct, total });
+    await loadGI(false);
+    const after = GI ? earned(GI.stats) : [];
+    const fresh = before ? after.filter(b => before.indexOf(b.k) < 0) : [];
+    if (slot()) slot().innerHTML = `<p class="note-s ok">${x('saved')}</p>${fresh.map(b => `<div class="newbadge"><span>${b.ico}</span><div><b>${x('newBadge')}</b> ${esc(bName(b))}</div></div>`).join('')}`;
+  } catch (e) {
+    if (slot()) slot().innerHTML = `<p class="note-s">${e.code === 'already' ? x('already') : e.code === 'auth' ? x('notSaved') : e.code === 'closed' ? esc(e.message) : x('saveFail')}</p>`;
+  }
+}
+
+/* ---------- badges ---------- */
+const BADGES = [
+  { k: 'first', ico: '🌱', en: ['First steps', 'Played your first game'], ceb: ['Unang lakang', 'Nakadula sa imong unang dula'], ok: s => Object.keys(s.games).length > 0 },
+  { k: 'streak7', ico: '🔥', en: ['7-day streak', 'Played 7 days in a row'], ceb: ['7 ka adlaw nga sunod-sunod', 'Nakadula 7 ka adlaw nga sunod-sunod'], ok: s => maxRun(s.days) >= 7 },
+  { k: 'perfect', ico: '⭐', en: ['Perfect quiz', 'All 10 right in a Bible Quiz'], ceb: ['Hingpit nga quiz', 'Tanan 10 husto sa Bible Quiz'], ok: s => (s.perfect.quiz || 0) + (s.perfect.challenge || 0) > 0 },
+  { k: 'books', ico: '📚', en: ['Book keeper', 'Order the Books with no mistakes'], ceb: ['Tigbantay sa mga libro', 'Order the Books nga walay sayop'], ok: s => (s.perfect.books || 0) > 0 },
+  { k: 'hundred', ico: '💯', en: ['100 right answers', 'Answered 100 questions correctly'], ceb: ['100 ka husto nga tubag', 'Nakatubag og 100 ka pangutana nga husto'], ok: s => s.correct >= 100 },
+  { k: 'challenger', ico: '🕊️', en: ['Faithful challenger', 'Took 4 Sabbath Challenges'], ceb: ['Matinud-anon nga mohagit', 'Nakaapil og 4 ka Hagit sa Igpapahulay'], ok: s => s.challenges >= 4 },
+  { k: 'champion', ico: '🏆', en: ['Sabbath champion', 'Won a Sabbath Challenge'], ceb: ['Kampeon sa Igpapahulay', 'Nakadaog sa Hagit sa Igpapahulay'], ok: s => s.wins >= 1 },
+  { k: 'puzzler', ico: '🧩', en: ['Verse builder', 'Solved 7 daily verse puzzles'], ceb: ['Tighimo og bersikulo', 'Nakasulbad og 7 ka puzzle sa bersikulo'], ok: s => (s.games.puzzle || 0) >= 7 },
+  { k: 'seeker', ico: '🔎', en: ['Word seeker', 'Finished 5 word searches'], ceb: ['Tigpangita og pulong', 'Nahuman ang 5 ka word search'], ok: s => (s.perfect.wordsearch || 0) >= 5 },
+  { k: 'memory', ico: '💡', en: ['Hidden in my heart', 'Learned 5 memory verses'], ceb: ['Gitipigan sa kasingkasing', 'Nakasag-ulo og 5 ka bersikulo'], ok: s => s.memoryGood >= 5 }
+];
+const bName = b => (LANG === 'ceb' ? b.ceb : b.en)[0];
+const bDesc = b => (LANG === 'ceb' ? b.ceb : b.en)[1];
+function maxRun(days) { let best = 0, run = 0, prev = null; (days || []).forEach(d => { const t = Date.parse(d + 'T00:00:00Z'); run = prev != null && t - prev === 864e5 ? run + 1 : 1; best = Math.max(best, run); prev = t; }); return best; }
+const earned = st => st ? BADGES.filter(b => { try { return b.ok(st); } catch (e) { return false; } }) : [];
+
+/* ---------- home page additions ---------- */
+const renderHomeBase = renderHome;
+renderHome = function () {
+  VIEW = 'home';
+  const w = isAdmin() ? null : worshipNow();
+  if (w) {
+    stopTimer(); S = {}; setChrome('home');
+    app.innerHTML = `<section class="hero"><h1>Scripture <em>Quest</em></h1></section>
+      <div class="card pause"><div class="pause-ico">🙏</div><h2>${x('pauseT')}</h2><p class="sub">${x('pauseD')(esc(w.name), w.until)}</p>
+      <div class="btnrow"><a class="primary" href="index.html">${x('pauseBack')}</a></div></div>`;
+    return;
+  }
+  renderHomeBase();
+  const modes = app.querySelector('.modes');
+  if (!modes) return;
+  modes.insertAdjacentHTML('beforebegin', challengeCard());
+  const card = (mode, ico, extra = '') => `<button class="mode ${extra}" data-act="mode" data-mode="${mode}"><div class="ico">${ico}</div><div><h3>${x('m_' + mode + '_t')}</h3><p>${x('m_' + mode + '_d')}</p></div></button>`;
+  modes.insertAdjacentHTML('afterend', `
+    <h2 class="sec-t">${x('moreT')}</h2>
+    <section class="modes">
+      ${card('puzzle', '🧩')}${card('wordsearch', '🔎')}${card('memory', '💡')}${card('kids', '🧒')}
+      <button class="mode" data-act="board"><div class="ico">🏆</div><div><h3>${x('boardT')}</h3><p>${x('boardD')}</p></div></button>
+      ${isAdmin() ? card('host', '📺', 'admin') : ''}
+    </section>`);
+};
+function challengeCard() {
+  const w = challengeWin(), mine = GI && GI.myChallenge && GI.week === weekKey() ? GI.myChallenge : null;
+  let line, btn;
+  if (w.on && !mine) { line = x('chOpen')(clock(w.close)); btn = `<button class="primary" data-act="challenge">${x('chPlay')}</button>`; }
+  else if (mine) { line = x('chDone')(mine.score); btn = `<button class="secondary" data-act="board">${x('chSee')}</button>`; }
+  else if (w.before) { const d = phd(w.open); line = x('chSoon')((LANG === 'ceb' ? ['Ene','Peb','Mar','Abr','May','Hun','Hul','Ago','Sep','Okt','Nob','Dis'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])[d.getUTCMonth()] + ' ' + d.getUTCDate()); btn = `<button class="secondary" data-act="board">${x('boardT')}</button>`; }
+  else { line = x('chOver'); btn = `<button class="secondary" data-act="board">${x('chSee')}</button>`; }
+  return `<div class="card chal ${w.on && !mine ? 'live' : ''}"><div class="chal-ico">🕊️</div><div class="chal-b"><h2>${x('chT')}</h2><p>${x('chD')}</p><p class="chal-l">${line}</p>${!TOKEN ? `<p class="note-s">${x('chSign')}</p>` : ''}<div class="btnrow" style="justify-content:flex-start">${btn}</div></div></div>`;
+}
+
+/* ---------- Sabbath Challenge ---------- */
+function startChallenge() {
+  const w = challengeWin();
+  if (!w.on && !isAdmin()) { renderHome(); return; }
+  const wk = weekKey(), pick = [];
+  ['ot', 'nt', 'pr', 'sb', 'ah'].forEach(c => seededShuffle(QUIZ.filter(q => q.c === c), 'ch' + wk + c).slice(0, 2).forEach(q => pick.push(q)));
+  startGame('quiz', 'all');
+  S.items = seededShuffle(pick, 'order' + wk).map(qItem);
+  S.challenge = true;
+  stopTimer(); renderStep();
+}
+
+/* results: save the score and add a place for the message */
+const renderResultsBase = renderResults;
+renderResults = function () {
+  renderResultsBase();
+  const mode = S.challenge ? 'challenge' : S.mode;
+  if (!BOARD_MODES[mode]) return;
+  const box = app.querySelector('.res .btnrow');
+  if (box) box.insertAdjacentHTML('beforebegin', '<div id="saveSlot" class="save-slot"></div>');
+  if (S.challenge) { const again = app.querySelector('[data-act="again"]'); if (again) { again.dataset.act = 'board'; again.textContent = x('chSee'); } }
+  saveScore(mode, S.score, S.correct, S.items.length, 'saveSlot');
+};
+function miniResults(o) {
+  VIEW = 'res';
+  app.innerHTML = `<div class="card res">
+    <div class="rank">${o.title}</div><div class="big">${o.score}</div><div class="sub">${t('points')}</div>
+    ${o.html || ''}<div id="saveSlot" class="save-slot"></div>
+    <div class="btnrow" style="margin-top:14px">${o.again ? `<button class="primary" data-act="${o.again}">${o.againLabel || t('playAgain')}</button>` : ''}${o.back ? `<button class="secondary" data-act="${o.back}">${o.backLabel}</button>` : ''}<button class="secondary" data-act="home">${t('home')}</button></div></div>`;
+  if (o.save !== false) saveScore(o.mode, o.score, o.correct, o.total, 'saveSlot');
+}
+
+/* ---------- leaderboard and badges ---------- */
+function renderBoard() {
+  VIEW = 'board'; stopTimer(); setChrome('play');
+  if (!TOKEN) { app.innerHTML = `<div class="card"><h2>${x('boardT')}</h2><p class="sub">${x('signBoard')}</p><div class="btnrow"><a class="primary" href="index.html">${x('openChurch')}</a></div></div>`; return; }
+  if (!GI) { app.innerHTML = `<div class="card"><h2>${x('boardT')}</h2><p class="sub">${x('loading')}</p></div>`; loadGI(true); return; }
+  const me = GI.me && GI.me.id;
+  const list = (rows, key) => rows && rows.length ? `<ol class="lb">${rows.map((r, i) => `<li class="${r.uid === me ? 'me' : ''}"><span class="lb-n">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span><span class="lb-name">${esc(r.name)}${r.uid === me ? ` <small>(${x('you')})</small>` : ''}</span><b>${r[key]} ${x('pts')}</b></li>`).join('')}</ol>` : `<p class="sub">${x('noOne')}</p>`;
+  const got = earned(GI.stats).map(b => b.k);
+  app.innerHTML = `
+    <div class="card"><h2>🕊️ ${x('chThis')}</h2>${list(GI.challenge, 'score')}
+      ${GI.lastChallenge && GI.lastChallenge.length ? `<h3 class="lb-sub">${x('chLast')}</h3>${list(GI.lastChallenge, 'score')}` : ''}</div>
+    <div class="card" style="margin-top:12px"><h2>🏆 ${x('thisWeek')}</h2>${list(GI.weekly, 'points')}</div>
+    <div class="card" style="margin-top:12px"><h2>${x('myBadges')} (${got.length}/${BADGES.length})</h2>
+      <div class="badges">${BADGES.map(b => `<div class="badge ${got.indexOf(b.k) >= 0 ? 'on' : ''}"><span>${b.ico}</span><b>${esc(bName(b))}</b><small>${esc(bDesc(b))}</small></div>`).join('')}</div></div>
+    <div class="btnrow" style="margin-top:14px"><button class="secondary" data-act="home">${t('home')}</button></div>`;
+  if (!GI.at || Date.now() - GI.at > 30000) loadGI(true);
+}
+
+/* ---------- Daily Verse Puzzle ---------- */
+const MORE_VERSES = [
+  { r: 'Psalm 119:105', t: 'Thy word is a lamp unto my feet, and a light unto my path.' },
+  { r: 'Philippians 4:13', t: 'I can do all things through Christ which strengtheneth me.' },
+  { r: 'Psalm 46:10', t: 'Be still, and know that I am God.' },
+  { r: 'Hebrews 13:8', t: 'Jesus Christ the same yesterday, and to day, and for ever.' },
+  { r: 'Psalm 119:11', t: 'Thy word have I hid in mine heart, that I might not sin against thee.' },
+  { r: 'James 4:8', t: 'Draw nigh to God, and he will draw nigh to you.' },
+  { r: '1 Peter 5:7', t: 'Casting all your care upon him; for he careth for you.' },
+  { r: 'Psalm 118:24', t: 'This is the day which the LORD hath made; we will rejoice and be glad in it.' },
+  { r: 'Psalm 34:8', t: 'O taste and see that the LORD is good: blessed is the man that trusteth in him.' },
+  { r: 'Psalm 27:1', t: 'The LORD is my light and my salvation; whom shall I fear?' }
+];
+const ALL_VERSES = (() => {
+  const seen = {}, out = [];
+  VERSES.map(v => ({ r: v.r, t: v.t.replace('___', v.a) })).concat(MORE_VERSES).forEach(v => { if (!seen[v.r]) { seen[v.r] = 1; out.push(v); } });
+  return out;
+})();
+const words = s => s.split(/\s+/).filter(Boolean);
+function puzzleChunks(v) {
+  const w = words(v.t);
+  if (w.length <= 12) return w;
+  const size = Math.ceil(w.length / 10), out = [];
+  for (let i = 0; i < w.length; i += size) out.push(w.slice(i, i + size).join(' '));
+  return out;
+}
+const todayVerse = () => { const list = seededShuffle(ALL_VERSES.filter(v => words(v.t).length <= 30), 'daily'); return list[Math.floor(Date.parse(dayKey() + 'T00:00:00Z') / 864e5) % list.length]; };
+function startPuzzle() {
+  const v = todayVerse(), parts = puzzleChunks(v);
+  S = { mode: 'puzzle', v, parts, chips: seededShuffle(parts.map((p, i) => ({ p, i })), dayKey() + 'pz'), next: 0, mist: 0 };
+  VIEW = 'puzzle'; setChrome('play'); renderPuzzle();
+}
+function renderPuzzle() {
+  const done = S.next >= S.parts.length;
+  app.innerHTML = `<div class="card pz"><p class="eyebrow">${x('pzToday')} · ${esc(S.v.r)}</p>
+    <div class="pz-line">${S.parts.slice(0, S.next).map(p => `<span>${esc(p)}</span>`).join(' ')}${done ? '' : '<span class="pz-caret"></span>'}</div>
+    ${done ? '' : `<p class="sub">${x('pzTap')} ${S.mist ? '· ' + x('pzMist')(S.mist) : ''}</p><div class="pz-chips">${S.chips.map((c, k) => c.used ? '' : `<button class="chip" data-act="pzchip" data-k="${k}">${esc(c.p)}</button>`).join('')}</div>`}
+    ${LANG === 'ceb' ? `<p class="note-s">${t('verseNote')}</p>` : ''}</div>`;
+  if (done) {
+    const first = store.get('pz_done', '') !== dayKey();
+    store.set('pz_done', dayKey());
+    const score = Math.max(20, 100 - 10 * S.mist);
+    setTimeout(() => miniResults({ mode: 'puzzle', title: x('pzDone'), score, correct: Math.max(0, S.parts.length - S.mist), total: S.parts.length,
+      html: `<blockquote class="vq">${esc(S.v.t)}<cite>${esc(S.v.r)}</cite></blockquote><p class="sub">${S.mist ? x('pzMist')(S.mist) + ' · ' : ''}${x('pzBack')}</p>`,
+      again: 'mode-puzzle', againLabel: x('pzAgain'), save: first }), 500);
+  }
+}
+function pzTap(k, el) {
+  const c = S.chips[k]; if (!c || c.used) return;
+  if (c.p === S.parts[S.next]) { c.used = true; S.next++; renderPuzzle(); }
+  else { S.mist++; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); const sub = app.querySelector('.pz .sub'); if (sub) sub.textContent = `${x('pzTap')} · ${x('pzMist')(S.mist)}`; }
+}
+
+/* ---------- Bible Word Search ---------- */
+const WS_THEMES = [
+  { k: 'disc', en: 'The Twelve Disciples', ceb: 'Ang Napulog Duha ka Tinun-an', w: ['PETER', 'ANDREW', 'JAMES', 'JOHN', 'PHILIP', 'THOMAS', 'MATTHEW', 'BARTHOLOMEW', 'THADDAEUS', 'SIMON', 'JUDAS'] },
+  { k: 'patr', en: 'Fathers and Prophets', ceb: 'Mga Patriarka ug Propeta', w: ['ABRAHAM', 'ISAAC', 'JACOB', 'JOSEPH', 'MOSES', 'SAMUEL', 'ELIJAH', 'ELISHA', 'DANIEL', 'ISAIAH', 'JONAH'] },
+  { k: 'place', en: 'Bible Places', ceb: 'Mga Lugar sa Bibliya', w: ['EDEN', 'EGYPT', 'SINAI', 'JERICHO', 'JORDAN', 'BETHLEHEM', 'NAZARETH', 'GALILEE', 'JERUSALEM', 'BABYLON', 'PATMOS'] },
+  { k: 'women', en: 'Women of the Bible', ceb: 'Mga Babaye sa Bibliya', w: ['SARAH', 'REBEKAH', 'RACHEL', 'MIRIAM', 'DEBORAH', 'RUTH', 'HANNAH', 'ESTHER', 'MARY', 'MARTHA', 'LYDIA', 'DORCAS'] },
+  { k: 'sab', en: 'Creation and Sabbath', ceb: 'Paglalang ug Igpapahulay', w: ['SABBATH', 'CREATION', 'SEVENTH', 'BLESSED', 'HOLY', 'REST', 'LIGHT', 'GARDEN', 'WORSHIP', 'CREATOR', 'SANCTIFIED'] }
+];
+function startWordSearch(theme) {
+  VIEW = 'ws'; setChrome('play');
+  if (!theme) {
+    app.innerHTML = `<div class="card"><h2>${x('m_wordsearch_t')}</h2><p class="sub">${x('wsPick')}</p><div class="cats">${WS_THEMES.map(th => `<button class="cat" data-act="wstheme" data-k="${th.k}">${LANG === 'ceb' ? th.ceb : th.en}<small>${th.w.length}</small></button>`).join('')}</div></div>`;
+    return;
+  }
+  const th = WS_THEMES.find(z => z.k === theme), N = 11;
+  const dirs = [[0, 1], [1, 0], [1, 1], [-1, 1]];
+  let grid, placed;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    grid = Array.from({ length: N }, () => Array(N).fill('')); placed = [];
+    for (const word of shuffle(th.w).filter(z => z.length <= N).slice(0, 8)) {
+      let ok = false;
+      for (let tries = 0; tries < 120 && !ok; tries++) {
+        const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+        const r0 = Math.floor(Math.random() * N), c0 = Math.floor(Math.random() * N);
+        const r1 = r0 + dr * (word.length - 1), c1 = c0 + dc * (word.length - 1);
+        if (r1 < 0 || r1 >= N || c1 < 0 || c1 >= N) continue;
+        let fits = true;
+        for (let i = 0; i < word.length; i++) { const ch = grid[r0 + dr * i][c0 + dc * i]; if (ch && ch !== word[i]) { fits = false; break; } }
+        if (!fits) continue;
+        for (let i = 0; i < word.length; i++) grid[r0 + dr * i][c0 + dc * i] = word[i];
+        placed.push({ word, cells: Array.from({ length: word.length }, (_, i) => (r0 + dr * i) * N + (c0 + dc * i)), found: false });
+        ok = true;
+      }
+    }
+    if (placed.length >= 7) break;
+  }
+  const AZ = 'ABCDEFGHIJKLMNOPRSTUWY';
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) grid[r][c] = AZ[Math.floor(Math.random() * AZ.length)];
+  S = { mode: 'wordsearch', th, N, grid, placed, start: null, t0: Date.now(), gave: false };
+  renderWS();
+}
+function renderWS() {
+  const { N, grid, placed } = S, found = placed.filter(p => p.found).length;
+  const foundCells = new Set(); placed.forEach(p => { if (p.found || S.gave) p.cells.forEach(c => foundCells.add(c)); });
+  app.innerHTML = `<div class="card ws"><h2>${LANG === 'ceb' ? S.th.ceb : S.th.en}</h2><p class="sub">${x('wsHow')}</p>
+    <div class="ws-grid" style="--n:${N}" id="wsGrid">${grid.flat().map((ch, i) => `<button class="ws-c ${foundCells.has(i) ? (S.gave && !placed.some(p => p.found && p.cells.includes(i)) ? 'shown' : 'found') : ''} ${S.start === i ? 'sel' : ''}" data-i="${i}" aria-label="${ch}">${ch}</button>`).join('')}</div>
+    <p class="ws-count">${x('wsFound')(found, placed.length)}</p>
+    <div class="ws-words">${placed.map(p => `<span class="${p.found ? 'done' : ''}">${p.word}</span>`).join('')}</div>
+    <div class="btnrow" style="margin-top:12px">${S.gave ? `<button class="primary" data-act="mode-wordsearch">${x('wsNew')}</button>` : `<button class="secondary" data-act="wsgive">${x('wsGiveUp')}</button>`}</div></div>`;
+  wireWS();
+}
+function wireWS() {
+  const g = document.getElementById('wsGrid'); if (!g || S.gave) return;
+  let down = null;
+  const cellAt = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.classList.contains('ws-c') ? Number(el.dataset.i) : null; };
+  g.addEventListener('pointerdown', e => { const i = cellAt(e); if (i == null) return; down = i; e.preventDefault(); });
+  g.addEventListener('pointermove', e => {
+    if (down == null) return; const i = cellAt(e); if (i == null) return;
+    g.querySelectorAll('.ws-c.drag').forEach(c => c.classList.remove('drag'));
+    lineCells(down, i).forEach(k => g.children[k] && g.children[k].classList.add('drag'));
+  });
+  g.addEventListener('pointerup', e => {
+    const i = cellAt(e); const from = down; down = null;
+    g.querySelectorAll('.ws-c.drag').forEach(c => c.classList.remove('drag'));
+    if (i == null) return;
+    if (from != null && from !== i) { tryWord(from, i); return; }
+    if (S.start == null || S.start === i) { S.start = S.start === i ? null : i; renderWS(); return; }
+    tryWord(S.start, i);
+  });
+}
+function lineCells(a, b) {
+  const N = S.N, r0 = Math.floor(a / N), c0 = a % N, r1 = Math.floor(b / N), c1 = b % N;
+  const dr = Math.sign(r1 - r0), dc = Math.sign(c1 - c0), len = Math.max(Math.abs(r1 - r0), Math.abs(c1 - c0));
+  if (!(r0 === r1 || c0 === c1 || Math.abs(r1 - r0) === Math.abs(c1 - c0))) return [a];
+  return Array.from({ length: len + 1 }, (_, k) => (r0 + dr * k) * N + (c0 + dc * k));
+}
+function tryWord(a, b) {
+  const cells = lineCells(a, b), key = cells.join(','), rev = cells.slice().reverse().join(',');
+  const hit = S.placed.find(p => !p.found && (p.cells.join(',') === key || p.cells.join(',') === rev));
+  S.start = null;
+  if (hit) hit.found = true;
+  renderWS();
+  if (hit && S.placed.every(p => p.found)) {
+    const secs = (Date.now() - S.t0) / 1000, n = S.placed.length;
+    const score = n * 20 + Math.max(0, Math.round(120 - secs / 3));
+    setTimeout(() => miniResults({ mode: 'wordsearch', title: x('wsDone'), score, correct: n, total: n, again: 'mode-wordsearch', againLabel: x('wsNew') }), 600);
+  }
+}
+
+/* ---------- Memory Verse ---------- */
+function parseVerse(s) {
+  s = String(s || '').trim(); if (!s) return null;
+  const m = /^([\s\S]*?)[\s—–-]*\(?((?:[1-3]\s)?[A-Z][A-Za-z]+\.?\s\d+:\d+(?:[-–]\d+)?)\)?\.?\s*$/.exec(s);
+  return m && m[1].trim().length > 8 ? { t: m[1].trim().replace(/^[“"]|[”"]$/g, ''), r: m[2] } : { t: s, r: '' };
+}
+function startMemory(which) {
+  const weekly = GI && GI.verse ? parseVerse(GI.verse) : null;
+  const list = seededShuffle(ALL_VERSES, 'mem');
+  let v;
+  if (which === 'other') { const k = (store.get('mem_k', 0) + 1) % list.length; store.set('mem_k', k); v = list[k]; }
+  else v = weekly && words(weekly.t).length >= 4 && words(weekly.t).length <= 60 ? weekly : list[Math.floor(Date.parse(weekKey() + 'T00:00:00Z') / (7 * 864e5)) % list.length];
+  const w = words(v.t);
+  S = { mode: 'memory', v, w, step: 1, hide: new Set(seededShuffle(w.map((_, i) => i), v.r + v.t).slice(0, Math.ceil(w.length / 2))), peek: new Set() };
+  VIEW = 'memory'; setChrome('play'); renderMemory();
+}
+const firstLetters = wd => wd.replace(/([A-Za-z])([A-Za-z']*)/, (m, a, b) => a + b.replace(/[A-Za-z']/g, '_'));
+function renderMemory() {
+  const { v, w, step } = S;
+  let body;
+  if (step === 1) body = `<p class="mv-text">${esc(v.t)}</p><p class="sub">${x('mvRead')}</p>`;
+  else if (step === 2) body = `<p class="mv-text">${w.map((wd, i) => S.hide.has(i) && !S.peek.has(i) ? `<button class="mvb" data-act="mvpeek" data-i="${i}">${'_'.repeat(Math.min(8, wd.length))}</button>` : esc(wd)).join(' ')}</p><p class="sub">${x('mvHide1')}</p>`;
+  else if (step === 3) body = `<p class="mv-text mono">${w.map(wd => esc(firstLetters(wd))).join(' ')}</p><p class="sub">${x('mvHide2')}</p>`;
+  else body = `<p class="sub">${x('mvType')}</p><textarea id="mvIn" class="mv-in" rows="5" placeholder="${x('mvPlaceholder')}" autocapitalize="sentences"></textarea>`;
+  app.innerHTML = `<div class="card mv"><p class="eyebrow">${x('mvStep')(step)}${v.r ? ' · ' + esc(v.r) : ''}</p>${body}
+    <div class="btnrow" style="margin-top:12px">${step < 4 ? `<button class="primary" data-act="mvnext">${x('mvNext')}</button>` : `<button class="primary" data-act="mvcheck">${x('mvCheck')}</button>`}
+    ${step === 1 ? `<button class="secondary" data-act="mvother">${x('mvOther')}</button>` : ''}</div>
+    ${LANG === 'ceb' ? `<p class="note-s">${t('verseNote')}</p>` : ''}</div>`;
+  if (step === 4) setTimeout(() => { const i = document.getElementById('mvIn'); if (i) i.focus(); }, 50);
+}
+const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]/g, ' ').split(/\s+/).filter(Boolean);
+function lcsMatch(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+  for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const hit = new Set(); let i = 0, j = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { hit.add(i); i++; j++; } else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++; }
+  return hit;
+}
+function checkMemory() {
+  const typed = (document.getElementById('mvIn') || {}).value || '';
+  const want = norm(S.v.t), got = norm(typed), hit = lcsMatch(want, got);
+  const pct = want.length ? Math.round(hit.size / want.length * 100) : 0;
+  const shown = words(S.v.t).map((wd, i) => hit.has(i) ? esc(wd) : `<u class="miss">${esc(wd)}</u>`).join(' ');
+  miniResults({ mode: 'memory', title: x('mvScore')(pct), score: pct, correct: hit.size, total: want.length,
+    html: `<blockquote class="vq">${shown}${S.v.r ? `<cite>${esc(S.v.r)}</cite>` : ''}</blockquote><p class="sub">${pct >= 80 ? x('mvGreat') : x('mvKeep')} ${pct < 100 ? x('mvMissing') : ''}</p>`,
+    again: 'mode-memory', againLabel: x('mvRetry') });
+}
+
+/* ---------- Kids Corner ---------- */
+const KIDS = [
+  ['Who built a big boat called the ark?', 'Noah', ['Moses', 'David'], 'Kinsa ang naghimo sa dakong sakayan nga gitawag og arka?', 'Noe', ['Moises', 'David']],
+  ['God made the world in six days. On which day did He rest?', 'The seventh day', ['The first day', 'The third day'], 'Gilalang sa Dios ang kalibutan sulod sa unom ka adlaw. Unsang adlawa Siya mipahulay?', 'Ang ikapito nga adlaw', ['Ang unang adlaw', 'Ang ikatulo nga adlaw']],
+  ['Who was swallowed by a big fish?', 'Jonah', ['Peter', 'Paul'], 'Kinsa ang gilamoy sa dakong isda?', 'Jonas', ['Pedro', 'Pablo']],
+  ['Who was put in the den of lions?', 'Daniel', ['Joseph', 'Samuel'], 'Kinsa ang gibutang sa langob sa mga leon?', 'Daniel', ['Jose', 'Samuel']],
+  ['David beat the giant Goliath with a sling and a...', 'Stone', ['Sword', 'Spear'], 'Gipildi ni David ang higante nga si Goliat gamit ang lambuyog ug...', 'Bato', ['Espada', 'Bangkaw']],
+  ['In which town was baby Jesus born?', 'Bethlehem', ['Jerusalem', 'Nazareth'], 'Asang lungsod natawo ang bata nga si Jesus?', 'Betlehem', ['Jerusalem', 'Nazaret']],
+  ['What was the name of Jesus\' mother?', 'Mary', ['Martha', 'Ruth'], 'Unsa ang ngalan sa inahan ni Jesus?', 'Maria', ['Marta', 'Rut']],
+  ['After the flood, what did God put in the sky as a promise?', 'A rainbow', ['A star', 'The moon'], 'Human sa lunop, unsa ang gibutang sa Dios sa langit isip saad?', 'Balangaw', ['Bitoon', 'Bulan']],
+  ['Who led the people of Israel out of Egypt?', 'Moses', ['Noah', 'Jonah'], 'Kinsa ang nanguna sa katawhan sa Israel paggawas sa Ehipto?', 'Moises', ['Noe', 'Jonas']],
+  ['How many disciples did Jesus choose?', '12', ['7', '3'], 'Pila ka tinun-an ang gipili ni Jesus?', '12', ['7', '3']],
+  ['Jesus fed 5,000 people with five loaves and two...', 'Fishes', ['Eggs', 'Melons'], 'Gipakaon ni Jesus ang 5,000 ka tawo gamit ang lima ka pan ug duha ka...', 'Isda', ['Itlog', 'Melon']],
+  ['Who had a coat of many colours?', 'Joseph', ['Daniel', 'Elijah'], 'Kinsa ang adunay kupo nga daghag kolor?', 'Jose', ['Daniel', 'Elias']],
+  ['What was the name of the first man?', 'Adam', ['Abel', 'Seth'], 'Unsa ang ngalan sa unang lalaki?', 'Adan', ['Abel', 'Set']],
+  ['Who was very strong when God\'s Spirit was on him?', 'Samson', ['Saul', 'Solomon'], 'Kinsa ang kusgan kaayo sa diha nga ang Espiritu sa Dios ania kaniya?', 'Samson', ['Saul', 'Solomon']],
+  ['Which day does God ask us to keep holy?', 'The Sabbath, the seventh day', ['Monday', 'Wednesday'], 'Unsang adlawa ang gihangyo sa Dios nga atong balaanon?', 'Ang Igpapahulay, ang ikapito nga adlaw', ['Lunes', 'Miyerkules']],
+  ['Who climbed a tree to see Jesus?', 'Zacchaeus', ['Peter', 'Thomas'], 'Kinsa ang mikatkat sa kahoy aron makita si Jesus?', 'Zaqueo', ['Pedro', 'Tomas']],
+  ['Who walked on the water toward Jesus?', 'Peter', ['John', 'Andrew'], 'Kinsa ang milakaw ibabaw sa tubig paingon kang Jesus?', 'Pedro', ['Juan', 'Andres']],
+  ['What food did God send from heaven for Israel in the desert?', 'Manna', ['Apples', 'Rice'], 'Unsang pagkaon ang gipadala sa Dios gikan sa langit alang sa Israel didto sa kamingawan?', 'Mana', ['Mansanas', 'Bugas']],
+  ['Where did Adam and Eve first live?', 'The Garden of Eden', ['Egypt', 'Jerusalem'], 'Asa una nagpuyo si Adan ug Eva?', 'Ang Tanaman sa Eden', ['Ehipto', 'Jerusalem']],
+  ['Which king asked God for wisdom?', 'Solomon', ['Saul', 'Ahab'], 'Kinsang hari ang nangayo og kaalam sa Dios?', 'Solomon', ['Saul', 'Ahab']],
+  ['Jesus said, "Suffer the little ___ to come unto me."', 'Children', ['Animals', 'Kings'], 'Miingon si Jesus, "Pasagdi ang gagmayng mga ___ nga moduol kanako."', 'Bata', ['Mananap', 'Hari']],
+  ['God wrote the Ten Commandments on...', 'Tables of stone', ['Paper', 'Leaves'], 'Gisulat sa Dios ang Napulo ka Sugo diha sa...', 'Mga papan nga bato', ['Papel', 'Dahon']],
+  ['Which brave queen helped save her people?', 'Esther', ['Miriam', 'Eve'], 'Kinsang maisog nga reyna ang mitabang pagluwas sa iyang katawhan?', 'Ester', ['Miriam', 'Eva']],
+  ['Which boy heard God call his name at night?', 'Samuel', ['David', 'Isaac'], 'Kinsang bata ang nakadungog sa Dios nga mitawag sa iyang ngalan sa gabii?', 'Samuel', ['David', 'Isaac']],
+  ['On which day did Jesus rise from the dead?', 'The third day', ['The seventh day', 'The tenth day'], 'Sa unsang adlawa nabanhaw si Jesus gikan sa mga patay?', 'Sa ikatulo nga adlaw', ['Sa ikapito nga adlaw', 'Sa ikanapulo nga adlaw']]
+];
+function renderKids() {
+  VIEW = 'kids'; stopTimer(); setChrome('play');
+  app.innerHTML = `<div class="card kids"><h2>🧒 ${x('kidsT')}</h2>
+    <div class="kids-menu"><button class="kbig" data-act="kquiz"><span>⭐</span><b>${x('kidsQuiz')}</b><small>${x('kidsQuizD')}</small></button>
+    <button class="kbig" data-act="kcards"><span>🃏</span><b>${x('kidsCards')}</b><small>${x('kidsCardsD')}</small></button></div></div>`;
+}
+function startKidsQuiz() {
+  const c = LANG === 'ceb';
+  S = { mode: 'kids', i: 0, stars: 0, tried: false, items: shuffle(KIDS).slice(0, 8).map(k => { const q = c ? k[3] : k[0], a = c ? k[4] : k[1], w = c ? k[5] : k[2]; const opts = shuffle([a, ...w]); return { q, opts, ci: opts.indexOf(a) }; }) };
+  VIEW = 'kids'; renderKidsQ();
+}
+function renderKidsQ(msg) {
+  const it = S.items[S.i];
+  app.innerHTML = `<div class="card kids"><p class="eyebrow">${S.i + 1} / ${S.items.length} · ${'⭐'.repeat(S.stars) || '☆'}</p><h2 class="kq">${esc(it.q)}</h2>
+    <div class="kopts">${it.opts.map((o, k) => `<button class="kopt ${it.done && k === it.ci ? 'right' : ''} ${it.wrong && it.wrong.includes(k) ? 'wrong' : ''}" data-act="kpick" data-k="${k}" ${it.done || (it.wrong && it.wrong.includes(k)) ? 'disabled' : ''}>${esc(o)}</button>`).join('')}</div>
+    ${msg ? `<p class="kmsg ${it.done ? 'ok' : ''}">${msg}</p>` : ''}
+    ${it.done ? `<div class="btnrow"><button class="primary" data-act="knext">${t('next')}</button></div>` : ''}</div>`;
+}
+function kidsPick(k) {
+  const it = S.items[S.i]; if (it.done) return;
+  if (k === it.ci) { it.done = true; if (!it.wrong) S.stars++; const g = x('kGood'); renderKidsQ('🎉 ' + g[Math.floor(Math.random() * g.length)]); }
+  else { it.wrong = (it.wrong || []).concat(k); renderKidsQ(x('kTry')); }
+}
+function kidsNext() {
+  S.i++;
+  if (S.i < S.items.length) { renderKidsQ(); return; }
+  miniResults({ mode: 'kids', title: x('kStars')(S.stars), score: S.stars * 50, correct: S.stars, total: S.items.length, html: `<p class="kstars">${'⭐'.repeat(S.stars)}</p>`, again: 'kquiz', back: 'mode-kids', backLabel: '🧒 ' + x('kidsT') });
+}
+const CARD_PEOPLE = [['🌈', 'Noah', 'Noe'], ['🐋', 'Jonah', 'Jonas'], ['🦁', 'Daniel', 'Daniel'], ['🎶', 'David', 'David'], ['🌊', 'Moses', 'Moises'], ['👑', 'Esther', 'Ester'], ['🌳', 'Zacchaeus', 'Zaqueo'], ['⭐', 'Baby Jesus', 'Bata nga si Jesus']];
+function startCards() {
+  S = { mode: 'cards', deck: shuffle(CARD_PEOPLE.concat(CARD_PEOPLE).map((p, i) => ({ p, id: i }))), open: [], matched: new Set(), moves: 0, lock: false };
+  VIEW = 'kids'; renderCards();
+}
+function renderCards() {
+  app.innerHTML = `<div class="card kids"><p class="eyebrow">${x('cMoves')(S.moves)}</p><div class="cards">${S.deck.map((c, k) => {
+    const up = S.open.includes(k) || S.matched.has(c.p[1]);
+    return `<button class="mcard ${up ? 'up' : ''} ${S.matched.has(c.p[1]) ? 'got' : ''}" data-act="kcard" data-k="${k}" aria-label="${up ? esc(LANG === 'ceb' ? c.p[2] : c.p[1]) : '?'}">${up ? `<span>${c.p[0]}</span><small>${esc(LANG === 'ceb' ? c.p[2] : c.p[1])}</small>` : '<span class="back">✝</span>'}</button>`;
+  }).join('')}</div></div>`;
+}
+function flipCard(k) {
+  if (S.lock || S.open.includes(k) || S.matched.has(S.deck[k].p[1])) return;
+  S.open.push(k); renderCards();
+  if (S.open.length < 2) return;
+  S.moves++; S.lock = true;
+  const [a, b] = S.open.map(i => S.deck[i]);
+  setTimeout(() => {
+    if (a.p[1] === b.p[1]) S.matched.add(a.p[1]);
+    S.open = []; S.lock = false; renderCards();
+    if (S.matched.size === CARD_PEOPLE.length) {
+      const score = Math.max(100, 400 - (S.moves - 8) * 15);
+      setTimeout(() => miniResults({ mode: 'cards', title: x('cDone'), score, correct: 8, total: 8, html: `<p class="sub">${x('cMoves')(S.moves)}</p>`, again: 'kcards', back: 'mode-kids', backLabel: '🧒 ' + x('kidsT') }), 400);
+    }
+  }, a.p[1] === b.p[1] ? 350 : 900);
+}
+
+/* ---------- Host a Team Quiz (admins) ---------- */
+let HOST = { teams: 2, names: [], count: 10, timer: true };
+function renderHostSetup() {
+  VIEW = 'host'; stopTimer(); setChrome('play');
+  if (!isAdmin()) { app.innerHTML = `<div class="card"><h2>${x('hostT')}</h2><p class="sub">${x('hostOnly')}</p><div class="btnrow"><a class="primary" href="index.html">${x('openChurch')}</a></div></div>`; return; }
+  const names = Array.from({ length: HOST.teams }, (_, i) => HOST.names[i] || '');
+  app.innerHTML = `<div class="card"><h2>📺 ${x('hostT')}</h2><p class="sub">${x('hostD')}</p>
+    <p class="lbl">${x('hTeams')}</p><div class="seg">${[2, 3, 4, 5, 6].map(n => `<button class="${HOST.teams === n ? 'on' : ''}" data-act="hteams" data-n="${n}">${n}</button>`).join('')}</div>
+    <p class="lbl">${x('hNames')}</p><div class="names">${names.map((v, i) => `<input class="hname" data-i="${i}" maxlength="18" value="${esc(v)}" placeholder="${esc(x('hTeam')(i + 1))}">`).join('')}</div>
+    <p class="lbl">${x('hCount')}</p><div class="seg">${[10, 15, 20].map(n => `<button class="${HOST.count === n ? 'on' : ''}" data-act="hcount" data-n="${n}">${n}</button>`).join('')}</div>
+    <label class="hchk"><input type="checkbox" id="hTimer" ${HOST.timer ? 'checked' : ''}> ${x('hTimer')}</label>
+    <p class="lbl">${x('hCat')}</p>${catButtons('hcat')}</div>`;
+}
+function readHostNames() { document.querySelectorAll('.hname').forEach(i => { HOST.names[Number(i.dataset.i)] = i.value.trim(); }); const tm = document.getElementById('hTimer'); if (tm) HOST.timer = tm.checked; }
+function startHost(cat) {
+  readHostNames();
+  const pool = cat === 'all' ? QUIZ : QUIZ.filter(q => q.c === cat);
+  S = { mode: 'host', i: 0, items: shuffle(pool).slice(0, Math.min(HOST.count, pool.length)).map(qItem),
+    teams: Array.from({ length: HOST.teams }, (_, i) => ({ name: HOST.names[i] || x('hTeam')(i + 1), pts: 0 })), shown: false, got: new Set() };
+  document.body.classList.add('hosting'); renderHostQ();
+}
+function hostBoard() { return `<div class="hboard">${S.teams.map(tm => `<div><b>${esc(tm.name)}</b><span>${tm.pts}</span></div>`).join('')}</div>`; }
+function renderHostQ() {
+  stopTimer();
+  const it = S.items[S.i], L = 'ABCD';
+  app.innerHTML = `${hostBoard()}<div class="card host"><p class="eyebrow">${x('hQ')(S.i + 1, S.items.length)}${HOST.timer && !S.shown ? ' · ⏱ <span id="hT">30</span>' : ''}</p>
+    <h2 class="hq">${esc(it.q)}</h2>
+    <div class="hopts">${it.opts.map((o, k) => `<div class="hopt ${S.shown && k === it.ci ? 'right' : ''} ${S.shown && k !== it.ci ? 'dim' : ''}"><b>${L[k]}</b>${esc(o)}</div>`).join('')}</div>
+    ${S.shown ? `${it.r ? `<p class="href">${esc(it.r)}</p>` : ''}<p class="lbl">${x('hWho')}</p><div class="hteams">${S.teams.map((tm, i) => `<button class="${S.got.has(i) ? 'on' : ''}" data-act="hgot" data-i="${i}">${esc(tm.name)} +100</button>`).join('')}</div>
+      <div class="btnrow"><button class="primary" data-act="hnext">${S.i + 1 < S.items.length ? x('hNext') : x('hFinal')}</button></div>`
+    : `<div class="btnrow"><button class="primary" data-act="hshow">${x('hShow')}</button><button class="secondary" data-act="hend">${x('hEnd')}</button></div>`}</div>`;
+  if (HOST.timer && !S.shown) {
+    const t0 = Date.now();
+    S.timer = setInterval(() => { const left = Math.max(0, 30 - Math.floor((Date.now() - t0) / 1000)); const el = document.getElementById('hT'); if (el) { el.textContent = left; el.parentElement.classList.toggle('low', left <= 5); } if (!left) { stopTimer(); S.shown = true; renderHostQ(); } }, 250);
+  }
+}
+function hostNext() {
+  S.got.forEach(i => { S.teams[i].pts += 100; });
+  S.got = new Set(); S.shown = false; S.i++;
+  if (S.i < S.items.length) { renderHostQ(); return; }
+  const top = Math.max(...S.teams.map(tm => tm.pts)), winners = S.teams.filter(tm => tm.pts === top);
+  app.innerHTML = `<div class="card host res"><h2 class="hq">${winners.length > 1 ? x('hTie') : '🏆 ' + x('hWin')(esc(winners[0].name))}</h2>
+    <ol class="lb big">${S.teams.slice().sort((a, b) => b.pts - a.pts).map(tm => `<li><span class="lb-name">${esc(tm.name)}</span><b>${tm.pts}</b></li>`).join('')}</ol>
+    <div class="btnrow"><button class="primary" data-act="mode-host">${x('hNew')}</button><button class="secondary" data-act="home">${t('home')}</button></div></div>`;
+}
+
+/* ---------- clicks for the new parts (these run before the original handlers) ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  let a = b.dataset.act, m = b.dataset.mode;
+  if (a.indexOf('mode-') === 0) { m = a.slice(5); a = 'mode'; }
+  if (a === 'home') { document.body.classList.remove('hosting'); return; }
+  if (a === 'lang') return;
+  const stop = () => { e.stopImmediatePropagation(); e.preventDefault(); };
+  if (a === 'mode' && ['quiz', 'verse', 'who', 'books', 'duel'].indexOf(m) >= 0) {
+    const w = isAdmin() ? null : worshipNow(); if (w) { stop(); renderHome(); }
+    return;
+  }
+  if (a === 'mode') {
+    stop();
+    if (!isAdmin() && worshipNow() && m !== 'host') { renderHome(); return; }
+    if (m === 'puzzle') startPuzzle(); else if (m === 'wordsearch') startWordSearch(); else if (m === 'memory') startMemory();
+    else if (m === 'kids') renderKids(); else if (m === 'host') renderHostSetup();
+    return;
+  }
+  const acts = {
+    challenge: startChallenge, board: renderBoard,
+    pzchip: () => pzTap(Number(b.dataset.k), b), wstheme: () => startWordSearch(b.dataset.k), wsgive: () => { S.gave = true; renderWS(); },
+    mvnext: () => { S.step++; renderMemory(); }, mvother: () => startMemory('other'), mvpeek: () => { S.peek.add(Number(b.dataset.i)); renderMemory(); setTimeout(() => { if (S.mode === 'memory' && S.step === 2) { S.peek.delete(Number(b.dataset.i)); renderMemory(); } }, 1500); }, mvcheck: checkMemory,
+    kquiz: startKidsQuiz, kcards: startCards, kpick: () => kidsPick(Number(b.dataset.k)), knext: kidsNext, kcard: () => flipCard(Number(b.dataset.k)),
+    hteams: () => { readHostNames(); HOST.teams = Number(b.dataset.n); renderHostSetup(); }, hcount: () => { readHostNames(); HOST.count = Number(b.dataset.n); renderHostSetup(); },
+    hcat: () => startHost(b.dataset.cat), hshow: () => { stopTimer(); S.shown = true; renderHostQ(); },
+    hgot: () => { const i = Number(b.dataset.i); if (S.got.has(i)) S.got.delete(i); else S.got.add(i); b.classList.toggle('on'); }, hnext: hostNext,
+    hend: () => { stopTimer(); document.body.classList.remove('hosting'); renderHome(); }
+  };
+  if (acts[a]) { stop(); acts[a](); }
+}, true);
+setInterval(() => { if (VIEW === 'home' && !S.mode) renderHome(); }, 60000);
+loadGI(true);
 
 /* ---------- Events ---------- */
 document.addEventListener('click', e => {

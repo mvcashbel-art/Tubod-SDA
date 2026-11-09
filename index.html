@@ -330,6 +330,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .ev-b span{font-size:.84rem;color:var(--muted);overflow-wrap:anywhere}
 .ev-b p{font-size:.86rem;margin:3px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .ev-act{display:flex;gap:6px;margin-top:4px}
+.g-lb{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.g-lb li{display:flex;align-items:center;gap:8px;font-size:.92rem}
+.g-lb .g-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-lb b{color:var(--accent-dark)}
 .bday li{display:flex;align-items:center;gap:8px;margin:6px 0}
 .bday .today{font-weight:700}
 .ann-strip a.live-row{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#B3382C;border-color:#9C2F25;color:#fff;text-decoration:none;font-weight:700}
@@ -685,7 +689,8 @@ function applySync(j){
   S.loaded = {posts:true, files:true, profiles:true}; S.offline = false;
   const wasPending = S.pending; S.pending = !!j.pending;
   if (S.pending) setTimeout(() => showAuth('pending'), 0);
-  else if (wasPending && $('#auth')){ const a = $('#auth'); a.remove(); setTimeout(() => { mount(); fromHash(); toast('Your account is approved. Welcome to the church family!'); }, 0); }
+  if (!S.pending) setTimeout(loadGame, 300);
+  if (!S.pending && wasPending && $('#auth')){ const a = $('#auth'); a.remove(); setTimeout(() => { mount(); fromHash(); toast('Your account is approved. Welcome to the church family!'); }, 0); }
   schedule();
 }
 async function sync(){ const j = await api('sync'); applySync(j); if (!j.pending) saveCache(j); }
@@ -1032,6 +1037,26 @@ function birthdaysCard(){
   if (!list.length) return '';
   return `<div class="card bday"><h3>Birthdays</h3><ul style="list-style:none;margin:0;padding:0">${list.map(({p, i, d}) => `<li class="${i ? '' : 'today'}">${av(p.id, 'sm')}<span>${i ? `${esc(p.name)} · ${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}` : `Happy birthday, ${esc(p.name)}! 🎂`}</span></li>`).join('')}</ul></div>`;
 }
+/* Bible game: this week's Sabbath Challenge (or last week's winners) and top players */
+let GAME = null, gameAt = 0, gameBusy = false;
+async function loadGame(){
+  if (gameBusy || !S.uid || S.pending || Date.now() - gameAt < 5 * 60000) return;
+  gameBusy = true;
+  try { GAME = await api('gameInfo'); gameAt = Date.now(); const c = $('#gameCard'); if (c) c.outerHTML = gameCard(); }
+  catch (e){ gameAt = Date.now(); }
+  gameBusy = false;
+}
+function gameCard(){
+  if (!GAME) return '<div id="gameCard"></div>';
+  const ph = phNow(), sat = ph.getUTCDay() === 6, rows = GAME.challenge && GAME.challenge.length && sat ? GAME.challenge : GAME.lastChallenge || [];
+  const top = (GAME.weekly || []).slice(0, 3);
+  if (!rows.length && !top.length) return `<div class="card more" id="gameCard"><h3>Bible game</h3><p class="muted">Play Scripture Quest and join the Sabbath Challenge every Sabbath afternoon.</p><p style="margin-top:8px"><a class="btn sm primary" href="bible-game.html">Play</a></p></div>`;
+  const li = (r, i, key) => `<li><span>${['🥇','🥈','🥉'][i] || i + 1}</span><span class="g-n">${esc(r.name)}</span><b>${r[key]}</b></li>`;
+  return `<div class="card more" id="gameCard"><h3>Bible game</h3>
+    ${rows.length ? `<p class="meta">${sat && GAME.challenge && GAME.challenge.length ? 'Sabbath Challenge today' : 'Last Sabbath Challenge winners'}</p><ol class="g-lb">${rows.slice(0, 3).map((r, i) => li(r, i, 'score')).join('')}</ol>` : ''}
+    ${top.length ? `<p class="meta" style="margin-top:8px">Top players this week</p><ol class="g-lb">${top.map((r, i) => li(r, i, 'points')).join('')}</ol>` : ''}
+    <p style="margin-top:10px"><a class="btn sm primary" href="bible-game.html">Play</a></p></div>`;
+}
 function liveNow(){
   const url = S.settings.liveUrl; if (!url) return null;
   if (Number(S.settings.liveUntil) > Date.now()) return {url, manual:true};
@@ -1042,7 +1067,7 @@ function renderSide(){
   const st = S.settings, n = Object.keys(S.profiles).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${thisSabbathCard()}${eventsCard()}${birthdaysCard()}${sched}${verse}
+  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${thisSabbathCard()}${eventsCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
     <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
     <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
 }
@@ -2219,6 +2244,8 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   'Youth camp, Baptism, Pathfinder Day':'Youth camp, Bunyag, Adlaw sa Pathfinder', 'Church hall':'Church hall', 'What to bring, who can join':'Unsay dad-on, kinsa ang makaapil',
   'Choose one or many files at once (hold Ctrl or Shift, or tap several on your phone). Audio, video, PDF, Word, slides and photos all work. Files over 15 MB (big videos too, up to 50 GB) go straight to the church Google Drive. Files are saved exactly as they are, with nothing compressed or resized. They upload one after another. Keep this page open and your phone awake until it finishes.':'Pagpili og usa o daghang file dungan (kupti ang Ctrl o Shift, o tuploka ang pipila sa imong cellphone). Mahimo ang audio, video, PDF, Word, slides ug litrato. Ang file nga labaw sa 15 MB (apil ang dagkong video, hangtod 50 GB) diretso sa Google Drive sa simbahan. Gi-save ang file sama gyud sa orihinal, walay gi-compress o gigamay. Usa-usa kini nga ma-upload. Ayaw isira kini nga panid ug ayaw papalonga ang screen hangtod mahuman.',
   'Thank you for joining':'Salamat sa pag-apil',
+  'Bible game':'Dula sa Bibliya', 'Play':'Dula', 'Sabbath Challenge today':'Hagit sa Igpapahulay karong adlawa', 'Last Sabbath Challenge winners':'Mga mananaog sa miaging Hagit sa Igpapahulay', 'Top players this week':'Mga nanguna karong semanaha',
+  'Play Scripture Quest and join the Sabbath Challenge every Sabbath afternoon.':'Dulaa ang Scripture Quest ug apil sa Hagit sa Igpapahulay matag hapon sa Igpapahulay.',
   'Cancel':'Kanselahon', 'Save':'I-save', 'Close':'Isira', 'Done':'Human na', 'Edit':'Usba', 'Add':'Idugang', 'Delete':'Papasa', 'Yes':'Oo', 'No':'Dili',
   'Copied.':'Nakopya na.', 'Copied. Paste it into Messenger or a text message.':'Nakopya na. Idikit kini sa Messenger o text.',
   'Loading…':'Nagkarga…', 'Loading posts…':'Nagkarga sa mga post…', 'Loading members…':'Nagkarga sa mga miyembro…', 'just now':'karon lang', 'Uploaded.':'Na-upload na.',
