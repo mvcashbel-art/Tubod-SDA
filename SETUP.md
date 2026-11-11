@@ -87,3 +87,14 @@ After you send, a box shows the message and the numbers. Tap **Open text app** t
 - **Forgot the admin password?** In Apps Script, open `resetPasswordFromEditor`, type your username and a new password on the two lines near the top, and run it.
 - **Changing Code.gs later?** After editing, click **Deploy > Manage deployments**, then the pencil icon, choose **New version**, and **Deploy**. The web app link stays the same.
 - **Keep the Google Sheet private.** It holds member names and sign-in details. Do not share it with anyone you do not fully trust.
+
+## Keeping the church's information safe (please read before anyone helps with the files)
+
+The website files on GitHub (`index.html`, `config.js`, `sw.js` and the logos) are only the look of the site. They are meant to be public, and anyone can read them in their browser. That is normal and safe: the files hold no member information. All the church's information lives in the Google Sheet, and the site only shows it to someone after they sign in, so a copy of the files on its own shows an empty sign-in page.
+
+So that this stays true, whoever helps you must follow these rules:
+
+- **Never put the Google Sheet, or any copy or export of it, on GitHub.** Not the sheet, not a CSV file, not a screenshot of the member list. GitHub is public. The sheet belongs only in your own Google Drive.
+- **Never put the downloaded member list (the CSV from "Download member list") on GitHub or any public place.** It holds names, status and baptism details. Keep it on your own computer or Drive. Under the Data Privacy Act, a person's religion is sensitive personal information.
+- **Keep the join code off the files.** Share it in person or in your Messenger group, not inside any file you upload.
+- **If you ever think the web app link (`/exec` in `config.js`) has leaked**, make a new deployment in Apps Script (Deploy > New deployment), put the new link in `config.js`, and the old link stops working.
