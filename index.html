@@ -252,6 +252,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .role{color:var(--accent-dark);font-weight:600}
 .pf-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px}
 .facts{display:flex;gap:18px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+.st-pill{display:inline-block;font-size:.74rem;font-weight:700;padding:1px 9px;border-radius:999px;margin-top:3px;letter-spacing:.01em}
+.st-inactive{background:#EEF1F4;color:#4F5F6E}.st-backslidden{background:#FBF1D9;color:#8A5A07}
+.st-offshoot{background:#F7E4E2;color:#8F332B}.st-deceased{background:#E9E4F2;color:#4B3B6B}
+.mem.dead{background:#FAF9FC}.mem.dead .av{filter:grayscale(1)}
+.st-box{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#FAFCFD}
+.st-box.st-deceased,.st-box.st-inactive,.st-box.st-backslidden,.st-box.st-offshoot{font-size:.92rem}
+.st-box h3{font-size:1rem;margin:0 0 4px}.st-box p{margin:2px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.mem-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .facts b{color:var(--ink);font-weight:600}
 .quote{font-family:var(--display);font-size:1.2rem;line-height:1.35;padding-left:14px;border-left:3px solid var(--gold)}
 
@@ -576,7 +584,7 @@ const MAX_FILE_MB = 15;
 
 /* ---------- state ---------- */
 const S = {
-  route:'home', profileId:null, filter:'all', libCat:'all', libQ:'', memQ:'', limit:30,
+  route:'home', profileId:null, filter:'all', libCat:'all', libQ:'', memQ:'', memSt:'all', limit:30,
   token:'', uid:null, isAdmin:false, offline:false, rev:'',
   posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{}, program:[],
   loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}, posting:false, chatInit:false
@@ -623,6 +631,12 @@ function fmtSize(n){
 }
 const hue = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
 const initials = n => String(n).trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+const MST = [['active','Active'],['inactive','Inactive'],['backslidden','Backslidden'],['offshoot','Offshoot'],['deceased','Deceased']];
+const mstLabel = k => (MST.find(x => x[0] === k) || MST[0])[1];
+const stOf = p => (p && p.status) || 'active';
+const isDead = p => stOf(p) === 'deceased';
+const stDate = d => { if (!/^\d{4}-\d{2}-\d{2}$/.test(d || '')) return ''; const x = new Date(d + 'T00:00:00Z'); return `${MONTHS[x.getUTCMonth()]} ${x.getUTCDate()}, ${x.getUTCFullYear()}`; };
+const stPill = p => stOf(p) === 'active' ? '' : `<span class="st-pill st-${stOf(p)}">${isDead(p) ? 'In loving memory' : mstLabel(stOf(p))}</span>`;
 const nameOf = id => id === 'system' ? (S.settings.churchName || 'Tubod SDA Church') : (S.profiles[id] && S.profiles[id].name) || 'Church member';
 function av(id, size = 'md'){
   if (id === 'system') return `<span class="av ${size} sys">${LOGO}</span>`;
@@ -1050,7 +1064,7 @@ function birthdaysCard(){
   const n = phNow(), list = [];
   for (let i = 0; i < 8; i++){
     const d = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + i)), md = d.toISOString().slice(5, 10);
-    Object.values(S.profiles).filter(p => p.bday === md).forEach(p => list.push({p, i, d}));
+    Object.values(S.profiles).filter(p => p.bday === md && !isDead(p)).forEach(p => list.push({p, i, d}));
   }
   if (!list.length) return '';
   return `<div class="card bday"><h3>Birthdays</h3><ul style="list-style:none;margin:0;padding:0">${list.map(({p, i, d}) => `<li class="${i ? '' : 'today'}">${av(p.id, 'sm')}<span>${i ? `${esc(p.name)} · ${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}` : `Happy birthday, ${esc(p.name)}! 🎂`}</span></li>`).join('')}</ul></div>`;
@@ -1082,7 +1096,7 @@ function liveNow(){
   return w && w.on ? {url, manual:false, name:w.sv.name} : null;
 }
 function renderSide(){
-  const st = S.settings, n = Object.keys(S.profiles).length;
+  const st = S.settings, n = Object.values(S.profiles).filter(p => !isDead(p)).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
   $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${thisSabbathCard()}${eventsCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
@@ -1253,8 +1267,9 @@ function mount(){
       <div class="tools"><input type="search" id="libQ" placeholder="Search the library" aria-label="Search the library" value="${esc(S.libQ)}"></div>
       <div class="filters" id="libCats" role="group" aria-label="Library categories"></div><div class="grid" id="libList"></div>`;
   } else if (S.route === 'members'){
-    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Members</h1><p>Everyone who has joined the church family page.</p><button class="btn primary" data-act="invite">Invite family</button></div>
-      <div class="tools"><input type="search" id="memQ" placeholder="Search by name or ministry" aria-label="Search members" value="${esc(S.memQ)}"></div><div class="grid" id="memList"></div>`;
+    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Members</h1><p>Everyone in the church family. Search a name to see if they are active.</p><button class="btn primary" data-act="invite">Invite family</button>${S.isAdmin ? `<button class="btn" data-act="addperson">Add a person without an account</button>` : ''}</div>
+      <div class="tools"><input type="search" id="memQ" placeholder="Search by name or ministry" aria-label="Search members" value="${esc(S.memQ)}"></div>
+      <div class="filters" id="memSts" role="group" aria-label="Member status" style="margin-bottom:12px"></div><div class="grid" id="memList"></div>`;
   } else {
     v.innerHTML = `${bannerHTML}<div id="profSlot"></div>`;
   }
@@ -1631,12 +1646,20 @@ function openAlbum(key){
 
 /* members */
 function memCard(id, p){
-  return `<button class="card mem" data-act="profile" data-uid="${esc(id)}">${av(id, 'lg')}<span><b>${esc(p.name || 'Church member')}</b><span class="s">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</span>${p.ministries ? `<span class="s">${esc(p.ministries)}</span>` : ''}</span></button>`;
+  const st = stOf(p), d = stDate(p.statusDate);
+  const detail = st === 'active' ? '' : `${d ? `<span class="s"><span>${isDead(p) ? 'Passed away' : 'Since'}</span> ${esc(d)}</span>` : ''}${p.statusNote ? `<span class="s" data-notr style="font-style:italic">${esc(p.statusNote.length > 90 ? p.statusNote.slice(0, 88) + '…' : p.statusNote)}</span>` : ''}`;
+  return `<button class="card mem${isDead(p) ? ' dead' : ''}" data-act="profile" data-uid="${esc(id)}">${av(id, 'lg')}<span><b>${esc(p.name || 'Church member')}</b><span class="s">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</span>${p.ministries ? `<span class="s">${esc(p.ministries)}</span>` : ''}${stPill(p)}${detail}</span></button>`;
 }
 function renderMembers(){
-  const q = S.memQ.trim().toLowerCase();
-  const list = Object.entries(S.profiles).filter(([, p]) => !q || ((p.name || '') + ' ' + (p.ministries || '') + ' ' + (p.role || '')).toLowerCase().includes(q))
-    .sort((a, b) => String(a[1].name).localeCompare(String(b[1].name)));
+  const q = S.memQ.trim().toLowerCase(), all = Object.entries(S.profiles);
+  const sts = $('#memSts');
+  if (sts){
+    const cnt = k => all.filter(([, p]) => stOf(p) === k).length;
+    sts.innerHTML = [['all','All'], ...MST].filter(([k]) => k === 'all' || k === 'active' || cnt(k)).map(([k, l]) => `<button type="button" class="chip ${S.memSt === k ? 'on' : ''}" data-act="memst" data-c="${k}" aria-pressed="${S.memSt === k}">${esc(l)} <span data-notr>(${k === 'all' ? all.length : cnt(k)})</span></button>`).join('');
+  }
+  const list = all.filter(([, p]) => (S.memSt === 'all' || stOf(p) === S.memSt)
+      && (!q || ((p.name || '') + ' ' + (p.ministries || '') + ' ' + (p.role || '') + ' ' + mstLabel(stOf(p)) + ' ' + (p.statusNote || '')).toLowerCase().includes(q)))
+    .sort((a, b) => (isDead(a[1]) - isDead(b[1])) || String(a[1].name).localeCompare(String(b[1].name)));
   $('#memList').innerHTML = !S.loaded.profiles ? '<div class="card empty" style="grid-column:1/-1">Loading members…</div>'
     : list.length ? list.map(([id, p]) => memCard(id, p)).join('')
     : `<div class="card empty" style="grid-column:1/-1">No members match.</div>`;
@@ -1656,9 +1679,12 @@ function renderProfile(){
   keepInputs(slot, () => {
     slot.innerHTML = `<section class="card pf">
       <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
-      <div class="pf-main">${av(id, 'xl')}<div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p></div>
+      <div class="pf-main">${av(id, 'xl')}<div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
+        ${S.isAdmin && !own ? `<div class="pf-btns"><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
         ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
+        ${stOf(p) !== 'active' ? `<div class="st-box st-${stOf(p)}"><h3>${isDead(p) ? 'In loving memory' : 'Status: ' + mstLabel(stOf(p))}</h3>${p.statusDate ? `<p>${isDead(p) ? 'Passed away' : 'Since'} <b>${esc(stDate(p.statusDate))}</b></p>` : ''}${p.statusNote ? `<p data-notr>${esc(p.statusNote)}</p>` : ''}</div>` : ''}
+        ${p.access === 'roll' ? `<p class="muted"><span>Listed by the church.</span>${isDead(p) ? '' : ' <span>This person does not have an account on the site yet.</span>'}</p>` : ''}
         ${p.bio ? `<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.bio)}</p>` : own ? `<p class="muted">Add your photo and a few words so the church family can get to know you.</p>` : ''}
         ${p.verse ? `<p class="quote">${esc(p.verse)}</p>` : ''}
         <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}${p.bday ? `<span>Birthday <b>${MONTHS[Number(p.bday.slice(0, 2)) - 1]} ${Number(p.bday.slice(3))}</b></span>` : ''}</div>
@@ -1984,10 +2010,56 @@ function svcRead(root = document){
 function svcWrite(list){ const box = $('#svcList'); if (box) box.innerHTML = svcRows(list); }
 function openMembersModal(){
   const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => `
-    <div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${p.access === 'admin' ? 'Church admin' : 'Member'}${p.role ? ' · ' + esc(p.role) : ''}</span></div>
-    ${p.id === S.uid ? '<span class="meta">You</span>' : `<button class="btn sm" data-act="macc" data-uid="${esc(p.id)}" data-to="${p.access === 'admin' ? 'member' : 'admin'}">${p.access === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>`}</div>`).join('');
+    <div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${p.access === 'admin' ? 'Church admin' : p.access === 'roll' ? 'No account' : 'Member'}${p.role ? ' · ' + esc(p.role) : ''}</span>${stPill(p)}</div>
+    ${p.id === S.uid ? '<span class="meta">You</span>' : p.access === 'roll' ? `<button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>` : `<button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm" data-act="macc" data-uid="${esc(p.id)}" data-to="${p.access === 'admin' ? 'member' : 'admin'}">${p.access === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>`}</div>`).join('');
   const wait = (S.waiting || []).map(p => `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">Joined ${ago(p.createdAt)} · waiting for approval</span></div><button class="btn sm primary" data-act="macc" data-uid="${esc(p.id)}" data-to="member">Approve</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Decline</button></div>`).join('');
-  openModal('Manage members', `${wait ? `<h3 style="margin-bottom:6px">Waiting for approval</h3><div class="mlist wait-list">${wait}</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">` : ''}<p class="muted">Admins can post announcements, pin and delete any post, and manage members.</p><div class="mlist">${rows}</div><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
+  openModal('Manage members', `${wait ? `<h3 style="margin-bottom:6px">Waiting for approval</h3><div class="mlist wait-list">${wait}</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">` : ''}<p class="muted">Admins can post announcements, pin and delete any post, and manage members.</p><div class="mlist">${rows}</div><div class="m-actions"><button class="btn" type="button" data-act="addperson">Add a person without an account</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
+}
+/* member status: active, inactive, backslidden, offshoot, deceased (admins set it; every signed-in member can see it) */
+function statusFields(p){
+  const st = stOf(p);
+  return `<label class="fld" for="msSt">Status<select id="msSt">${MST.map(([k, l]) => `<option value="${k}" ${st === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <div id="msMore"><label class="fld" for="msDate"><span id="msDateL">Since when (optional)</span><input id="msDate" type="date" value="${esc((p && p.statusDate) || '')}"></label>
+    <label class="fld" for="msNote">Note (optional)<textarea id="msNote" maxlength="400" placeholder="For example: moved away, joined another group, or a short memorial">${esc((p && p.statusNote) || '')}</textarea><small>All signed-in members can see the status, date and note.</small></label></div>`;
+}
+function wireStatus(m){
+  const sync1 = () => { const v = $('#msSt', m).value; $('#msMore', m).hidden = v === 'active'; $('#msDateL', m).textContent = v === 'deceased' ? 'Date of passing (optional)' : 'Since when (optional)'; };
+  $('#msSt', m).addEventListener('change', sync1); sync1();
+}
+function openStatusModal(uid, back){
+  const p = S.profiles[uid]; if (!p) return;
+  const m = openModal('Member status', `<form id="msForm" class="m-body" style="padding:0"><p class="muted">Set the status of <b>${esc(p.name)}</b>.${p.access !== 'roll' ? ' Marking someone as deceased closes their account so no one else can sign in with it.' : ''}</p>
+    ${statusFields(p)}
+    <div class="m-actions"><button class="btn" type="button" data-act="${back ? 'members' : 'closemodal'}">${back ? 'Back' : 'Cancel'}</button><button class="btn primary" type="submit" id="msSave">Save</button></div></form>`);
+  wireStatus(m);
+  $('#msForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const status = $('#msSt', m).value, btn = $('#msSave', m);
+    if (status === 'deceased' && !isDead(p) && !await confirmBox('Mark as deceased?', `${p.name} will be shown with "In loving memory".${p.access !== 'roll' ? ' Their account will be closed.' : ''}`, 'Yes, save')){ openStatusModal(uid, back); return; }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      await api('setMemberStatus', {uid, status, date:$('#msDate', m).value, note:$('#msNote', m).value});
+      await sync(); if (back) openMembersModal(); else closeModal();
+      toast('Status saved.');
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save'; }
+  });
+}
+function openAddPersonModal(){
+  const m = openModal('Add a person without an account', `<form id="aForm" class="m-body" style="padding:0"><p class="muted">For church members who do not use the site, or who have passed away. They cannot sign in, but members can find them when they search.</p>
+    <label class="fld" for="aName">Full name<input id="aName" required maxlength="60" autocomplete="off"></label>
+    <label class="fld" for="aRole">Role in the church (optional)<input id="aRole" maxlength="60" list="roleList2" placeholder="Member"><datalist id="roleList2">${ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist></label>
+    <label class="fld" for="aSince">Member since (optional)<input id="aSince" maxlength="4" inputmode="numeric" placeholder="Year"></label>
+    ${statusFields({status:'active'})}
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="aSave">Add to the list</button></div></form>`);
+  wireStatus(m);
+  $('#aForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#aSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      await api('addPerson', {name:$('#aName', m).value, role:$('#aRole', m).value, since:$('#aSince', m).value, status:$('#msSt', m).value, date:$('#msDate', m).value, note:$('#msNote', m).value});
+      await sync(); closeModal(); toast('Added to the church list.');
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Add to the list'; }
+  });
 }
 async function memberAction(a, uid, to){
   const p = S.profiles[uid] || (S.waiting || []).find(x => x.id === uid); if (!p) return;
@@ -2059,6 +2131,9 @@ document.addEventListener('click', e => {
     case 'delcm': act('deleteComment', {id}).catch(() => {}); break;
     case 'pin': act('pinPost', {id}).catch(() => {}); break;
     case 'libcat': S.libCat = el.dataset.c; renderLibrary(); break;
+    case 'memst': S.memSt = el.dataset.c; renderMembers(); break;
+    case 'mstatus': openStatusModal(el.dataset.uid, !!el.closest('.mlist')); break;
+    case 'addperson': openAddPersonModal(); break;
     case 'upload': if (guard()) openUploadModal(); break;
     case 'delfile': deleteFile(id); break;
     case 'editsab': openSabbathModal(); break;
@@ -2248,7 +2323,17 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   'Change password':'Usba ang password', 'Current password':'Karon nga password', 'New password':'Bag-ong password', 'Password changed.':'Nausab na ang password.',
   // members
   'Everyone who has joined the church family page.':'Tanang miapil sa panid sa pamilya sa simbahan.', 'Search by name or ministry':'Pangitaa pinaagi sa ngalan o ministeryo',
-  'Search members':'Pangitaa ang mga miyembro', 'Manage members':'Atimana ang mga miyembro', 'Make admin':'Himoang admin', 'Remove admin':'Kuhaa ang pagka-admin',
+  'Search members':'Pangitaa ang mga miyembro',
+  'Active':'Aktibo', 'Inactive':'Dili aktibo', 'Backslidden':'Nahisalaag', 'Offshoot':'Nibulag (offshoot)', 'Deceased':'Namatay na', 'All':'Tanan',
+  'In loving memory':'Sa mahigugmaong paghinumdom', 'Passed away':'Namatay', 'Since':'Sukad', 'Status':'Kahimtang', 'Member status':'Kahimtang sa miyembro',
+  'Change status':'Usba ang kahimtang', 'Status saved.':'Na-save ang kahimtang.', 'No account':'Walay account', 'Since when (optional)':'Sukad kanus-a (kon gusto)',
+  'Date of passing (optional)':'Petsa sa pagkamatay (kon gusto)', 'Note (optional)':'Nota (kon gusto)', 'Full name':'Bug-os nga ngalan',
+  'All signed-in members can see the status, date and note.':'Makita sa tanang naka-sign in nga miyembro ang kahimtang, petsa ug nota.',
+  'Add a person without an account':'Idugang ang tawo nga walay account', 'Add to the list':'Idugang sa lista', 'Added to the church list.':'Nadugang na sa lista sa simbahan.',
+  'Everyone in the church family. Search a name to see if they are active.':'Tanan sa pamilya sa simbahan. Pangitaa ang ngalan aron makita kon aktibo ba sila.',
+  'For church members who do not use the site, or who have passed away. They cannot sign in, but members can find them when they search.':'Para sa mga miyembro nga wala mogamit sa site, o namatay na. Dili sila maka-sign in, apan makit-an sila sa mga miyembro kon mangita.',
+  'This person does not have an account on the site yet.':'Wala pay account kini nga tawo sa site.', 'Listed by the church.':'Gilista sa simbahan.',
+  'Mark as deceased?':'Markahan nga namatay na?', 'Yes, save':'Oo, i-save', 'Role in the church (optional)':'Papel sa simbahan (kon gusto)', 'Member since (optional)':'Miyembro sukad (kon gusto)', 'Manage members':'Atimana ang mga miyembro', 'Make admin':'Himoang admin', 'Remove admin':'Kuhaa ang pagka-admin',
   'Remove':'Tangtangon', 'Approve':'Aprobahan', 'Decline':'Dili aprobahan', 'Waiting for approval':'Naghulat sa pag-aprobar', 'waiting for approval':'naghulat sa pag-aprobar',
   'Admins can post announcements, pin and delete any post, and manage members.':'Ang mga admin makapost og pahibalo, makabutang sa ibabaw ug makapapas sa bisan unsang post, ug makaatiman sa mga miyembro.',
   'Your account is approved. Welcome to the church family!':'Na-aprobahan na ang imong account. Maayong pag-abot sa pamilya sa simbahan!',
@@ -2292,6 +2377,7 @@ const BIS_RX = [
   [new RegExp('^' + BIS_DAY_RX + 's (\\d.*)$'), (m, d, t) => `Kada ${BIS_DAYS[d]} ${t}`],
   [/^(\d+) members?$/, '$1 ka miyembro'], [/^(\d+) posts? shared$/, '$1 ka post ang gipaambit'], [/^(\d+) items?$/, '$1 ka butang'],
   [/^(\d+) (hours?) before$/, (m, n) => `${n} ka oras sa una`],
+  [/^Status: (.+)$/, (m, x) => 'Kahimtang: ' + (BIS[x] || x)],
   [/^Happy birthday, (.+)! 🎂$/, 'Malipayong adlaw nga natawhan, $1! 🎂'],
   [/^new (person is|people are) waiting for your approval\.$/, 'ka bag-ong miyembro ang naghulat sa imong pag-aprobar.'],
   [/^Joined (.+)$/, (m, x) => 'Ni-apil ' + (bisSeg(x) || x)],

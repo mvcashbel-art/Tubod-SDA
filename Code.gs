@@ -8,7 +8,7 @@
  */
 
 const SCHEMA = {
-  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms'],
+  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote'],
   Posts:     ['id', 'authorId', 'cat', 'text', 'photos', 'pinned', 'createdAt', 'sms', 'svc'],
   Comments:  ['id', 'postId', 'authorId', 'text', 'createdAt'],
   Reactions: ['id', 'postId', 'uid', 'createdAt'],
@@ -16,13 +16,17 @@ const SCHEMA = {
   Settings:  ['key', 'value'],
   Sessions:  ['token', 'uid', 'createdAt'],
   SmsOutbox: ['time', 'postId', 'number', 'text', 'status'],
-  Program:   ['id', 'svcId', 'date', 'items', 'updatedAt']
+  Program:   ['id', 'svcId', 'date', 'items', 'updatedAt'],
+  Events:    ['id', 'title', 'date', 'time', 'place', 'desc', 'remind', 'createdBy', 'createdAt'],
+  Scores:    ['id', 'uid', 'mode', 'score', 'correct', 'total', 'week', 'day', 'createdAt']
 };
 const POST_CATS = ['share', 'prayer', 'testimony', 'announcement'];
 const FILE_CATS = ['sermons', 'sabbath-school', 'music', 'documents', 'media', 'other'];
 const SESSION_DAYS = 90;
 const MAX_FILE_BASE64 = 21000000;   // about 15 MB of file
-const JPEG_PREFIX = 'data:image/jpeg;base64,';
+const MAX_BIG_BYTES = 50 * 1024 * 1024 * 1024;   // biggest file a member may upload straight to Drive (50 GB)
+const DEFAULT_QUOTA_GB = 10;        // storage each member may use in the Library (admins have no limit). Change it in Settings.
+const MAX_PHOTO_CHARS = 36000000;   // about 26 MB of photo, saved exactly as sent
 const SMS_MAX_CHARS = 320;          // two text parts
 
 /* ---------- run once from the editor ---------- */
@@ -37,7 +41,7 @@ function setup() {
       { id: 'wed', name: 'Wednesday worship', day: 3, time: '19:00' },
       { id: 'fri', name: 'Friday worship', day: 5, time: '19:00' }
     ]),
-    autoRemind: '1', remindHours: '3', autoSms: ''
+    autoRemind: '1', remindHours: '3', autoSms: '', memberQuotaGB: String(DEFAULT_QUOTA_GB)
   };
   Object.keys(defaults).forEach(function (k) {
     if (getSetting_(k) === null) setSetting_(k, defaults[k]);
@@ -79,6 +83,11 @@ function worshipReminders() {
   const now = nowMs_();
   const isOld = function (x) { return x.id.indexOf('wrem') === 0 && now - Number(x.createdAt) > 3 * 864e5; };
   if (readAll_('Posts').some(isOld)) withLock_(function () { remove_('Posts', isOld); bump_(); });
+  try {
+    const last = Number(PropertiesService.getScriptProperties().getProperty('LAST_BACKUP') || 0);
+    if (now - last > 7 * 864e5) backup_();
+  } catch (e) { Logger.log('Backup skipped: ' + e.message); }
+  eventReminders_(now);
   if (getSetting_('autoRemind') !== '1') return;
   const lead = Math.min(24, Math.max(1, Number(getSetting_('remindHours')) || 3)) * 36e5;
   const props = PropertiesService.getScriptProperties();
@@ -102,6 +111,87 @@ function worshipReminders() {
       try { smsSend_(post, false); } catch (e) { Logger.log('Reminder text not sent: ' + e.message); }
     }
   });
+}
+
+/* Run once from the editor: moves files uploaded before member folders existed into each member's own folder
+   (Tubod SDA Church files / Members / Name). Church logos and other files with no owner stay where they are. */
+function organizeFiles() {
+  const members = {};
+  readAll_('Members').forEach(function (m) { members[m.id] = m; });
+  let moved = 0, skipped = 0;
+  const move = function (driveId, uid) {
+    if (!driveId || !members[uid]) { skipped++; return; }
+    try {
+      const f = DriveApp.getFileById(driveId), dest = memberFolder_(members[uid]);
+      const parents = f.getParents();
+      if (parents.hasNext() && parents.next().getId() === dest.getId()) return;
+      f.moveTo(dest); moved++;
+    } catch (e) { skipped++; }
+  };
+  readAll_('Files').forEach(function (x) { move(x.driveId, x.authorId); });
+  readAll_('Posts').forEach(function (p) { (p.photos ? p.photos.split(',') : []).forEach(function (id) { move(id, p.authorId); }); });
+  Object.keys(members).forEach(function (id) { move(members[id].avatar, id); move(members[id].cover, id); });
+  Logger.log('Done. Moved ' + moved + ' files into member folders. ' + skipped + ' were left in the main folder (church files, or files that are gone).');
+}
+
+/* ---------- Bible game helpers ---------- */
+const GAME_MODES = ['quiz', 'verse', 'who', 'books', 'challenge', 'puzzle', 'wordsearch', 'memory', 'kids', 'cards'];
+/* a game week runs Sunday to Sabbath; it is named by the date of its Sabbath (Philippine time) */
+function gameWeek_(ms) {
+  const d = new Date(ms + 8 * 36e5), add = (6 - d.getUTCDay() + 7) % 7;
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + add)).toISOString().slice(0, 10);
+}
+/* Sabbath afternoon: from 1 PM until a little after sunset (Philippine time, with a few minutes to spare) */
+function challengeOpen_(ms) {
+  const d = new Date(ms + 8 * 36e5);
+  if (d.getUTCDay() !== 6) return false;
+  const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return mins >= 12 * 60 + 55 && mins <= 18 * 60 + 40;
+}
+
+/* Posts a reminder announcement before each event that has reminders turned on. */
+function eventReminders_(now) {
+  const lead = Math.min(24, Math.max(1, Number(getSetting_('remindHours')) || 3)) * 36e5;
+  const props = PropertiesService.getScriptProperties();
+  const done = String(props.getProperty('EV_REMINDED') || '').split(',').filter(Boolean);
+  const today = phDate_(now);
+  readAll_('Events').forEach(function (ev) {
+    if (ev.remind !== '1' || ev.date < today) return;
+    const hm = (ev.time || '08:00').split(':');
+    const d = ev.date.split('-');
+    const start = Date.UTC(+d[0], +d[1] - 1, +d[2], +hm[0], +hm[1]) - 8 * 36e5;
+    const at = ev.time ? start - lead : start - 2 * 36e5;    // all-day events: remind at 6 AM that day
+    if (now < at || now > start + 36e5) return;
+    const key = ev.id + '_' + ev.date;
+    if (done.indexOf(key) >= 0) return;
+    const when = ev.date === today ? 'today' : 'tomorrow';
+    const text = ev.title + ' ' + when + (ev.time ? ' at ' + time12_(ev.time) : '') + (ev.place ? ', ' + ev.place : '') + '.' + (ev.desc ? ' ' + ev.desc : '');
+    withLock_(function () {
+      append_('Posts', { id: id_('wrem'), authorId: 'system', cat: 'announcement', pinned: '', photos: '', createdAt: String(now), sms: '', svc: '', text: text });
+      done.push(key);
+      props.setProperty('EV_REMINDED', done.slice(-40).join(','));
+      bump_();
+    });
+  });
+}
+
+/* Makes a copy of the whole church sheet in "Tubod SDA Church files / Backups" and keeps the newest 8 copies.
+   It runs by itself once a week (with the hourly trigger), or run backupNow from the editor any time. */
+function backupNow() { Logger.log('Saved backup: ' + backup_()); }
+function backup_() {
+  const props = PropertiesService.getScriptProperties();
+  let folder = null;
+  const id = props.getProperty('BACKUP_FOLDER_ID');
+  if (id) { try { folder = DriveApp.getFolderById(id); } catch (e) { folder = null; } }
+  if (!folder) { folder = folder_().createFolder('Backups'); props.setProperty('BACKUP_FOLDER_ID', folder.getId()); }
+  const name = 'Tubod SDA backup ' + phDate_(nowMs_());
+  DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId()).makeCopy(name, folder);
+  const list = [], it = folder.getFiles();
+  while (it.hasNext()) list.push(it.next());
+  list.sort(function (a, b) { return b.getDateCreated() - a.getDateCreated(); });
+  list.slice(8).forEach(function (f) { try { f.setTrashed(true); } catch (e) {} });
+  props.setProperty('LAST_BACKUP', String(nowMs_()));
+  return name;
 }
 
 /* If you ever change the sheet by hand (edit a post, a setting, a name), run this once so the site notices. */
@@ -133,7 +223,7 @@ function resetPasswordFromEditor() {
 
 /* ---------- web app entry points ---------- */
 function doGet() {
-  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_() });
+  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, v: 7 });
 }
 
 function doPost(e) {
@@ -146,6 +236,7 @@ function doPost(e) {
     if (OPEN[req.action] !== true) {
       me = sessionUser_(req.token);
       if (!me) throw err_('Please sign in again.', 'auth');
+      if (me.access === 'pending' && PENDING_OK[req.action] !== true) throw err_('Your account is waiting for a church admin to approve it.', 'pending');
     }
     if (WRITE[req.action] === true) {
       const lock = LockService.getScriptLock();
@@ -162,12 +253,16 @@ function doPost(e) {
 }
 
 const OPEN = { ping: true, publicInfo: true, register: true, login: true };
+/* what a new member may do while waiting for approval */
+const PENDING_OK = { sync: true, logout: true, ping: true };
 /* these change no shared data, so they must not make everyone reload (and must not throw away the saved copy) */
-const NOBUMP = { login: true, logout: true };
+const NOBUMP = { login: true, logout: true, backupNow: true, saveScore: true };
 const WRITE = {
   register: true, login: true, logout: true, post: true, deletePost: true, pinPost: true, comment: true,
-  deleteComment: true, react: true, saveProfile: true, changePassword: true, uploadFile: true, deleteFile: true,
-  saveSettings: true, setAccess: true, removeMember: true, resetPassword: true, saveProgram: true
+  deleteComment: true, react: true, saveProfile: true, changePassword: true, uploadFile: true, finishUpload: true, deleteFile: true,
+  saveSettings: true, setAccess: true, removeMember: true, resetPassword: true, saveProgram: true,
+  saveEvent: true, deleteEvent: true, saveSabbath: true, goLive: true, saveScore: true,
+  setMemberStatus: true, addPerson: true
 };
 
 const ACTIONS = {
@@ -192,7 +287,7 @@ const ACTIONS = {
     const salt = Utilities.getUuid();
     const m = {
       id: id_('m'), name: name, username: username, salt: salt, hash: hash_(pw, salt),
-      access: members.length === 0 ? 'admin' : 'member', createdAt: String(Date.now()),
+      access: members.length === 0 ? 'admin' : (getSetting_('requireApproval') === '0' ? 'member' : 'pending'), createdAt: String(Date.now()),
       title: '', ministries: '', since: '', bio: '', verse: '', avatar: '', cover: ''
     };
     append_('Members', m);
@@ -202,11 +297,12 @@ const ACTIONS = {
   login: function (r) {
     const username = String(r.username || '').trim().toLowerCase();
     const tryAgain = throttle_('login_' + username);
-    const m = readAll_('Members').filter(function (x) { return x.username === username; })[0];
-    if (!m || hash_(String(r.password || ''), m.salt) !== m.hash) {
+    const m = username ? readAll_('Members').filter(function (x) { return x.username === username; })[0] : null;
+    if (!m || !m.hash || hash_(String(r.password || ''), m.salt) !== m.hash) {
       tryAgain();
       throw err_('Wrong username or password.', 'login');
     }
+    if (m.mstatus === 'deceased') throw err_('This account is closed. Talk to the church admin.', 'closed');
     purgeSessions_();
     return { token: newSession_(m.id) };
   },
@@ -218,6 +314,11 @@ const ACTIONS = {
   },
 
   sync: function (r, me) {
+    if (me.access === 'pending') {
+      return { rev: rev_(), pending: true, me: { id: me.id, access: 'pending', name: me.name },
+        settings: { churchName: getSetting_('churchName') || 'Tubod SDA Church', tagline: getSetting_('tagline') || '', bgId: getSetting_('bgId') || '' },
+        members: [], posts: [], comments: [], reactions: [], files: [], program: [], events: [] };
+    }
     const admin = me.access === 'admin';
     const rev = rev_();
     /* Reading every tab of the sheet is the slow part, so the answer is kept for each revision.
@@ -238,9 +339,10 @@ const ACTIONS = {
     const cat = POST_CATS.indexOf(r.cat) >= 0 ? r.cat : 'share';
     if (cat === 'announcement' && me.access !== 'admin') throw err_('Only church leaders can send announcements.', 'denied');
     const text = clean_(r.text, 3000, true);
-    const photos = (Array.isArray(r.photos) ? r.photos : []).slice(0, 3);
+    const photos = (Array.isArray(r.photos) ? r.photos : []).slice(0, 10);
     if (!text && !photos.length) throw err_('Write something or add a photo first.', 'invalid');
-    const ids = photos.map(function (d) { return saveImage_(d, 'post'); });
+    const dest = photos.length ? memberFolder_(me) : null;
+    const ids = photos.map(function (d) { return saveImage_(d, 'post', dest); });
     let svc = '';
     if (cat === 'announcement' && r.svc) {
       const sv = services_().filter(function (x) { return x.id === r.svc; })[0];
@@ -306,8 +408,13 @@ const ACTIONS = {
       patch.phone = ph;
       patch.sms = (r.sms && ph) ? '1' : '';
     }
-    if (r.avatar) { trash_(me.avatar); patch.avatar = saveImage_(r.avatar, 'avatar'); }
-    if (r.cover) { trash_(me.cover); patch.cover = saveImage_(r.cover, 'cover'); }
+    if (Object.prototype.hasOwnProperty.call(r, 'bday')) {
+      const b = String(r.bday || '').trim();
+      if (b && !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(b)) throw err_('Choose your birthday month and day.', 'invalid');
+      patch.bday = b;
+    }
+    if (r.avatar) { trash_(me.avatar); patch.avatar = saveImage_(r.avatar, 'avatar', memberFolder_(me)); }
+    if (r.cover) { trash_(me.cover); patch.cover = saveImage_(r.cover, 'cover', memberFolder_(me)); }
     update_('Members', me.id, patch);
     return {};
   },
@@ -328,11 +435,80 @@ const ACTIONS = {
     const name = clean_(r.name, 120) || 'file';
     const mime = String(r.mime || 'application/octet-stream').slice(0, 100);
     const bytes = Utilities.base64Decode(data);
-    const f = folder_().createFile(Utilities.newBlob(bytes, mime, name));
+    checkQuota_(me, bytes.length);
+    const f = memberFolder_(me).createFile(Utilities.newBlob(bytes, mime, name));
     f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     append_('Files', {
       id: id_('f'), title: title, cat: FILE_CATS.indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
       driveId: f.getId(), name: name, mime: mime, size: String(bytes.length), authorId: me.id, createdAt: String(Date.now())
+    });
+    return {};
+  },
+
+  /* Big files go from the member's browser straight to Google Drive. The server only opens an upload
+     session (a private one-time web address) and hands that address back. The owner's Google login
+     never leaves this script. */
+  startUpload: function (r, me) {
+    const size = Math.floor(Number(r.size));
+    if (!(size > 0)) throw err_('That file is empty.', 'invalid');
+    if (size > MAX_BIG_BYTES) throw err_('That file is too big. The limit is 50 GB.', 'too_big');
+    checkQuota_(me, size);
+    try {
+      const free = DriveApp.getStorageLimit() - DriveApp.getStorageUsed();
+      if (DriveApp.getStorageLimit() > 0 && size > free) {
+        throw err_('The church Google Drive does not have enough space for this file (' + Math.ceil(free / 1048576) + ' MB free). Ask the church admin to free up space or buy more Google storage.', 'no_space');
+      }
+    } catch (e) { if (e.code === 'no_space') throw e; /* storage figures unavailable: let Drive decide */ }
+    const mime = String(r.mime || 'application/octet-stream').replace(/[^\w.+\-\/]/g, '').slice(0, 100) || 'application/octet-stream';
+    const origin = String(r.origin || '');
+    if (!/^https?:\/\/[\w.\-]+(:\d+)?$/.test(origin)) throw err_('Could not start the upload from this page.', 'invalid');
+    const uploadId = Utilities.getUuid().replace(/-/g, '');
+    const res = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', {
+      method: 'post',
+      contentType: 'application/json; charset=UTF-8',
+      headers: {
+        Authorization: 'Bearer ' + ScriptApp.getOAuthToken(),
+        'X-Upload-Content-Type': mime,
+        'X-Upload-Content-Length': String(size),
+        Origin: origin
+      },
+      payload: JSON.stringify({ name: 'up_' + uploadId, description: me.id, mimeType: mime, parents: [memberFolder_(me).getId()] }),
+      muteHttpExceptions: true
+    });
+    const code = res.getResponseCode();
+    const hdr = res.getAllHeaders() || {};
+    const url = hdr.Location || hdr.location || '';
+    if (code !== 200 || !url) {
+      if (code === 403 || code === 401) throw err_('Google Drive refused the upload. The church admin may need to re-authorize the church script (see SETUP.md).', 'drive');
+      throw err_('Could not start the upload (Google Drive said ' + code + '). Try again in a moment.', 'drive');
+    }
+    return { uploadId: uploadId, url: String(url) };
+  },
+
+  finishUpload: function (r, me) {
+    const title = clean_(r.title, 100);
+    if (!title) throw err_('Give the file a title.', 'invalid');
+    const uploadId = String(r.uploadId || '');
+    if (!/^[0-9a-f]{32}$/.test(uploadId)) throw err_('That upload could not be found.', 'invalid');
+    const want = 'up_' + uploadId;
+    let f = null;
+    const id = String(r.driveId || '');
+    if (/^[\w-]{10,80}$/.test(id)) { try { f = DriveApp.getFileById(id); } catch (e) { f = null; } }
+    if (f && f.getName() !== want) f = null;
+    for (let i = 0; !f && i < 6; i++) {          // Drive can take a few seconds to list a new file
+      const it = memberFolder_(me).getFilesByName(want), it2 = it.hasNext() ? it : folder_().getFilesByName(want);
+      if (it2.hasNext()) f = it2.next(); else if (i < 5) Utilities.sleep(2000);
+    }
+    if (!f) throw err_('Drive has not finished saving the file yet. Wait a moment and try again.', 'not_ready');
+    if (f.getDescription() !== me.id) throw err_('That upload belongs to someone else.', 'denied');
+    const name = clean_(r.name, 120) || 'file';
+    const mime = f.getMimeType() || String(r.mime || 'application/octet-stream').slice(0, 100);
+    f.setName(name);
+    f.setDescription('');
+    f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    append_('Files', {
+      id: id_('f'), title: title, cat: FILE_CATS.indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
+      driveId: f.getId(), name: name, mime: mime, size: String(f.getSize()), authorId: me.id, createdAt: String(Date.now())
     });
     return {};
   },
@@ -365,6 +541,17 @@ const ACTIONS = {
     }
     if (Object.prototype.hasOwnProperty.call(r, 'autoRemind')) upd.autoRemind = r.autoRemind ? '1' : '';
     if (Object.prototype.hasOwnProperty.call(r, 'autoSms')) upd.autoSms = r.autoSms ? '1' : '';
+    if (Object.prototype.hasOwnProperty.call(r, 'requireApproval')) upd.requireApproval = r.requireApproval ? '1' : '0';
+    if (Object.prototype.hasOwnProperty.call(r, 'liveUrl')) {
+      const u = String(r.liveUrl || '').trim();
+      if (u && !/^https:\/\/[^\s"'<>]{4,400}$/.test(u)) throw err_('The livestream link must start with https://', 'invalid');
+      upd.liveUrl = u;
+    }
+    if (Object.prototype.hasOwnProperty.call(r, 'memberQuotaGB')) {
+      const q = Math.floor(Number(r.memberQuotaGB));
+      if (!(q >= 0 && q <= 10000)) throw err_('Enter a storage limit from 0 to 10000 GB (0 means no limit).', 'invalid');
+      upd.memberQuotaGB = String(q);
+    }
     if (r.remindHours) upd.remindHours = String(Math.min(24, Math.max(1, parseInt(r.remindHours, 10) || 3)));
     if (r.bg) { trash_(getSetting_('bgId')); upd.bgId = saveImage_(r.bg, 'background'); }
     else if (r.resetBg) { trash_(getSetting_('bgId')); upd.bgId = ''; }
@@ -375,6 +562,9 @@ const ACTIONS = {
   setAccess: function (r, me) {
     if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
     const access = r.access === 'admin' ? 'admin' : 'member';
+    const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
+    if (!who) throw err_('That member is no longer here.', 'missing');
+    if (who.access === 'roll') throw err_('This person has no account on the site.', 'invalid');
     const admins = readAll_('Members').filter(function (m) { return m.access === 'admin'; });
     if (access === 'member' && admins.length === 1 && admins[0].id === r.uid) throw err_('The church needs at least one admin.', 'denied');
     update_('Members', r.uid, { access: access });
@@ -390,6 +580,138 @@ const ACTIONS = {
     remove_('Sessions', function (s) { return s.uid === m.id; });
     remove_('Members', function (x) { return x.id === m.id; });
     return {};
+  },
+
+  saveSabbath: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
+    const link = String(r.link || '').trim();
+    if (link && !/^https?:\/\/[^\s"'<>]{4,400}$/.test(link)) throw err_('The lesson link must start with https://', 'invalid');
+    const date = String(r.date || '');
+    const v = { date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '', lesson: clean_(r.lesson, 120), link: link, speaker: clean_(r.speaker, 80),
+      reading: clean_(r.reading, 120), ssTeacher: clean_(r.ssTeacher, 80), note: clean_(r.note, 400, true) };
+    setSettings_({ sabbath: JSON.stringify(v) });
+    return {};
+  },
+
+  goLive: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
+    if (r.on && !getSetting_('liveUrl')) throw err_('Add the livestream link in Settings first.', 'invalid');
+    setSettings_({ liveUntil: r.on ? String(nowMs_() + 3 * 36e5) : '' });
+    return {};
+  },
+
+  saveEvent: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can add events.', 'denied');
+    const title = clean_(r.title, 100), date = String(r.date || ''), time = String(r.time || '');
+    if (!title) throw err_('Give the event a name.', 'invalid');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(new Date(date + 'T00:00:00Z'))) throw err_('Choose the date of the event.', 'invalid');
+    if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw err_('Choose a proper time, or leave it empty.', 'invalid');
+    const row = { title: title, date: date, time: time, place: clean_(r.place, 100), desc: clean_(r.desc, 600, true), remind: r.remind ? '1' : '' };
+    const id = String(r.id || '');
+    if (id && readAll_('Events').some(function (x) { return x.id === id; })) { update_('Events', id, row); return { id: id }; }
+    const nid = id_('e');
+    row.id = nid; row.createdBy = me.id; row.createdAt = String(Date.now());
+    append_('Events', row);
+    remove_('Events', function (x) { return x.date < phDate_(nowMs_() - 365 * 864e5); });
+    return { id: nid };
+  },
+
+  deleteEvent: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can remove events.', 'denied');
+    remove_('Events', function (x) { return x.id === r.id; });
+    return {};
+  },
+
+  /* ---------- member status: active, inactive, backslidden, offshoot, deceased ---------- */
+  setMemberStatus: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can change a member status.', 'denied');
+    const v = statusFields_(r);
+    const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
+    if (!who) throw err_('That member is no longer here.', 'missing');
+    if (v.mstatus === 'deceased' && who.id === me.id) throw err_('You cannot mark yourself as deceased.', 'denied');
+    if (v.mstatus === 'deceased' && who.access === 'admin') {
+      const admins = readAll_('Members').filter(function (m) { return m.access === 'admin' && m.mstatus !== 'deceased'; });
+      if (admins.length <= 1) throw err_('The church needs at least one admin.', 'denied');
+    }
+    update_('Members', who.id, v);
+    if (v.mstatus === 'deceased') {
+      remove_('Sessions', function (s) { return s.uid === who.id; });
+      if (who.access === 'admin') update_('Members', who.id, { access: 'member' });
+    }
+    return {};
+  },
+
+  /* Adds someone to the church list who has no account (an older member, or someone who passed away). */
+  addPerson: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can add people to the list.', 'denied');
+    const name = clean_(r.name, 60);
+    if (name.length < 2) throw err_('Please enter the full name.', 'invalid');
+    const v = statusFields_(r);
+    const m = { id: id_('m'), name: name, username: '', salt: '', hash: '', access: 'roll', createdAt: String(Date.now()),
+      title: clean_(r.role, 60), ministries: '', since: /^\d{4}$/.test(String(r.since || '')) ? String(r.since) : '', bio: '', verse: '', avatar: '', cover: '' };
+    append_('Members', Object.assign(m, v));
+    return { id: m.id };
+  },
+
+  /* ---------- Bible game ---------- */
+  saveScore: function (r, me) {
+    const mode = String(r.mode || '');
+    if (GAME_MODES.indexOf(mode) < 0) throw err_('Unknown game.', 'invalid');
+    const total = Math.floor(Number(r.total)), correct = Math.floor(Number(r.correct)), score = Math.floor(Number(r.score));
+    if (!(total >= 1 && total <= 60 && correct >= 0 && correct <= total && score >= 0 && score <= 3000)) throw err_('That score does not look right.', 'invalid');
+    const now = nowMs_(), week = gameWeek_(now);
+    if (mode === 'challenge') {
+      if (!challengeOpen_(now)) throw err_('The Sabbath Challenge is open on Sabbath afternoon only.', 'closed');
+      if (total !== 10) throw err_('That score does not look right.', 'invalid');
+      if (readAll_('Scores').some(function (x) { return x.uid === me.id && x.mode === 'challenge' && x.week === week; })) throw err_('You already played this week\'s Sabbath Challenge.', 'already');
+    }
+    append_('Scores', { id: id_('g'), uid: me.id, mode: mode, score: String(score), correct: String(correct), total: String(total), week: week, day: phDate_(now), createdAt: String(now) });
+    if (Math.random() < 0.05) remove_('Scores', function (x) { return Number(x.createdAt) < now - 180 * 864e5; });
+    return { week: week };
+  },
+
+  gameInfo: function (r, me) {
+    const now = nowMs_(), week = gameWeek_(now), lastWeek = gameWeek_(now - 7 * 864e5);
+    const names = {};
+    readAll_('Members').forEach(function (m) { if (m.access !== 'pending') names[m.id] = m.name; });
+    const rows = readAll_('Scores').filter(function (x) { return names[x.uid]; });
+    const board = function (list, key) {
+      const by = {};
+      list.forEach(function (x) { by[x.uid] = (by[x.uid] || 0) + Number(x[key] || 0); });
+      return Object.keys(by).map(function (u) { return { uid: u, name: names[u], points: by[u] }; }).sort(function (a, b) { return b.points - a.points; });
+    };
+    const ch = function (wk) {
+      return rows.filter(function (x) { return x.mode === 'challenge' && x.week === wk; })
+        .map(function (x) { return { uid: x.uid, name: names[x.uid], score: Number(x.score), correct: Number(x.correct) }; })
+        .sort(function (a, b) { return b.score - a.score; });
+    };
+    const mine = rows.filter(function (x) { return x.uid === me.id; });
+    const stats = { games: {}, perfect: {}, correct: 0, days: [], challenges: 0, wins: 0, memoryGood: 0 };
+    const days = {};
+    mine.forEach(function (x) {
+      stats.games[x.mode] = (stats.games[x.mode] || 0) + 1;
+      if (x.correct === x.total) stats.perfect[x.mode] = (stats.perfect[x.mode] || 0) + 1;
+      stats.correct += Number(x.correct) || 0;
+      days[x.day] = true;
+      if (x.mode === 'challenge') stats.challenges++;
+      if (x.mode === 'memory' && Number(x.correct) >= 0.8 * Number(x.total)) stats.memoryGood++;
+    });
+    stats.days = Object.keys(days).sort().slice(-120);
+    const weeks = {};
+    rows.forEach(function (x) { if (x.mode === 'challenge' && x.week < week) weeks[x.week] = true; });
+    Object.keys(weeks).forEach(function (wk) { const top = ch(wk)[0]; if (top && top.uid === me.id) stats.wins++; });
+    const thisCh = ch(week), myCh = thisCh.filter(function (x) { return x.uid === me.id; })[0] || null;
+    return {
+      me: { id: me.id, name: me.name, access: me.access },
+      services: services_(), week: week, verse: getSetting_('verse') || '',
+      weekly: board(rows.filter(function (x) { return x.week === week && x.mode !== 'kids' && x.mode !== 'cards'; }), 'score').slice(0, 10),
+      challenge: thisCh.slice(0, 10), lastChallenge: ch(lastWeek).slice(0, 3), myChallenge: myCh, stats: stats
+    };
+  },
+
+  backupNow: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
+    return { name: backup_() };
   },
 
   saveProgram: function (r, me) {
@@ -424,6 +746,8 @@ const ACTIONS = {
 
   resetPassword: function (r, me) {
     if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
+    const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
+    if (!who || who.access === 'roll' || !who.username) throw err_('This person has no account on the site.', 'invalid');
     if (String(r.password || '').length < 6) throw err_('The new password needs at least 6 characters.', 'invalid');
     const salt = Utilities.getUuid();
     update_('Members', r.uid, { salt: salt, hash: hash_(String(r.password), salt) });
@@ -448,7 +772,10 @@ function buildSync_(admin, rev) {
     }),
     sms: admin ? { provider: smsProvider_(), count: smsRecipientsFrom_(memberRows).length, prefix: smsPrefix_(), max: SMS_MAX_CHARS } : null,
     settings: settings,
-    members: memberRows.map(pub_),
+    members: memberRows.filter(function (m) { return admin || m.access !== 'pending'; }).map(pub_),
+    events: readAll_('Events').filter(function (x) { return x.date >= phDate_(nowMs_() - 30 * 864e5); }).map(function (x) {
+      return { id: x.id, title: x.title, date: x.date, time: x.time, place: x.place, desc: x.desc, remind: x.remind === '1' };
+    }).sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? -1 : 1; }),
     posts: readAll_('Posts').map(function (p) {
       return { id: p.id, authorId: p.authorId, cat: p.cat, text: p.text, pinned: p.pinned === '1', createdAt: Number(p.createdAt) || 0, photos: p.photos ? p.photos.split(',') : [], sms: admin ? p.sms : '', svc: p.svc };
     }).sort(byTime).slice(0, 300),
@@ -458,7 +785,7 @@ function buildSync_(admin, rev) {
     reactions: readAll_('Reactions').map(function (x) { return { id: x.id, postId: x.postId, uid: x.uid }; }).slice(-3000),
     files: readAll_('Files').map(function (f) {
       return { id: f.id, title: f.title, cat: f.cat, desc: f.desc, driveId: f.driveId, name: f.name, mime: f.mime, size: Number(f.size) || 0, authorId: f.authorId, createdAt: Number(f.createdAt) || 0 };
-    }).sort(byTime).slice(0, 500)
+    }).sort(byTime).slice(0, 2000)
   };
 }
 /* Google's cache holds at most 100 KB per item, so a big answer is stored in pieces. */
@@ -506,7 +833,16 @@ function clean_(v, max, multiline) {
   return s.trim().slice(0, max);
 }
 function pub_(m) {
-  return { id: m.id, name: m.name, access: m.access, role: m.title, ministries: m.ministries, since: m.since, bio: m.bio, verse: m.verse, avatar: m.avatar, cover: m.cover, createdAt: Number(m.createdAt) || 0 };
+  return { id: m.id, name: m.name, access: m.access, role: m.title, ministries: m.ministries, since: m.since, bio: m.bio, verse: m.verse, avatar: m.avatar, cover: m.cover, bday: m.bday || '', createdAt: Number(m.createdAt) || 0,
+    status: MSTATUS[m.mstatus] ? m.mstatus : 'active', statusDate: m.mstatusDate || '', statusNote: m.mstatusNote || '' };
+}
+const MSTATUS = { active: true, inactive: true, backslidden: true, offshoot: true, deceased: true };
+function statusFields_(r) {
+  const st = String(r.status || 'active');
+  if (!MSTATUS[st]) throw err_('Choose a status from the list.', 'invalid');
+  const d = String(r.date || '');
+  if (d && (!/^\d{4}-\d{2}-\d{2}$/.test(d) || isNaN(new Date(d + 'T00:00:00Z')))) throw err_('Choose a proper date, or leave it empty.', 'invalid');
+  return { mstatus: st === 'active' ? '' : st, mstatusDate: st === 'active' ? '' : d, mstatusNote: st === 'active' ? '' : clean_(r.note, 400, true) };
 }
 function hash_(pw, salt) {
   const raw = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + pw, Utilities.Charset.UTF_8);
@@ -538,7 +874,8 @@ function sessionUser_(token) {
     uid = s.uid;
     cache.put('s_' + token, uid, 21600);
   }
-  return userRow_(uid, rev_());
+  const m = userRow_(uid, rev_());
+  return m && m.mstatus !== 'deceased' && m.access !== 'roll' ? m : null;
 }
 function rev_() { return PropertiesService.getScriptProperties().getProperty('rev') || '0'; }
 /* The revision always goes up, even if two changes land in the same millisecond or the clock steps back,
@@ -618,7 +955,7 @@ function smsRecipients_() { return smsRecipientsFrom_(readAll_('Members')); }
 function smsRecipientsFrom_(rows) {
   const seen = {}, out = [];
   rows.forEach(function (m) {
-    const n = m.sms === '1' ? normPhone_(m.phone) : '';
+    const n = m.sms === '1' && m.mstatus !== 'deceased' && m.access !== 'roll' ? normPhone_(m.phone) : '';
     if (n && !seen[n]) { seen[n] = true; out.push(n); }
   });
   return out;
@@ -672,6 +1009,8 @@ function sh_(name) {
     s.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight('bold');
     s.setFrozenRows(1);
   }
+  const want = SCHEMA[name];
+  if (want && s.getLastColumn() < want.length) s.getRange(1, 1, 1, want.length).setValues([want]).setFontWeight('bold');
   SHEETS_[name] = s;
   return s;
 }
@@ -757,11 +1096,52 @@ function folder_() {
   props.setProperty('FOLDER_ID', f.getId());
   return f;
 }
-function saveImage_(dataUrl, name) {
+/* Each member gets their own folder inside the church folder: Tubod SDA Church files / Members / Name (username) */
+function memberFolder_(me) {
+  const props = PropertiesService.getScriptProperties(), key = 'MF_' + me.id;
+  const id = props.getProperty(key);
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* make it again below */ } }
+  const lock = LockService.getScriptLock(), mine = lock.hasLock && lock.hasLock();
+  if (!mine) lock.waitLock(20000);
+  try {
+    const again = props.getProperty(key);
+    if (again && again !== id) { try { return DriveApp.getFolderById(again); } catch (e) {} }
+    const root = folder_();
+    let members = null;
+    const mid = props.getProperty('MEMBERS_FOLDER_ID');
+    if (mid) { try { members = DriveApp.getFolderById(mid); } catch (e) { members = null; } }
+    if (!members) { members = root.createFolder('Members'); props.setProperty('MEMBERS_FOLDER_ID', members.getId()); }
+    const label = (clean_(me.name, 60) || 'Member') + ' (' + (me.username || me.id) + ')';
+    const f = members.createFolder(label);
+    props.setProperty(key, f.getId());
+    return f;
+  } finally { if (!mine) lock.releaseLock(); }
+}
+function quotaBytes_() {
+  const v = getSetting_('memberQuotaGB');
+  const gb = v === null || v === '' ? DEFAULT_QUOTA_GB : Number(v);
+  return gb > 0 ? gb * 1073741824 : 0;   // 0 means no limit
+}
+function usedBytes_(uid) {
+  return readAll_('Files').reduce(function (n, f) { return f.authorId === uid ? n + (Number(f.size) || 0) : n; }, 0);
+}
+function checkQuota_(me, add) {
+  if (me.access === 'admin') return;
+  const max = quotaBytes_();
+  if (!max) return;
+  const used = usedBytes_(me.id);
+  if (used + add > max) {
+    const gb = function (b) { return (b / 1073741824).toFixed(1); };
+    throw err_('This would go over your ' + gb(max) + ' GB storage limit. You have used ' + gb(used) + ' GB. Delete some of your files, or ask a church admin for more space.', 'quota');
+  }
+}
+function saveImage_(dataUrl, name, dest) {
   dataUrl = String(dataUrl || '');
-  if (dataUrl.indexOf(JPEG_PREFIX) !== 0 || dataUrl.length > 3000000) throw err_('That photo could not be saved. Try a different one.', 'bad_image');
-  const blob = Utilities.newBlob(Utilities.base64Decode(dataUrl.slice(JPEG_PREFIX.length)), 'image/jpeg', name + '.jpg');
-  const f = folder_().createFile(blob);
+  const m = /^data:image\/(jpeg|png|webp|gif);base64,/.exec(dataUrl);
+  if (!m || dataUrl.length > MAX_PHOTO_CHARS) throw err_('That photo could not be saved. Try a different one.', 'bad_image');
+  const ext = m[1] === 'jpeg' ? 'jpg' : m[1];
+  const blob = Utilities.newBlob(Utilities.base64Decode(dataUrl.slice(m[0].length)), 'image/' + m[1], name + '.' + ext);
+  const f = (dest || folder_()).createFile(blob);
   f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   return f.getId();
 }
