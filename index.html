@@ -74,6 +74,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .dnav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:500;font-size:.95rem}
 .dnav a:hover{background:#EEF4F7;color:var(--ink)}
 .dnav a.on{color:var(--accent-dark);background:var(--soft)}
+.dnav a{white-space:nowrap}
+@media (max-width:1380px){.dnav{margin-left:6px;gap:2px}.dnav a{padding:8px 9px;font-size:.92rem}.dnav a .ic{display:none}.brand{flex:0 1 auto}.brand b{overflow:hidden;text-overflow:ellipsis}}
 .top-r{margin-left:auto;display:flex;align-items:center;gap:8px}
 .icon-btn{width:38px;height:38px;border-radius:10px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
 .icon-btn:hover{background:#EEF4F7;color:var(--ink)}
@@ -273,6 +275,33 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sw-list .sw{width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
 .sw-list input{position:absolute;opacity:0;pointer-events:none}.sw-list input:checked+.sw{box-shadow:0 0 0 3px var(--ink)}.sw-list input:focus-visible+.sw{outline:2px solid var(--ink);outline-offset:3px}
 .logo-prev{width:96px;height:96px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center;background:#fff;overflow:hidden}.logo-prev img{max-width:88%;max-height:88%}
+.lv-help{margin:0 0 10px;font-size:.9rem}.lv-help summary{cursor:pointer;color:var(--accent-dark);font-weight:600}.lv-help ul{margin:6px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:4px}
+.msel{border:1px solid var(--line);border-radius:999px;padding:5px 10px;font:inherit;font-size:.85rem;background:#fff;max-width:100%}
+.rec-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}.rec-tools > input[type=search]{flex:1 1 200px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;background:#F7FAFB}
+.rec-tools select{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;background:#fff}
+.rec-h{font-size:1rem;margin:14px 0 6px}.rec-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rec-row{display:flex;gap:10px;align-items:center;padding:9px 12px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font:inherit;color:inherit;width:100%}
+.rec-row:last-child{border-bottom:0}button.rec-row{cursor:pointer}button.rec-row:hover{background:var(--soft2)}
+.rec-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;overflow-wrap:anywhere}.rec-main .st-pill{align-self:flex-start}
+.at-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;max-height:46vh;overflow-y:auto;padding:2px}
+.at-row{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:6px 10px;cursor:pointer;background:#fff}
+.at-row:has(input:checked){background:var(--soft);border-color:var(--accent)}.at-row input{width:20px;height:20px;accent-color:var(--accent)}.at-row[hidden]{display:none}
+.grp{display:flex;flex-direction:column;gap:10px}.grp-open{border:0;background:none;text-align:left;padding:0;cursor:pointer;font:inherit;color:inherit}.grp-open h3{margin:0 0 4px}
+.grp-av{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.grp-av .av{margin-right:-8px;border:2px solid #fff}.grp-av .meta{margin-left:14px}
+.grp-head h1{margin:2px 0 6px}.linkish{border:0;background:none;padding:0;color:var(--accent);cursor:pointer;font:inherit}
+.grp-mem{display:flex;flex-wrap:wrap;gap:6px}.chipmem{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:#fff;padding:2px 4px 2px 2px}
+.chipmem button{border:0;background:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font:inherit;color:inherit;padding:0 6px 0 0}.chipmem .x{color:var(--muted);padding:2px}.chipmem .x .ic{width:14px;height:14px}
+.grp-post textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;resize:vertical;background:#F7FAFB;margin-bottom:8px}
+.grp-page{display:flex;flex-direction:column;gap:14px}.grp-tag{cursor:pointer;border:0}
+.fam{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}.fam-h{margin:0 0 6px;font-size:.9rem;color:var(--muted)}.fam-h b{color:var(--ink)}
+.bul-wrap{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff;max-height:60vh;overflow-y:auto}
+.bul{font-size:.95rem;color:#1b2a36}.bul-h{display:flex;gap:12px;align-items:center;border-bottom:2px solid var(--accent);padding-bottom:10px;margin-bottom:10px}.bul-h img{width:56px;height:56px;object-fit:contain}
+.bul-h h2{margin:0;font-size:1.25rem}.bul-h p{margin:0;color:var(--muted)}.bul-h .bul-date{color:var(--accent-dark);font-weight:700}
+.bul section{margin:10px 0}.bul h3{font-size:.95rem;margin:0 0 4px;color:var(--accent-dark);text-transform:uppercase;letter-spacing:.03em}
+.bul dl{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:2px 12px;margin:0}.bul dt{color:var(--muted)}.bul dd{margin:0;font-weight:600}
+.bul ul{margin:0;padding-left:18px}.bul-verse{font-style:italic}.bul-foot{text-align:center;color:var(--muted);margin-top:14px}
+#printArea{display:none}
+@media print{body.printing > *:not(#printArea){display:none !important}body.printing #printArea{display:block}body.printing{background:#fff}#printArea .bul{font-size:11pt}}
 .mem-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .facts b{color:var(--ink);font-weight:600}
 .facts.bapt{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
@@ -595,7 +624,7 @@ const CATS = {
 };
 const DEF_LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
 const DEF_ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
-const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['game','Bible Game','book','bible-game.html'],['me','My profile','user']];
+const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['groups','Groups','heart',null,'notabs'],['game','Bible Game','book','bible-game.html'],['me','My profile','user']];
 let LIB_CATS = DEF_LIB_CATS, ROLES = DEF_ROLES, NAV = DEF_NAV, NAV_BIS = {}, NAV_HIDE = {};
 /* what admins changed on the Edit the site page */
 let SITE = {texts:{}, color:'blue', tabs:[], roles:[], libCats:[]}, siteSig = '';
@@ -771,7 +800,7 @@ async function api(action, data = {}){
 }
 function applySync(j){
   S.program = j.program || [];
-  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin';
+  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin'; S.lv = j.me.access; S.canPost = S.isAdmin || S.lv === 'editor'; S.canMem = S.isAdmin || S.lv === 'clerk'; S.canAttend = S.canPost || S.canMem; S.groups = j.groups || [];
   S.settings = j.settings || {}; if (applySite()) setTimeout(() => { renderChrome(); mount(); }, 0); S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.events = j.events || [];
   S.waiting = j.members.filter(m => m.access === 'pending');
@@ -783,7 +812,7 @@ function applySync(j){
   if (!S.pending && wasPending && $('#auth')){ const a = $('#auth'); a.remove(); setTimeout(() => { mount(); fromHash(); toast('Your account is approved. Welcome to the church family!'); }, 0); }
   schedule();
 }
-async function sync(){ const j = await api('sync'); applySync(j); if (!j.pending) saveCache(j); }
+async function sync(){ const j = await api('sync'); applySync(j); if (!j.pending){ saveCache(j); notifyNew(); } }
 
 /* last good copy of the church page, so the next visit shows something at once */
 const CACHE_KEY = 'tubodCache1';
@@ -813,7 +842,7 @@ function loadToken(){ try { return localStorage.getItem('tubodToken') || ''; } c
 /* poll cheaply: only fetch everything when something changed */
 let pollTimer = 0, polling = false;
 async function pollNow(){
-  if (polling || !S.token || document.hidden) return;
+  if (polling || !S.token || (document.hidden && !notifOn())) return;
   polling = true;
   try { const j = await api('ping'); if (j.rev !== S.rev) await sync(); else if (S.offline){ S.offline = false; schedule(); } }
   catch (e){ if (e.code === 'network'){ S.offline = true; schedule(); } }
@@ -992,7 +1021,7 @@ async function authSubmit(kind, form){
   } catch (e){ err.textContent = errMsg(e); btn.disabled = false; btn.textContent = old; }
 }
 function resetData(){
-  Object.assign(S, {uid:null, isAdmin:false, pending:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], events:[], waiting:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}});
+  Object.assign(S, {uid:null, isAdmin:false, canPost:false, canMem:false, canAttend:false, lv:'', groups:[], pending:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], events:[], waiting:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}});
 }
 function forceSignOut(msg){
   clearInterval(pollTimer); S.token = ''; saveToken(); clearCache(); resetData(); closeModal();
@@ -1007,20 +1036,20 @@ async function signOut(){
 
 /* ---------- navigation ---------- */
 function go(route, id){
-  S.route = route; S.profileId = route === 'profile' ? id : null; S.limit = 30;
-  if (route !== 'profile'){ try { if (location.hash !== '#' + route) location.hash = route; } catch (e) {} }
+  S.route = route; S.profileId = route === 'profile' ? id : null; S.groupId = route === 'group' ? id : null; S.limit = 30;
+  if (route !== 'profile' && route !== 'group'){ try { if (location.hash !== '#' + route) location.hash = route; } catch (e) {} }
   mount(); window.scrollTo({top:0});
 }
 function fromHash(){
   const h = (location.hash || '').slice(1);
   if (h === 'me'){ if (S.uid) return go('profile', S.uid); return; }
-  if (['home','news','library','members'].includes(h) && h !== S.route) go(h);
+  if (['home','news','library','members','groups'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[3])).map(([r, label0, ic, href]) => {
+  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && (n[3] || n[4]))).map(([r, label0, ic, href]) => {
     const bisL = LANG === 'ceb' && NAV_BIS[r], label = bisL || label0, nt = bisL ? ' data-notr' : '';
     if (href) return `<a href="${href}"${nt}>${icon(ic)}<span>${esc(label)}</span></a>`;
-    const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : S.route === r);
+    const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : r === 'groups' ? (S.route === 'groups' || S.route === 'group') : S.route === r);
     return `<a href="#${r}"${nt} data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${kind === 'tabs' && label === 'Announcements' ? '<span class="lg">Announcements</span><span class="sh">News</span>' : `<span>${esc(label)}</span>`}</a>`;
   }).join('');
 }
@@ -1036,7 +1065,7 @@ function renderChrome(){
   $('#bg').style.backgroundImage = u ? `url("${u}")` : '';
   $('#dnav').innerHTML = navHTML('top');
   $('#tabs').innerHTML = navHTML('tabs');
-  $('#gearBtn').hidden = !S.isAdmin;
+  $('#gearBtn').hidden = !S.canAttend; $('#gearBtn').setAttribute('aria-label', S.isAdmin ? 'Church settings' : 'Leader tools');
   $('#meBtn').innerHTML = S.uid ? av(S.uid, 'md') : '';
   $('#meBtn').hidden = !S.uid;
 }
@@ -1049,10 +1078,10 @@ function nextSabbathISO(){ const n = phNow(); const add = (6 - n.getUTCDay() + 7
 function sabInfo(){ try { const v = JSON.parse(S.settings.sabbath || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; } }
 function thisSabbathCard(){
   const v = sabInfo(), show = v.date && v.date >= phISO();
-  if (!show && !S.isAdmin) return '';
+  if (!show && !S.canPost) return '';
   if (!show) return `<div class="card this-sab"><div class="card-h"><h3>This Sabbath</h3></div><p class="muted">Share this week's lesson, speaker and reading with everyone.</p><p style="margin-top:8px"><button class="btn sm primary" data-act="editsab">Fill in this Sabbath</button></p></div>`;
   const rows = [['Lesson', v.lesson ? (v.link ? `<a href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.lesson)}</a>` : esc(v.lesson)) : ''], ['Sabbath School', esc(v.ssTeacher || '')], ['Speaker', esc(v.speaker || '')], ['Reading', esc(v.reading || '')]].filter(r => r[1]);
-  return `<div class="card this-sab"><div class="card-h"><h3>This Sabbath</h3>${S.isAdmin ? '<button class="btn sm quiet" data-act="editsab">Edit</button>' : ''}</div>
+  return `<div class="card this-sab"><div class="card-h"><h3>This Sabbath</h3><span class="se-acts"><button class="btn sm quiet" data-act="bulletin">Bulletin</button>${S.canPost ? '<button class="btn sm quiet" data-act="editsab">Edit</button>' : ''}</span></div>
     <p class="meta">${esc(fmtDate(v.date))}</p>${rows.length ? `<dl>${rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl>` : ''}
     ${v.link && !v.lesson ? `<p style="margin-top:6px"><a href="${esc(v.link)}" target="_blank" rel="noopener">Open the lesson</a></p>` : ''}${v.note ? `<p style="margin-top:6px;white-space:pre-wrap">${esc(v.note)}</p>` : ''}</div>`;
 }
@@ -1082,18 +1111,18 @@ function evItem(e, full){
   const [y, mo, d] = e.date.split('-').map(Number);
   const sub = [e.date === phISO() ? 'Today' : e.date === phISO(Date.now() + 864e5) ? 'Tomorrow' : DAYS[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()], e.time ? time12(e.time) : '', e.place].filter(Boolean).join(' · ');
   return `<li class="ev"><div class="ev-d"><small>${MONTHS[mo - 1].slice(0, 3)}</small><b>${d}</b></div><div class="ev-b"><b>${esc(e.title)}</b><span>${esc(sub)}</span>${full && e.desc ? `<p>${esc(e.desc)}</p>` : ''}
-    ${full && S.isAdmin ? `<div class="ev-act"><button class="btn sm" data-act="editev" data-id="${esc(e.id)}">Edit</button><button class="btn sm danger" data-act="delev" data-id="${esc(e.id)}">Remove</button></div>` : ''}</div></li>`;
+    ${full && S.canPost ? `<div class="ev-act"><button class="btn sm" data-act="editev" data-id="${esc(e.id)}">Edit</button><button class="btn sm danger" data-act="delev" data-id="${esc(e.id)}">Remove</button></div>` : ''}</div></li>`;
 }
 function eventsCard(){
   const up = upcomingEvents();
-  if (!up.length && !S.isAdmin) return '';
-  return `<div class="card"><div class="card-h"><h3>Upcoming events</h3>${S.isAdmin ? '<button class="btn sm quiet" data-act="addev">Add</button>' : ''}</div>
+  if (!up.length && !S.canPost) return '';
+  return `<div class="card"><div class="card-h"><h3>Upcoming events</h3>${S.canPost ? '<button class="btn sm quiet" data-act="addev">Add</button>' : ''}</div>
     ${up.length ? `<ul class="evlist">${up.slice(0, 3).map(e => evItem(e, false)).join('')}</ul><p style="margin-top:10px"><button class="btn sm" data-act="allev">See all events${up.length > 3 ? ` (${up.length})` : ''}</button></p>` : '<p class="muted">No events yet. Add camps, baptisms, Pathfinders, visitations and more.</p>'}</div>`;
 }
 function openEventsModal(){
   const up = upcomingEvents();
   const m = openModal('Church events', `${up.length ? `<ul class="evlist">${up.map(e => evItem(e, true)).join('')}</ul>` : '<p class="muted">No upcoming events.</p>'}
-    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button>${S.isAdmin ? '<button class="btn primary" type="button" data-act="addev">Add an event</button>' : ''}</div>`, true);
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button>${S.canPost ? '<button class="btn primary" type="button" data-act="addev">Add an event</button>' : ''}</div>`, true);
 }
 function openEventForm(id){
   const e = (S.events || []).find(x => x.id === id) || {remind:true};
@@ -1292,7 +1321,7 @@ function renderStrip(){
   const nw = nextWorships(), w = nw[0];
   let rows = '';
   const live = liveNow();
-  if (live) rows += `<a class="live-row" href="${esc(live.url)}" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span><span class="grow">LIVE now${live.name ? ' · ' + esc(live.name) : ''} · Tap to watch</span>${S.isAdmin && live.manual ? '<button type="button" data-act="endlive">End</button>' : ''}</a>`;
+  if (live) rows += `<a class="live-row" href="${esc(live.url)}" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span><span class="grow">LIVE now${live.name ? ' · ' + esc(live.name) : ''} · Tap to watch</span>${S.canPost && live.manual ? '<button type="button" data-act="endlive">End</button>' : ''}</a>`;
   if (w) rows += `<div class="wr" role="status"><span class="iw">${LOGO}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
   if (list.length && S.route !== 'news'){
     const p = list[0];
@@ -1314,7 +1343,7 @@ function mount(){
     v.innerHTML = `${bannerHTML}<section class="card chat" aria-label="Church announcements">
       <div class="chat-head">${av('system', 'md')}<div><b>Church announcements</b><small>Messages from the church leaders</small></div></div>
       <div class="msgs" id="msgs" tabindex="0" aria-label="Announcements"></div>
-      ${S.isAdmin ? `<form class="chat-in wrap" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button>
+      ${S.canPost ? `<form class="chat-in wrap" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button>
           <label class="sms-opt" for="aSms"><input type="checkbox" id="aSms"><span>Also text members <span id="aSmsNote"></span></span></label>
 </form>`
         : `<div class="chat-in"><p class="muted">Only church leaders can send announcements. You can say Amen and reply to any message.</p></div>`}</section>`;
@@ -1328,18 +1357,21 @@ function mount(){
       <div class="tools"><input type="search" id="libQ" placeholder="Search the library" aria-label="Search the library" value="${esc(S.libQ)}"></div>
       <div class="filters" id="libCats" role="group" aria-label="Library categories"></div><div class="grid" id="libList"></div>`;
   } else if (S.route === 'members'){
-    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Members</h1><p>Everyone in the church family. Search a name to see if they are active.</p><button class="btn primary" data-act="invite">Invite family</button>${S.isAdmin ? `<button class="btn" data-act="addperson">Add a person without an account</button>` : ''}</div>
+    v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Members</h1><p>Everyone in the church family. Search a name to see if they are active.</p><button class="btn primary" data-act="invite">Invite family</button><button class="btn" data-act="gogroups">Ministry groups</button>${S.canMem ? `<button class="btn" data-act="addperson">Add a person without an account</button>` : ''}</div>
       <div class="tools"><input type="search" id="memQ" placeholder="Search by name, ministry or pastor" aria-label="Search members" value="${esc(S.memQ)}"></div>
       <div class="filters" id="memSts" role="group" aria-label="Member status" style="margin-bottom:12px"></div><div class="grid" id="memList"></div>`;
   } else {
-    v.innerHTML = `${bannerHTML}<div id="profSlot"></div>`;
+    v.innerHTML = S.route === 'groups' ? `${bannerHTML}<div class="page-head"><h1>Ministry groups</h1><p>Choir, Pathfinders, youth and other ministries. Join the ones you belong to and post to your group.</p>${S.canMem ? `<button class="btn primary" data-act="newgroup">New group</button>` : ''}</div><div class="grid" id="grpSlot"></div>`
+      : S.route === 'group' ? `${bannerHTML}<div id="grpSlot" class="grp-page"></div>` : `${bannerHTML}<div id="profSlot"></div>`;
   }
   refresh();
 }
 function refresh(){
   renderChrome(); renderStrip(); renderSide(); renderBanner();
   if (!S.uid) return;
-  if (S.route === 'home'){ renderFilters(); renderFeed(S.filter === 'all' ? S.posts : S.posts.filter(p => p.cat === S.filter), 'No posts here yet. Be the first to share something.'); refreshComposer(); }
+  if (S.route === 'home'){ renderFilters(); const homeP = S.posts.filter(p => !p.grp); renderFeed(S.filter === 'all' ? homeP : homeP.filter(p => p.cat === S.filter), 'No posts here yet. Be the first to share something.'); refreshComposer(); }
+  else if (S.route === 'groups') renderGroups();
+  else if (S.route === 'group') renderGroup();
   else if (S.route === 'news') renderChat();
   else if (S.route === 'library') renderLibrary();
   else if (S.route === 'members') renderMembers();
@@ -1412,7 +1444,7 @@ function smsNote(){
     : `(${n} member${plural}. You will get their numbers to text yourself.)`;
 }
 function smsPart(p){
-  if (!S.isAdmin || !S.sms) return '';
+  if (!S.canPost || !S.sms) return '';
   const st = String(p.sms || '');
   if (/^(SENT|QUEUED)/.test(st)) return `<span>Texted \u00b7 ${esc(st.split(':')[1] || '')}</span>${/^QUEUED/.test(st) ? `<button data-act="smsinfo" data-id="${esc(p.id)}">Show numbers</button>` : ''}`;
   return `<button data-act="smsann" data-id="${esc(p.id)}">Text members</button>${/^FAILED/.test(st) ? '<span>Last text failed</span>' : ''}`;
@@ -1513,8 +1545,8 @@ function postHTML(p){
   return `<article class="card post" data-id="${esc(p.id)}">
     <div class="p-head">${av(p.authorId)}
       <div class="p-who">${sys ? `<b>${esc(nameOf(p.authorId))}</b>` : `<button class="p-name" data-act="profile" data-uid="${esc(p.authorId)}">${esc(nameOf(p.authorId))}</button>`}
-        <div class="p-meta"><span>${ago(p.createdAt)}</span><span class="tag ${cat}">${esc(CATS[cat].label)}</span>${p.pinned ? `<span class="tag pinned">${icon('pin')}Pinned</span>` : ''}</div></div>
-      ${S.isAdmin ? `<button class="icon-btn" data-act="pin" data-id="${esc(p.id)}" aria-label="${p.pinned ? 'Unpin' : 'Pin'} post" title="${p.pinned ? 'Unpin' : 'Pin to top'}">${icon('pin')}</button>` : ''}
+        <div class="p-meta"><span>${ago(p.createdAt)}</span><span class="tag ${cat}">${esc(CATS[cat].label)}</span>${p.pinned ? `<span class="tag pinned">${icon('pin')}Pinned</span>` : ''}${p.grp && S.route !== 'group' ? `<button type="button" class="tag grp-tag" data-act="opengroup" data-id="${esc(p.grp)}">${esc((S.groups.find(g => g.id === p.grp) || {}).name || 'Group')}</button>` : ''}</div></div>
+      ${S.canPost ? `<button class="icon-btn" data-act="pin" data-id="${esc(p.id)}" aria-label="${p.pinned ? 'Unpin' : 'Pin'} post" title="${p.pinned ? 'Unpin' : 'Pin to top'}">${icon('pin')}</button>` : ''}
       ${mine(p.authorId) ? `<button class="icon-btn" data-act="delpost" data-id="${esc(p.id)}" aria-label="Delete post" title="Delete post">${icon('trash')}</button>` : ''}
     </div>
     ${p.text ? `<p class="p-text">${richText(p.text)}</p>` : ''}
@@ -1568,12 +1600,12 @@ function buildComposer(){
 }
 function composerBits(){
   const cats = $('#cCats'); if (!cats) return;
-  const keys = Object.keys(CATS).filter(k => k !== 'announcement' || S.isAdmin);
+  const keys = Object.keys(CATS).filter(k => k !== 'announcement' || S.canPost);
   if (!keys.includes(S.draft.cat)) S.draft.cat = 'share';
   cats.innerHTML = keys.map(k => `<button type="button" class="chip ${S.draft.cat === k ? 'on' : ''}" data-act="ccat" data-cat="${k}" aria-pressed="${S.draft.cat === k}">${esc(CATS[k].label)}</button>`).join('');
   $('#cPrev').innerHTML = S.draft.photos.map((d, i) => `<div class="pv"><img src="${d.url}" alt="Photo ${i + 1} to post"><button type="button" data-act="rmphoto" data-i="${i}" aria-label="Remove photo ${i + 1}">${icon('x')}</button></div>`).join('')
     + (S.draft.video ? `<div class="pv vfile">${icon('file')}<span>${esc(S.draft.video.name)} · ${fmtSize(S.draft.video.size)}</span><button type="button" data-act="rmvid" aria-label="Remove video">${icon('x')}</button></div>` : '');
-  $('#cPinWrap').hidden = !S.isAdmin;
+  $('#cPinWrap').hidden = !S.canPost;
   $('#cPin').checked = !!S.draft.pin;
   const btn = $('#cPost'); btn.disabled = S.posting || (!S.draft.text.trim() && !S.draft.photos.length && !S.draft.video);
   btn.textContent = S.posting ? 'Posting…' : 'Post';
@@ -1620,7 +1652,7 @@ function postWithVideo(){
   const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
   composerBits();
   toast('Video upload started. Keep this page open.');
-  enqueueUploads([{file:f, title:(text || f.name).slice(0, 100), cat:'media', desc:'[[profile]]', post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.isAdmin && d.pin)}}]);
+  enqueueUploads([{file:f, title:(text || f.name).slice(0, 100), cat:'media', desc:'[[profile]]', post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.canPost && d.pin)}}]);
 }
 async function submitPost(){
   if (S.draft.video) return postWithVideo();
@@ -1629,7 +1661,7 @@ async function submitPost(){
   if (!text && !S.draft.photos.length) return;
   S.posting = true; composerBits();
   try {
-    await sendPost(S.draft.cat, text, S.draft.photos, !!(S.isAdmin && S.draft.pin)); await sync();
+    await sendPost(S.draft.cat, text, S.draft.photos, !!(S.canPost && S.draft.pin)); await sync();
     S.draft = {text:'', cat:S.draft.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
     const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
   } catch (err){ toast(errMsg(err)); }
@@ -1719,7 +1751,7 @@ function renderMembers(){
     sts.innerHTML = [['all','All'], ...MST].filter(([k]) => k === 'all' || k === 'active' || cnt(k)).map(([k, l]) => `<button type="button" class="chip ${S.memSt === k ? 'on' : ''}" data-act="memst" data-c="${k}" aria-pressed="${S.memSt === k}">${esc(l)} <span data-notr>(${k === 'all' ? all.length : cnt(k)})</span></button>`).join('');
   }
   const list = all.filter(([, p]) => (S.memSt === 'all' || stOf(p) === S.memSt)
-      && (!q || ((p.name || '') + ' ' + (p.ministries || '') + ' ' + (p.role || '') + ' ' + mstLabel(stOf(p)) + ' ' + (p.statusNote || '') + ' ' + (p.baptBy || '') + ' ' + (p.baptPlace || '')).toLowerCase().includes(q)))
+      && (!q || ((p.name || '') + ' ' + (p.ministries || '') + ' ' + (p.role || '') + ' ' + mstLabel(stOf(p)) + ' ' + (p.statusNote || '') + ' ' + (p.baptBy || '') + ' ' + (p.baptPlace || '') + ' ' + (p.household || '')).toLowerCase().includes(q)))
     .sort((a, b) => (isDead(a[1]) - isDead(b[1])) || String(a[1].name).localeCompare(String(b[1].name)));
   $('#memList').innerHTML = !S.loaded.profiles ? '<div class="card empty" style="grid-column:1/-1">Loading members…</div>'
     : list.length ? list.map(([id, p]) => memCard(id, p)).join('')
@@ -1741,14 +1773,16 @@ function renderProfile(){
     slot.innerHTML = `<section class="card pf">
       <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
       <div class="pf-main">${av(id, 'xl')}<div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
-        ${S.isAdmin && !own ? `<div class="pf-btns"><button class="btn primary" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
-        ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
+        ${S.canMem && !own ? `<div class="pf-btns"><button class="btn primary" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
+        ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${notifOn() ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
         ${stOf(p) !== 'active' ? `<div class="st-box st-${stOf(p)}"><h3>${isDead(p) ? 'In loving memory' : 'Status: ' + mstLabel(stOf(p))}</h3>${p.statusDate ? `<p>${isDead(p) ? 'Passed away' : 'Since'} <b>${esc(stDate(p.statusDate))}</b></p>` : ''}${p.statusNote ? `<p data-notr>${esc(p.statusNote)}</p>` : ''}</div>` : ''}
         ${p.access === 'roll' ? `<p class="muted"><span>Listed by the church.</span>${isDead(p) ? '' : ' <span>This person does not have an account on the site yet.</span>'}</p>` : ''}
         ${p.bio ? `<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.bio)}</p>` : own ? `<p class="muted">Add your photo and a few words so the church family can get to know you.</p>` : ''}
         ${p.verse ? `<p class="quote">${esc(p.verse)}</p>` : ''}
         <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}${p.bday ? `<span>Birthday <b>${MONTHS[Number(p.bday.slice(0, 2)) - 1]} ${Number(p.bday.slice(3))}</b></span>` : ''}</div>
+        ${(p.groups || []).length ? `<div class="facts"><span>Groups ${p.groups.map(gid => S.groups.find(g => g.id === gid)).filter(Boolean).map(g => `<button type="button" class="tag grp-tag" data-act="opengroup" data-id="${esc(g.id)}">${esc(g.name)}</button>`).join(' ')}</span></div>` : ''}
+        ${p.household ? `<div class="fam"><p class="fam-h"><span>Family</span> <b data-notr>${esc(p.household)}</b></p>${familyOf(p).length ? `<div class="grp-mem">${familyOf(p).map(x => `<span class="chipmem"><button type="button" data-act="profile" data-uid="${esc(x.id)}">${av(x.id, 'sm')}<span>${esc(x.name)}</span></button></span>`).join('')}</div>` : ''}</div>` : ''}
         ${p.baptDate || p.baptBy || p.baptPlace ? `<div class="facts bapt">${p.baptDate ? `<span>Baptized <b>${esc(baptText(p.baptDate))}</b></span>` : ''}${p.baptBy ? `<span>Baptized by <b data-notr>${esc(p.baptBy)}</b></span>` : ''}${p.baptPlace ? `<span>Place of baptism <b data-notr>${esc(p.baptPlace)}</b></span>` : ''}</div>` : ''}
       </div></section>
       ${mine2.length || own ? `<div class="sec-row"><h2 class="sec">Photos and videos</h2>${own ? `<button class="btn primary sm" data-act="myupload">${icon('upload')}Add photos or videos</button>` : ''}</div>${own || S.isAdmin ? storageHTML(id) : ''}
@@ -1765,7 +1799,7 @@ function renderProfile(){
 const baptText = d => /^\d{4}$/.test(d || '') ? d : stDate(d);
 function openProfileModal(uid){
   uid = uid || S.uid;
-  const self = uid === S.uid, p = S.profiles[uid] || {}, adm = S.isAdmin;
+  const self = uid === S.uid, p = S.profiles[uid] || {}, adm = S.canMem;
   const bd = p.baptDate || '', bdFull = /^\d{4}-\d{2}-\d{2}$/.test(bd);
   const m = openModal(self ? 'Edit profile' : 'Edit member', `
     <form id="pForm" class="m-body" style="padding:0">
@@ -1774,6 +1808,7 @@ function openProfileModal(uid){
       <label class="fld" for="pRole">Role in the church<input id="pRole" maxlength="60" list="roleList" value="${esc(p.role || '')}" placeholder="Member"><datalist id="roleList">${ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist></label>
       <label class="fld" for="pMin">Ministries<input id="pMin" maxlength="100" value="${esc(p.ministries || '')}" placeholder="Choir, Pathfinders, Deacons"></label>
       <label class="fld" for="pSince">Member since<input id="pSince" maxlength="4" inputmode="numeric" value="${esc(p.since || '')}" placeholder="Year"></label>
+      <label class="fld" for="pFam">Family or household (optional)<input id="pFam" maxlength="60" list="famList" value="${esc(p.household || '')}" placeholder="For example: Cruz family" autocomplete="off"><datalist id="famList">${households().map(h => `<option value="${esc(h)}">`).join('')}</datalist><small>Use the same name for everyone in one family, so they show together on their profiles.</small></label>
       <label class="fld" for="pBio">${self ? 'About you' : 'About'}<textarea id="pBio" maxlength="500" placeholder="A few words about you and your family">${esc(p.bio || '')}</textarea></label>
       <label class="fld" for="pVerse">Favorite verse<textarea id="pVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(p.verse || '')}</textarea></label>
       <div class="fld"><span>Birthday (optional)</span><div class="bd-sel"><select id="pBdM" aria-label="Birthday month"><option value="">Month</option>${MONTHS.map((x, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${(p.bday || '').slice(0, 2) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${x}</option>`).join('')}</select><select id="pBdD" aria-label="Birthday day"><option value="">Day</option>${Array.from({length:31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => `<option value="${d}" ${(p.bday || '').slice(3) === d ? 'selected' : ''}>${Number(d)}</option>`).join('')}</select></div><small>Only the month and day are shown, so the church can greet you. Leave it empty to keep it private.</small></div>
@@ -1798,7 +1833,7 @@ function openProfileModal(uid){
     const btn = $('#pSave', m), label = btn.textContent; btn.disabled = true; btn.textContent = 'Saving…';
     const fail = msg => { toast(msg); btn.disabled = false; btn.textContent = label; };
     try {
-      const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value};
+      const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value, household:$('#pFam', m).value};
       if (self){ body.phone = $('#pPhone', m).value; body.sms = $('#pSms', m).checked; }
       const bm = $('#pBdM', m).value, bdd = $('#pBdD', m).value;
       if ((bm && !bdd) || (!bm && bdd)) return fail('Choose both the month and the day of the birthday, or neither.');
@@ -2069,7 +2104,7 @@ function openSettingsModal(){
       <div style="display:flex;gap:8px;flex-wrap:wrap">${Number(st.liveUntil) > Date.now() ? '<button class="btn sm danger" type="button" data-act="endlive">End live now</button>' : '<button class="btn sm" type="button" data-act="golive">Go live now (3 hours)</button>'}<button class="btn sm" type="button" data-act="backup">Back up the church data now</button></div>
       <p class="muted" style="margin-top:-4px">A backup copy of the church sheet is also saved every week in Google Drive, in the Backups folder.</p>
       <label class="fld" for="sQuota">Storage limit for each member (GB)<input id="sQuota" type="number" min="0" max="10000" step="1" inputmode="numeric" value="${esc(st.memberQuotaGB == null || st.memberQuotaGB === '' ? '10' : st.memberQuotaGB)}"><small>How much each member may upload to the Library. Admins have no limit. 0 means no limit. All files share the church Google Drive.</small></label>
-      <button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="siteedit">Edit the site</button>
+      <fieldset class="fset"><legend>Leader tools</legend><div class="se-acts" style="padding:4px 0 8px">${toolButtons()}<button class="btn" type="button" data-act="siteedit">Edit the site</button></div></fieldset>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="sSave">Save settings</button></div>
     </form>`, true);
   $('#sForm', m).addEventListener('submit', async e => {
@@ -2096,12 +2131,20 @@ function svcRead(root = document){
   return $$('.svcrow', root).map(r => ({id:r.dataset.id || '', name:$('.sv-name', r).value, day:Number($('.sv-day', r).value), time:$('.sv-time', r).value}));
 }
 function svcWrite(list){ const box = $('#svcList'); if (box) box.innerHTML = svcRows(list); }
+const LV_NAMES = [['member','Member'],['editor','Announcements and program'],['clerk','Clerk / pastor'],['admin','Church admin']];
+const lvName = a => a === 'roll' ? 'No account' : (LV_NAMES.find(x => x[0] === a) || LV_NAMES[0])[1];
 function openMembersModal(){
-  const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => `
-    <div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${p.access === 'admin' ? 'Church admin' : p.access === 'roll' ? 'No account' : 'Member'}${p.role ? ' · ' + esc(p.role) : ''}</span>${stPill(p)}</div>
-    ${p.id === S.uid ? '<span class="meta">You</span>' : p.access === 'roll' ? `<button class="btn sm" data-act="medit" data-uid="${esc(p.id)}">Edit</button><button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>` : `<button class="btn sm" data-act="medit" data-uid="${esc(p.id)}">Edit</button><button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm" data-act="macc" data-uid="${esc(p.id)}" data-to="${p.access === 'admin' ? 'member' : 'admin'}">${p.access === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>`}</div>`).join('');
-  const wait = (S.waiting || []).map(p => `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">Joined ${ago(p.createdAt)} · waiting for approval</span></div><button class="btn sm primary" data-act="macc" data-uid="${esc(p.id)}" data-to="member">Approve</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Decline</button></div>`).join('');
-  openModal('Manage members', `${wait ? `<h3 style="margin-bottom:6px">Waiting for approval</h3><div class="mlist wait-list">${wait}</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">` : ''}<p class="muted">Admins can post announcements, pin and delete any post, and manage members.</p><div class="mlist">${rows}</div><div class="m-actions"><button class="btn" type="button" data-act="addperson">Add a person without an account</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
+  const adm = S.isAdmin;
+  const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => {
+    const acct = p.access !== 'roll', me = p.id === S.uid;
+    const roleSel = adm && acct && !me ? `<select class="msel" data-act="mlevel" data-uid="${esc(p.id)}" aria-label="Role on the site for ${esc(p.name)}">${LV_NAMES.map(([k, l]) => `<option value="${k}" ${p.access === k ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '';
+    const btns = me ? '<span class="meta">You</span>' : `<button class="btn sm" data-act="medit" data-uid="${esc(p.id)}">Edit</button><button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button>${roleSel}${adm && acct ? `<button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button>` : ''}${adm ? `<button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>` : ''}`;
+    return `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${esc(lvName(p.access))}${p.role ? ' · ' + esc(p.role) : ''}</span>${stPill(p)}</div>${btns}</div>`;
+  }).join('');
+  const wait = adm ? (S.waiting || []).map(p => `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">Joined ${ago(p.createdAt)} · waiting for approval</span></div><button class="btn sm primary" data-act="macc" data-uid="${esc(p.id)}" data-to="member">Approve</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Decline</button></div>`).join('') : '';
+  openModal('Manage members', `${wait ? `<h3 style="margin-bottom:6px">Waiting for approval</h3><div class="mlist wait-list">${wait}</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">` : ''}
+    ${adm ? `<details class="lv-help"><summary>What each role can do</summary><ul><li><b>Church admin:</b> everything, including settings and Edit the site.</li><li><b>Clerk / pastor:</b> edit members, status and baptism, records and history, member list.</li><li><b>Announcements and program:</b> announcements, This Sabbath, events, worship program, text alerts.</li><li><b>Member:</b> posts, comments, library and their own profile.</li></ul></details>` : ''}
+    <div class="mlist">${rows}</div><div class="m-actions"><button class="btn" type="button" data-act="addperson">Add a person without an account</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
 }
 /* member status: active, inactive, backslidden, offshoot, deceased (admins set it; every signed-in member can see it) */
 function statusFields(p){
@@ -2243,10 +2286,268 @@ function openSiteModal(part){
     catch (err){ fail(errMsg(err)); }
   });
 }
+/* ---------- leader tools: records, attendance, member list ---------- */
+function toolButtons(){
+  return [S.canMem ? '<button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="records">Records and history</button><button class="btn" type="button" data-act="exportmem">Download member list</button>' : '',
+    S.canPost && !S.isAdmin ? '<button class="btn" type="button" data-act="editsab">This Sabbath</button><button class="btn" type="button" data-act="editprog">Worship program</button><button class="btn" type="button" data-act="addev">Add an event</button>' : '',
+    '<button class="btn" type="button" data-act="gogroups">Ministry groups</button>'].join('');
+}
+function openToolsModal(){
+  openModal('Leader tools', `<p class="muted">You are: <b>${esc(lvName(S.lv))}</b></p><div class="se-acts" style="margin-top:10px">${toolButtons()}</div><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`);
+}
+const csvCell = v => { const t = String(v == null ? '' : v); return /[",\n\r]/.test(t) || /^[=+\-@]/.test(t) ? '"' + (/^[=+\-@]/.test(t) ? "'" : '') + t.replace(/"/g, '""') + '"' : t; };
+function downloadCSV(name, rows){
+  const blob = new Blob(['﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+const grpNames = ids => (ids || []).map(id => (S.groups.find(g => g.id === id) || {}).name).filter(Boolean).join('; ');
+function exportMembers(){
+  const rows = [['Name','Role in the church','Site role','Status','Status date','Status note','Baptism date','Baptized by','Place of baptism','Member since','Birthday (month-day)','Family','Ministries','Groups','Joined the site']];
+  Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).forEach(p => rows.push([p.name, p.role, lvName(p.access), mstLabel(stOf(p)), p.statusDate, p.statusNote, p.baptDate, p.baptBy, p.baptPlace, p.since, p.bday, p.household, p.ministries, grpNames(p.groups), p.access === 'roll' ? '' : new Date(p.createdAt || 0).toISOString().slice(0, 10)]));
+  downloadCSV(`members-${phISO()}.csv`, rows);
+  toast('The member list is downloading. Keep it private: do not post it online.');
+}
+const LOG_KINDS = [['status','Status'],['member','Member details'],['access','Roles and approvals'],['group','Groups'],['post','Posts and files'],['file','Posts and files'],['site','Site and settings'],['settings','Site and settings']];
+const kindName = k => (LOG_KINDS.find(x => x[0] === k) || [k, k])[1];
+const when = ms => { const d = new Date(ms + TZ * 36e5); return `${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}, ${d.getUTCFullYear()} ${time12(d.toISOString().slice(11, 16))}`; };
+async function openRecordsModal(tab){
+  const m = openModal('Records and history', '<p class="muted">Loading the records…</p>', true);
+  let log = [];
+  try { log = (await api('getLog')).log || []; } catch (err){ m.querySelector('.sheet').insertAdjacentHTML('beforeend', `<p class="err" style="padding:0 20px 20px">${esc(errMsg(err))}</p>`); return; }
+  if (!$('#modal') || $('#modal') !== m) return;
+  const R = {tab:tab || 'status', q:'', st:'all', kind:'all', year:'all'};
+  const years = [...new Set(log.map(x => new Date(x.time + TZ * 36e5).getUTCFullYear()))].sort((a, b) => b - a);
+  const body = $('.sheet', m);
+  body.querySelectorAll(':scope > :not(header)').forEach(x => x.remove());
+  body.insertAdjacentHTML('beforeend', `<div class="m-body">
+    <div class="se-seg">${[['status','Status records'],['all','All changes']].map(([k, l]) => `<button type="button" class="chip ${R.tab === k ? 'on' : ''}" data-rt="${k}">${l}</button>`).join('')}</div>
+    <div class="rec-tools"><input type="search" id="recQ" placeholder="Search a name, pastor, note or year" aria-label="Search the records">
+      <select id="recSt" aria-label="Status"><option value="all">All statuses</option>${MST.filter(x => x[0] !== 'active').map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>
+      <select id="recKind" aria-label="Kind of change"><option value="all">All kinds</option>${[...new Map(LOG_KINDS.map(x => [x[1], x[0]])).entries()].map(([l, k]) => `<option value="${k}">${l}</option>`).join('')}</select>
+      <select id="recYear" aria-label="Year"><option value="all">All years</option>${years.map(y => `<option>${y}</option>`).join('')}</select></div>
+    <div id="recOut"></div>
+    <div class="m-actions"><button class="btn" type="button" id="recCsv">Download this list</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div></div>`);
+  const yr = ms => String(new Date(ms + TZ * 36e5).getUTCFullYear());
+  const has = (txt) => !R.q || txt.toLowerCase().includes(R.q);
+  let current = [];
+  const draw = () => {
+    $('#recSt', m).hidden = R.tab !== 'status'; $('#recKind', m).hidden = R.tab !== 'all';
+    let html = '';
+    if (R.tab === 'status'){
+      const now = Object.values(S.profiles).filter(p => stOf(p) !== 'active' && (R.st === 'all' || stOf(p) === R.st)
+        && (R.year === 'all' || String(p.statusDate || '').startsWith(R.year))
+        && has([p.name, mstLabel(stOf(p)), p.statusDate, p.statusNote, p.baptBy, p.household].join(' '))).sort((a, b) => String(b.statusDate || '').localeCompare(String(a.statusDate || '')) || String(a.name).localeCompare(String(b.name)));
+      const hist = log.filter(x => x.kind === 'status' && (R.st === 'all' || x.detail.includes('→ ' + mstLabel(R.st))) && (R.year === 'all' || yr(x.time) === R.year) && has([x.target, x.detail, x.by].join(' ')));
+      current = [['Name','Status','Date','Note']].concat(now.map(p => [p.name, mstLabel(stOf(p)), p.statusDate, p.statusNote]));
+      html = `<h3 class="rec-h">Now <span class="meta">(${now.length})</span></h3>${now.length ? `<div class="rec-list">${now.map(p => `<button type="button" class="rec-row" data-act="profile" data-uid="${esc(p.id)}">${av(p.id, 'sm')}<span class="rec-main"><b>${esc(p.name)}</b> ${stPill(p)}<span class="meta">${p.statusDate ? esc(stDate(p.statusDate)) : 'No date'}${p.statusNote ? ' · <span data-notr>' + esc(p.statusNote) + '</span>' : ''}</span></span></button>`).join('')}</div>` : '<p class="muted">No one matches.</p>'}
+        <h3 class="rec-h">History of status changes <span class="meta">(${hist.length})</span></h3>${hist.length ? `<div class="rec-list">${hist.map(x => `<div class="rec-row"><span class="rec-main"><b>${esc(x.target)}</b><span data-notr>${esc(x.detail)}</span><span class="meta">${esc(when(x.time))} · by ${esc(x.by)}</span></span></div>`).join('')}</div>` : '<p class="muted">No changes yet. From now on, every status change is kept here.</p>'}`;
+      if (R.tab === 'status') current = current.concat([[], ['When','Name','Change','By']], hist.map(x => [when(x.time), x.target, x.detail, x.by]));
+    } else {
+      const list = log.filter(x => (R.kind === 'all' || kindName(x.kind) === kindName(R.kind)) && (R.year === 'all' || yr(x.time) === R.year) && has([x.target, x.detail, x.by, kindName(x.kind)].join(' ')));
+      current = [['When','Kind','Name','Change','By']].concat(list.map(x => [when(x.time), kindName(x.kind), x.target, x.detail, x.by]));
+      html = list.length ? `<div class="rec-list">${list.slice(0, 400).map(x => `<div class="rec-row"><span class="rec-main"><b>${esc(x.target || kindName(x.kind))}</b><span data-notr>${esc(x.detail)}</span><span class="meta">${esc(kindName(x.kind))} · ${esc(when(x.time))} · by ${esc(x.by)}</span></span></div>`).join('')}</div>${list.length > 400 ? `<p class="muted">Showing the newest 400. Search or pick a year to see older ones, or download the list.</p>` : ''}` : '<p class="muted">Nothing matches.</p>';
+    }
+    $('#recOut', m).innerHTML = html;
+  };
+  m.addEventListener('click', e => { const t = e.target.closest('[data-rt]'); if (!t) return; R.tab = t.dataset.rt; m.querySelectorAll('[data-rt]').forEach(x => x.classList.toggle('on', x === t)); draw(); });
+  $('#recQ', m).addEventListener('input', e => { R.q = e.target.value.trim().toLowerCase(); draw(); });
+  $('#recSt', m).addEventListener('change', e => { R.st = e.target.value; draw(); });
+  $('#recKind', m).addEventListener('change', e => { R.kind = e.target.value; draw(); });
+  $('#recYear', m).addEventListener('change', e => { R.year = e.target.value; draw(); });
+  $('#recCsv', m).addEventListener('click', () => downloadCSV(`records-${R.tab}-${phISO()}.csv`, current));
+  draw();
+}
+/* attendance: leaders tick who came; the clerk sees who has been away a long time */
+const ABSENT_RUN = 8;
+function lastSabbathISO(){ const n = phNow(); const back = (n.getUTCDay() + 1) % 7; return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() - back)).toISOString().slice(0, 10); }
+async function openAttendModal(date){
+  const m = openModal('Attendance', '<p class="muted" style="padding:0 20px 20px">Loading…</p>', true);
+  let days = [];
+  try { days = (await api('getAttendance')).days || []; } catch (err){ toast(errMsg(err)); closeModal(); return; }
+  if ($('#modal') !== m) return;
+  date = date || lastSabbathISO();
+  const day = days.find(d => d.date === date);
+  const here = new Set(day ? day.uids : []);
+  const people = Object.values(S.profiles).filter(p => !isDead(p)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  /* who missed the last 8 Sabbaths that had attendance taken (counting only Sabbaths after they joined) */
+  const sorted = [...days].sort((a, b) => b.date.localeCompare(a.date));
+  const away = S.canMem && sorted.length >= ABSENT_RUN ? people.filter(p => stOf(p) === 'active').filter(p => {
+    const since = p.access === 'roll' ? '' : new Date(p.createdAt || 0).toISOString().slice(0, 10);
+    const mine = sorted.filter(d => d.date >= since).slice(0, ABSENT_RUN);
+    return mine.length >= ABSENT_RUN && !mine.some(d => d.uids.includes(p.id));
+  }) : [];
+  const sheet = $('.sheet', m); sheet.querySelectorAll(':scope > :not(header)').forEach(x => x.remove());
+  sheet.insertAdjacentHTML('beforeend', `<form id="atForm" class="m-body">
+    <div class="rec-tools"><label class="fld" for="atDate" style="flex:1">Date<input id="atDate" type="date" max="${phISO()}" value="${esc(date)}"></label>
+      <label class="fld" for="atQ" style="flex:2">Find a name<input id="atQ" type="search" placeholder="Type a name" autocomplete="off"></label></div>
+    <p class="note"><b id="atN">${here.size}</b> present${day ? ` · saved by ${esc(day.by)}` : ' · not saved yet'}</p>
+    <div class="at-list" id="atList">${people.map(p => `<label class="at-row" data-n="${esc(String(p.name).toLowerCase())}"><input type="checkbox" value="${esc(p.id)}" ${here.has(p.id) ? 'checked' : ''}>${av(p.id, 'sm')}<span>${esc(p.name)}${stOf(p) !== 'active' ? ' ' + stPill(p) : ''}</span></label>`).join('')}</div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button><button class="btn primary" type="submit" id="atSave">Save attendance</button></div>
+    ${away.length ? `<h3 class="rec-h">Away for ${ABSENT_RUN} Sabbaths in a row</h3><p class="muted">They were not marked present on the last ${ABSENT_RUN} Sabbaths that had attendance. You may mark them inactive.</p><div class="rec-list">${away.map(p => `<div class="rec-row">${av(p.id, 'sm')}<span class="rec-main"><b>${esc(p.name)}</b></span><button type="button" class="btn sm" data-inact="${esc(p.id)}">Mark inactive</button></div>`).join('')}</div>` : ''}
+    ${sorted.length ? `<h3 class="rec-h">Past attendance</h3><div class="rec-list">${sorted.slice(0, 26).map(d => `<button type="button" class="rec-row" data-day="${esc(d.date)}"><span class="rec-main"><b>${esc(fmtDate(d.date))}, ${d.date.slice(0, 4)}</b><span class="meta">${d.uids.length} present · by ${esc(d.by)}</span></span></button>`).join('')}</div>` : ''}
+  </form>`);
+  const count = () => { $('#atN', m).textContent = m.querySelectorAll('#atList input:checked').length; };
+  $('#atList', m).addEventListener('change', count);
+  $('#atQ', m).addEventListener('input', e => { const q = e.target.value.trim().toLowerCase(); m.querySelectorAll('.at-row').forEach(r => { r.hidden = !!q && !r.dataset.n.includes(q); }); });
+  $('#atDate', m).addEventListener('change', e => { if (e.target.value) openAttendModal(e.target.value); });
+  m.addEventListener('click', async e => {
+    const d = e.target.closest('[data-day]'); if (d){ openAttendModal(d.dataset.day); return; }
+    const x = e.target.closest('[data-inact]'); if (!x) return;
+    x.disabled = true;
+    try { await api('setMemberStatus', {uid:x.dataset.inact, status:'inactive', date:phISO(), note:`Away for ${ABSENT_RUN} Sabbaths in a row (attendance)`}); await sync(); toast('Marked inactive.'); openAttendModal($('#atDate', m).value); }
+    catch (err){ toast(errMsg(err)); x.disabled = false; }
+  });
+  $('#atForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#atSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const uids = [...m.querySelectorAll('#atList input:checked')].map(i => i.value);
+      const r = await api('saveAttendance', {date:$('#atDate', m).value, uids});
+      toast(`Attendance saved: ${r.count} present.`); openAttendModal($('#atDate', m).value);
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save attendance'; }
+  });
+}
+/* ---------- family ---------- */
+const famKey = p => String((p && p.household) || '').trim().toLowerCase();
+const familyOf = p => famKey(p) ? Object.values(S.profiles).filter(x => x.id !== p.id && famKey(x) === famKey(p)).sort((a, b) => String(a.name).localeCompare(String(b.name))) : [];
+const households = () => [...new Set(Object.values(S.profiles).map(x => String(x.household || '').trim()).filter(Boolean))].sort();
+/* ---------- ministry groups ---------- */
+const inGroup = (uid, gid) => !!(S.profiles[uid] && (S.profiles[uid].groups || []).includes(gid));
+const groupMembers = gid => Object.values(S.profiles).filter(p => (p.groups || []).includes(gid) && !isDead(p)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+function renderGroups(){
+  const slot = $('#grpSlot'); if (!slot) return;
+  const list = [...S.groups].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  slot.innerHTML = list.length ? list.map(g => {
+    const mem = groupMembers(g.id), me = inGroup(S.uid, g.id), posts = S.posts.filter(p => p.grp === g.id).length;
+    return `<article class="card grp"><button type="button" class="grp-open" data-act="opengroup" data-id="${esc(g.id)}"><h3>${esc(g.name)}</h3>${g.desc ? `<p class="muted" data-notr>${esc(g.desc)}</p>` : ''}</button>
+      <div class="grp-av">${mem.slice(0, 6).map(p => av(p.id, 'sm')).join('')}<span class="meta">${mem.length} member${mem.length === 1 ? '' : 's'} · ${posts} post${posts === 1 ? '' : 's'}</span></div>
+      <div class="se-acts"><button class="btn sm" data-act="opengroup" data-id="${esc(g.id)}">Open</button><button class="btn sm ${me ? '' : 'primary'}" data-act="joingroup" data-id="${esc(g.id)}" data-on="${me ? '' : '1'}">${me ? 'Leave' : 'Join'}</button></div></article>`;
+  }).join('') : `<div class="card empty" style="grid-column:1/-1">No groups yet.${S.canMem ? ' Make the first one, like Choir, Pathfinders or Adventist Youth.' : ' Church leaders can add groups.'}</div>`;
+}
+function renderGroup(){
+  const slot = $('#grpSlot'); if (!slot) return;
+  const g = S.groups.find(x => x.id === S.groupId);
+  if (!g){ slot.innerHTML = '<div class="card empty">This group is no longer here.</div>'; return; }
+  const mem = groupMembers(g.id), me = inGroup(S.uid, g.id), canWrite = me || S.isAdmin;
+  const others = Object.values(S.profiles).filter(p => !isDead(p) && !(p.groups || []).includes(g.id)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  keepInputs(slot, () => {
+    slot.innerHTML = `<section class="card grp-head"><div class="sec-row"><div><p class="meta"><button type="button" class="linkish" data-act="gogroups">Ministry groups</button></p><h1>${esc(g.name)}</h1>${g.desc ? `<p class="muted" data-notr style="white-space:pre-wrap">${esc(g.desc)}</p>` : ''}</div>
+      <div class="se-acts"><button class="btn ${me ? '' : 'primary'}" data-act="joingroup" data-id="${esc(g.id)}" data-on="${me ? '' : '1'}">${me ? 'Leave the group' : 'Join the group'}</button>${S.canMem ? `<button class="btn" data-act="editgroup" data-id="${esc(g.id)}">Edit</button><button class="btn danger" data-act="delgroup" data-id="${esc(g.id)}">Remove group</button>` : ''}</div></div>
+      <h3 class="rec-h">Members <span class="meta">(${mem.length})</span></h3>
+      <div class="grp-mem">${mem.map(p => `<span class="chipmem"><button type="button" data-act="profile" data-uid="${esc(p.id)}">${av(p.id, 'sm')}<span>${esc(p.name)}</span></button>${S.canMem ? `<button type="button" class="x" data-act="grpdel" data-uid="${esc(p.id)}" aria-label="Take ${esc(p.name)} out of the group">${icon('x')}</button>` : ''}</span>`).join('') || '<span class="muted">No members yet.</span>'}</div>
+      ${S.canMem && others.length ? `<div class="se-acts" style="margin-top:10px"><select id="grpAdd" aria-label="Add a member to the group"><option value="">Add a member…</option>${others.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select><button class="btn sm" data-act="grpadd">Add</button></div>` : ''}</section>
+      ${canWrite ? `<form class="card grp-post" id="grpForm"><textarea id="grpText" maxlength="3000" rows="2" placeholder="Write to the group" aria-label="Write to the group"></textarea><div class="se-acts" style="justify-content:flex-end"><button class="btn primary" type="submit" id="grpSend">Post</button></div></form>` : `<div class="card empty">Join the group to post here.</div>`}
+      <div id="feedSlot"></div>`;
+  });
+  renderFeed(S.posts.filter(p => p.grp === g.id), 'No posts in this group yet.');
+  const f = $('#grpForm');
+  if (f && !f.dataset.on){ f.dataset.on = '1'; f.addEventListener('submit', async e => {
+    e.preventDefault(); const t = $('#grpText'), b = $('#grpSend'); if (!t.value.trim()) return;
+    b.disabled = true; try { await api('post', {cat:'share', text:t.value, grp:g.id}); t.value = ''; await sync(); } catch (err){ toast(errMsg(err)); } b.disabled = false;
+  }); }
+}
+function openGroupModal(id){
+  const g = S.groups.find(x => x.id === id) || {};
+  const m = openModal(id ? 'Edit group' : 'New ministry group', `<form id="gpForm" class="m-body" style="padding:0">
+    <label class="fld" for="gpName">Name<input id="gpName" required maxlength="50" value="${esc(g.name || '')}" placeholder="Choir"></label>
+    <label class="fld" for="gpDesc">About the group (optional)<textarea id="gpDesc" maxlength="300" placeholder="When you meet and what you do">${esc(g.desc || '')}</textarea></label>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="gpSave">Save</button></div></form>`);
+  $('#gpForm', m).addEventListener('submit', async e => {
+    e.preventDefault(); const b = $('#gpSave', m); b.disabled = true;
+    try { const r = await api('saveGroup', {id, name:$('#gpName', m).value, desc:$('#gpDesc', m).value}); await sync(); closeModal(); if (!id) go('group', r.id); else refresh(); toast('Group saved.'); }
+    catch (err){ toast(errMsg(err)); b.disabled = false; }
+  });
+}
+async function groupAction(a, el){
+  try {
+    if (a === 'joingroup'){ await api('joinGroup', {id:el.dataset.id, on:!!el.dataset.on}); await sync(); toast(el.dataset.on ? 'You joined the group.' : 'You left the group.'); }
+    else if (a === 'grpadd'){ const u = $('#grpAdd').value; if (!u) return; await api('setGroupMember', {id:S.groupId, uid:u, on:true}); await sync(); }
+    else if (a === 'grpdel'){ await api('setGroupMember', {id:S.groupId, uid:el.dataset.uid, on:false}); await sync(); }
+    else if (a === 'delgroup'){
+      if (!await confirmBox('Remove this group?', 'The group and its member list are removed. Its posts stay on the members’ profiles.', 'Remove')) return;
+      await api('deleteGroup', {id:el.dataset.id}); await sync(); go('groups'); toast('Group removed.');
+    }
+  } catch (err){ toast(errMsg(err)); }
+}
+/* ---------- weekly bulletin to print or send ---------- */
+function bulletinData(){
+  const v = sabInfo(), date = v.date && v.date >= phISO() ? v.date : nextSabbathISO();
+  const sab = v.date === date ? v : {};
+  const svcs = services().filter(sv => Number(sv.day) === 6).sort((a, b) => String(a.time).localeCompare(String(b.time))).map(sv => ({sv, items:named(progItems(sv.id, date))}));
+  const until = new Date(Date.parse(date + 'T00:00:00Z') + 14 * 864e5).toISOString().slice(0, 10);
+  const events = (S.events || []).filter(e => e.date >= phISO() && e.date <= until).slice(0, 8);
+  const anns = S.posts.filter(p => p.cat === 'announcement' && !p.grp && Date.now() - (p.createdAt || 0) < 8 * 864e5).sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+  const n = Date.parse(date + 'T00:00:00Z'), bdays = [];
+  for (let i = -6; i <= 6; i++){ const md = new Date(n + i * 864e5).toISOString().slice(5, 10); Object.values(S.profiles).filter(p => p.bday === md && !isDead(p)).forEach(p => bdays.push(p.name)); }
+  return {date, sab, svcs, events, anns, bdays, verse:S.settings.verse || '', name:S.settings.churchName || 'Tubod SDA Church', tag:S.settings.tagline || ''};
+}
+function bulletinHTML(d){
+  const rows = [['Sabbath School lesson', d.sab.lesson], ['Sabbath School', d.sab.ssTeacher], ['Speaker', d.sab.speaker], ['Scripture reading', d.sab.reading]].filter(r => r[1]);
+  return `<div class="bul"><header class="bul-h">${LOGO}<div><h2>${esc(d.name)}</h2>${d.tag ? `<p>${esc(d.tag)}</p>` : ''}<p class="bul-date">Sabbath, ${esc(fmtDate(d.date).replace(/^Saturday, /, ''))}, ${d.date.slice(0, 4)}</p></div></header>
+    ${rows.length ? `<section><h3>This Sabbath</h3><dl>${rows.map(r => `<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>${d.sab.note ? `<p>${esc(d.sab.note)}</p>` : ''}</section>` : ''}
+    ${d.svcs.filter(x => x.items.length).map(x => `<section><h3>${esc(x.sv.name)} · ${esc(time12(x.sv.time))}</h3><dl>${x.items.map(i => `<dt>${esc(i.role)}</dt><dd>${esc(i.name)}</dd>`).join('')}</dl></section>`).join('')}
+    ${d.verse ? `<section><h3>Verse of the week</h3><p class="bul-verse">${esc(d.verse)}</p></section>` : ''}
+    ${d.anns.length ? `<section><h3>Announcements</h3><ul>${d.anns.map(p => `<li>${esc(String(p.text || '').slice(0, 300))}</li>`).join('')}</ul></section>` : ''}
+    ${d.events.length ? `<section><h3>Coming up</h3><ul>${d.events.map(e => `<li><b>${esc(fmtDate(e.date))}${e.time ? ', ' + esc(time12(e.time)) : ''}:</b> ${esc(e.title)}${e.place ? ' · ' + esc(e.place) : ''}</li>`).join('')}</ul></section>` : ''}
+    ${d.bdays.length ? `<section><h3>Happy birthday</h3><p>${d.bdays.map(esc).join(', ')}</p></section>` : ''}
+    <p class="bul-foot">Welcome to our church family. Happy Sabbath!</p></div>`;
+}
+function bulletinText(d){
+  const L = [`${d.name.toUpperCase()}`, `Sabbath, ${fmtDate(d.date).replace(/^Saturday, /, '')}, ${d.date.slice(0, 4)}`, ''];
+  [['Lesson', d.sab.lesson], ['Sabbath School', d.sab.ssTeacher], ['Speaker', d.sab.speaker], ['Reading', d.sab.reading]].filter(r => r[1]).forEach(r => L.push(`${r[0]}: ${r[1]}`));
+  d.svcs.filter(x => x.items.length).forEach(x => { L.push('', `${x.sv.name} (${time12(x.sv.time)})`); x.items.forEach(i => L.push(`• ${i.role}: ${i.name}`)); });
+  if (d.verse) L.push('', 'Verse of the week: ' + d.verse);
+  if (d.anns.length){ L.push('', 'Announcements:'); d.anns.forEach(p => L.push('• ' + String(p.text || '').replace(/\s+/g, ' ').slice(0, 200))); }
+  if (d.events.length){ L.push('', 'Coming up:'); d.events.forEach(e => L.push(`• ${fmtDate(e.date)}${e.time ? ', ' + time12(e.time) : ''}: ${e.title}${e.place ? ' (' + e.place + ')' : ''}`)); }
+  if (d.bdays.length) L.push('', 'Happy birthday: ' + d.bdays.join(', '));
+  L.push('', 'Happy Sabbath!');
+  return L.join('\n');
+}
+function openBulletin(){
+  const d = bulletinData();
+  const m = openModal('Weekly bulletin', `<div class="m-body" style="padding:0"><div class="bul-wrap">${bulletinHTML(d)}</div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button><button class="btn" type="button" id="bulCopy">Copy for Messenger</button><button class="btn primary" type="button" id="bulPrint">Print or save as PDF</button></div></div>`, true);
+  $('#bulCopy', m).addEventListener('click', () => copyText(bulletinText(d)));
+  $('#bulPrint', m).addEventListener('click', () => {
+    let pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
+    pa.innerHTML = bulletinHTML(d); document.body.classList.add('printing');
+    const done = () => { document.body.classList.remove('printing'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done); setTimeout(() => window.print(), 50); setTimeout(done, 60000);
+  });
+}
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); toast('Copied. Paste it into Messenger or a text message.'); }
+  catch (e){ const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Copied. Paste it into Messenger or a text message.'); } catch (x){ toast('Could not copy on this phone.'); } ta.remove(); }
+}
+/* ---------- notifications on this phone for new announcements ---------- */
+const NOTIF_KEY = 'tubodNotif', ANN_SEEN = 'tubodAnnSeen';
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
+const notifOn = () => lsGet(NOTIF_KEY) === '1' && 'Notification' in window && Notification.permission === 'granted';
+async function toggleNotif(){
+  if (!('Notification' in window)){ toast('This phone or browser cannot show notifications from the church page.'); return; }
+  if (notifOn()){ lsSet(NOTIF_KEY, null); toast('Notifications are off on this phone.'); renderProfile(); return; }
+  const r = await Notification.requestPermission();
+  if (r !== 'granted'){ toast('Notifications are blocked. Allow them for this site in your browser settings.'); return; }
+  lsSet(NOTIF_KEY, '1'); lsSet(ANN_SEEN, String(Date.now()));
+  toast('Notifications are on. New announcements pop up while the church page is open or in the background.'); renderProfile();
+}
+function notifyNew(){
+  if (!notifOn()) return;
+  const seen = Number(lsGet(ANN_SEEN)) || Date.now();
+  const fresh = S.posts.filter(p => p.cat === 'announcement' && (p.createdAt || 0) > seen && p.authorId !== S.uid).sort((a, b) => b.createdAt - a.createdAt);
+  lsSet(ANN_SEEN, String(Math.max(seen, ...S.posts.map(p => p.createdAt || 0))));
+  if (!fresh.length) return;
+  const title = (S.settings.churchName || 'Tubod SDA Church') + (fresh.length > 1 ? ` · ${fresh.length} new announcements` : '');
+  const opt = {body:String(fresh[0].text || '').slice(0, 180), icon:'icon-192.png', badge:'icon-192.png', tag:'tubod-ann'};
+  const show = () => { try { new Notification(title, opt); } catch (e) {} };
+  if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification(title, opt) : show()).catch(show); else show();
+}
 async function memberAction(a, uid, to){
   const p = S.profiles[uid] || (S.waiting || []).find(x => x.id === uid); if (!p) return;
   try {
-    if (a === 'macc'){ await api('setAccess', {uid, access:to}); await sync(); openMembersModal(); toast(to === 'admin' ? `${p.name} is now an admin.` : `${p.name} is now a member.`); }
+    if (a === 'macc'){ await api('setAccess', {uid, access:to}); await sync(); openMembersModal(); toast(p.access === 'pending' ? `${p.name} is approved.` : `${p.name}: ${lvName(to)}`); }
     else if (a === 'mdel'){
       if (!await confirmBox('Remove this member?', `${p.name} will lose access. Their posts stay on the page.`, 'Remove')){ openMembersModal(); return; }
       await api('removeMember', {uid}); await sync(); openMembersModal(); toast('Member removed.');
@@ -2318,6 +2619,15 @@ document.addEventListener('click', e => {
     case 'addperson': openAddPersonModal(); break;
     case 'medit': openProfileModal(el.dataset.uid); break;
     case 'siteedit': if (S.isAdmin) openSiteModal(); break;
+    case 'records': if (S.canMem) openRecordsModal(); break;
+    case 'exportmem': if (S.canMem) exportMembers(); break;
+    case 'gogroups': closeModal(); go('groups'); break;
+    case 'opengroup': closeModal(); go('group', el.dataset.id); break;
+    case 'newgroup': openGroupModal(''); break;
+    case 'editgroup': openGroupModal(el.dataset.id); break;
+    case 'joingroup': case 'grpadd': case 'grpdel': case 'delgroup': groupAction(a, el); break;
+    case 'bulletin': openBulletin(); break;
+    case 'notif': toggleNotif(); break;
     case 'upload': if (guard()) openUploadModal(); break;
     case 'delfile': deleteFile(id); break;
     case 'editsab': openSabbathModal(); break;
@@ -2337,8 +2647,8 @@ document.addEventListener('click', e => {
     case 'editprofile': openProfileModal(); break;
     case 'chpw': openPasswordModal(); break;
     case 'signout': signOut(); break;
-    case 'settings': if (S.isAdmin) openSettingsModal(); break;
-    case 'members': if (S.isAdmin) openMembersModal(); break;
+    case 'settings': if (S.isAdmin) openSettingsModal(); else if (S.canAttend) openToolsModal(); break;
+    case 'members': if (S.canMem) openMembersModal(); break;
     case 'macc': case 'mdel': case 'mpw': memberAction(a, el.dataset.uid, el.dataset.to); break;
     case 'copyann': copyAnn(id); break;
     case 'smsann': smsAnn(id); break;
@@ -2375,6 +2685,10 @@ document.addEventListener('input', e => {
   if (e.target.id === 'memQ'){ S.memQ = e.target.value; renderMembers(); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches && t.matches('select.msel[data-act=mlevel]')) memberAction('macc', t.dataset.uid, t.value);
+});
 window.addEventListener('hashchange', fromHash);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) pollNow(); });
 
@@ -2508,6 +2822,31 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   // members
   'Everyone who has joined the church family page.':'Tanang miapil sa panid sa pamilya sa simbahan.', 'Search by name or ministry':'Pangitaa pinaagi sa ngalan o ministeryo',
   'Search members':'Pangitaa ang mga miyembro',
+  'Leader tools':'Mga gamit sa lider', 'Records and history':'Mga rekord ug kasaysayan', 'Download member list':'I-download ang lista sa miyembro', 'Attendance':'Pagtambong',
+  'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
+  'Church admin':'Admin sa simbahan', 'Clerk / pastor':'Klerk / pastor', 'Announcements and program':'Pahibalo ug programa', 'No account':'Walay account',
+  'Status records':'Mga rekord sa kahimtang', 'All changes':'Tanang kausaban', 'Now':'Karon', 'History of status changes':'Kasaysayan sa kausaban sa kahimtang',
+  'All statuses':'Tanang kahimtang', 'All kinds':'Tanang klase', 'All years':'Tanang tuig', 'Download this list':'I-download kini nga lista',
+  'Search a name, pastor, note or year':'Pangitaa ang ngalan, pastor, nota o tuig', 'No one matches.':'Walay nakit-an.', 'Nothing matches.':'Walay nakit-an.',
+  'No changes yet. From now on, every status change is kept here.':'Wala pay kausaban. Sukad karon, ang matag kausaban sa kahimtang matipigan dinhi.',
+  'Member details':'Detalye sa miyembro', 'Roles and approvals':'Mga papel ug pag-aprobar', 'Posts and files':'Mga post ug file', 'Site and settings':'Site ug mga setting',
+  'Loading the records…':'Nagkarga sa mga rekord…', 'Find a name':'Pangitaa ang ngalan', 'Type a name':'Isulat ang ngalan', 'Save attendance':'I-save ang pagtambong',
+  'present':'mitambong', 'Past attendance':'Miaging pagtambong', 'Mark inactive':'Markahi nga dili aktibo', 'Marked inactive.':'Namarkahan nga dili aktibo.',
+  'Family or household (optional)':'Pamilya o panimalay (kon gusto)', 'For example: Cruz family':'Pananglitan: Pamilya Cruz', 'Family':'Pamilya',
+  'Use the same name for everyone in one family, so they show together on their profiles.':'Gamita ang parehas nga ngalan alang sa tanan sa usa ka pamilya, aron magkauban sila sa ilang profile.',
+  'Choir, Pathfinders, youth and other ministries. Join the ones you belong to and post to your group.':'Koro, Pathfinders, kabatan-onan ug uban pang ministeryo. Apil sa imong mga grupo ug pag-post sa imong grupo.',
+  'New group':'Bag-ong grupo', 'New ministry group':'Bag-ong grupo sa ministeryo', 'Edit group':'Usba ang grupo', 'Join':'Apil', 'Leave':'Biya', 'Open':'Ablihi',
+  'Join the group':'Apil sa grupo', 'Leave the group':'Biyai ang grupo', 'Remove group':'Tangtanga ang grupo', 'Add a member…':'Idugang og miyembro…',
+  'Write to the group':'Pagsulat sa grupo', 'Post':'I-post', 'Join the group to post here.':'Apil sa grupo aron maka-post dinhi.', 'No posts in this group yet.':'Wala pay post niini nga grupo.',
+  'You joined the group.':'Ni-apil ka sa grupo.', 'You left the group.':'Mibiya ka sa grupo.', 'Group saved.':'Na-save ang grupo.', 'Group removed.':'Natangtang ang grupo.',
+  'About the group (optional)':'Bahin sa grupo (kon gusto)', 'When you meet and what you do':'Kanus-a kamo magtigom ug unsa ang inyong buhaton', 'Name':'Ngalan', 'No members yet.':'Wala pay miyembro.',
+  'Bulletin':'Bulletin', 'Weekly bulletin':'Semanal nga bulletin', 'Copy for Messenger':'Kopyaha para sa Messenger', 'Print or save as PDF':'I-print o i-save isip PDF',
+  'Coming up':'Umaabot', 'Happy birthday':'Malipayong adlaw nga natawhan', 'Scripture reading':'Pagbasa sa Kasulatan', 'Sabbath School lesson':'Leksyon sa Tulunghaan sa Igpapahulay',
+  'Welcome to our church family. Happy Sabbath!':'Maayong pag-abot sa among pamilya sa simbahan. Malipayong Igpapahulay!',
+  'Notifications':'Mga pahibalo sa cellphone', 'Notifications: on':'Mga pahibalo: on', 'Notifications are off on this phone.':'Gipalong ang mga pahibalo niini nga cellphone.',
+  'Notifications are on. New announcements pop up while the church page is open or in the background.':'Naka-on na ang mga pahibalo. Mogawas ang bag-ong pahibalo samtang abli ang panid sa simbahan o naa sa likod.',
+  'Notifications are blocked. Allow them for this site in your browser settings.':'Gi-block ang mga pahibalo. Tugoti kini nga site sa setting sa imong browser.',
+  'The member list is downloading. Keep it private: do not post it online.':'Nag-download na ang lista sa miyembro. Ayaw kini ipakaylap: ayaw i-post sa internet.',
   'Edit the site':'Usba ang site', 'Texts':'Mga teksto', 'Logo and colors':'Logo ug kolor', 'Menu tabs':'Mga tab sa menu', 'Lists':'Mga lista',
   'Change another text':'Usba ang laing teksto', 'Main color':'Panguna nga kolor', 'Hide this tab':'Itago kini nga tab', 'Undo all changes':'Ibalik tanan',
   'Add a category':'Idugang og kategorya', 'Library categories':'Mga kategorya sa librarya', 'Church roles (one on each line)':'Mga papel sa simbahan (usa kada linya)',
@@ -2570,6 +2909,10 @@ const BIS_RX = [
   [new RegExp('^' + BIS_DAY_RX + 's (\\d.*)$'), (m, d, t) => `Kada ${BIS_DAYS[d]} ${t}`],
   [/^(\d+) members?$/, '$1 ka miyembro'], [/^(\d+) posts? shared$/, '$1 ka post ang gipaambit'], [/^(\d+) items?$/, '$1 ka butang'],
   [/^(\d+) (hours?) before$/, (m, n) => `${n} ka oras sa una`],
+  [/^You are: (.+)$/, (m, x) => 'Ikaw: ' + (BIS[x] || x)],
+  [/^(\d+) members? · (\d+) posts?$/, '$1 ka miyembro · $2 ka post'],
+  [/^Attendance saved: (\d+) present\.$/, 'Na-save ang pagtambong: $1 ang mitambong.'],
+  [/^Away for (\d+) Sabbaths in a row$/, '$1 ka Igpapahulay nga sunod-sunod nga wala'],
   [/^Status: (.+)$/, (m, x) => 'Kahimtang: ' + (BIS[x] || x)],
   [/^Happy birthday, (.+)! 🎂$/, 'Malipayong adlaw nga natawhan, $1! 🎂'],
   [/^new (person is|people are) waiting for your approval\.$/, 'ka bag-ong miyembro ang naghulat sa imong pag-aprobar.'],
@@ -2651,7 +2994,7 @@ function boot(){
   $('#mark').innerHTML = LOGO; $('#gearBtn').innerHTML = icon('gear');
   startBisaya();
   const h = (location.hash || '').slice(1);
-  if (['home','news','library','members'].includes(h)) S.route = h;
+  if (['home','news','library','members','groups'].includes(h)) S.route = h;
   S.token = loadToken();
   mount();
   setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard(); if (S.uid) renderStrip(); }, 60000);
