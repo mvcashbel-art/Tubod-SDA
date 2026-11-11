@@ -31,7 +31,7 @@
   /* Layout idea: sticky top bar, one feed column beside a Sabbath sidebar; bottom tabs on phones.
      Light lake-blue and paper white, Sabbath gold only where the Sabbath is concerned. */
   --bg:#EEF4F7; --card:#FFFFFF; --ink:#17324D; --muted:#5B7083; --line:#D9E4EA;
-  --accent:#1D6A8A; --accent-dark:#14516B; --gold:#D79A22; --gold-soft:#FBF1D9; --leaf:#3F8060; --danger:#B0433A;
+  --accent:#1D6A8A; --accent-dark:#14516B; --soft:#E3F0F5; --soft2:#EAF3F7; --gold:#D79A22; --gold-soft:#FBF1D9; --leaf:#3F8060; --danger:#B0433A;
   --display:'Alegreya',Georgia,serif; --body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --radius:14px;
   color-scheme:light;
@@ -73,7 +73,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .dnav{display:flex;gap:4px;margin-left:12px}
 .dnav a{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:500;font-size:.95rem}
 .dnav a:hover{background:#EEF4F7;color:var(--ink)}
-.dnav a.on{color:var(--accent-dark);background:#E3F0F5}
+.dnav a.on{color:var(--accent-dark);background:var(--soft)}
 .top-r{margin-left:auto;display:flex;align-items:center;gap:8px}
 .icon-btn{width:38px;height:38px;border-radius:10px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
 .icon-btn:hover{background:#EEF4F7;color:var(--ink)}
@@ -90,7 +90,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .page-head p{color:var(--muted);flex-basis:100%;max-width:60ch}
 .page-head .btn{margin-left:auto}
 #banner:empty{display:none}
-.note{padding:12px 14px;border-radius:12px;background:#E3F0F5;color:var(--accent-dark);font-size:.92rem}
+.note{padding:12px 14px;border-radius:12px;background:var(--soft);color:var(--accent-dark);font-size:.92rem}
 .note.warn{background:var(--gold-soft);color:#6B4A07}
 .empty{padding:28px 16px;text-align:center;color:var(--muted)}
 
@@ -141,7 +141,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .p-name{border:0;background:none;padding:0;font-weight:600;cursor:pointer;color:var(--ink);text-align:left}
 .p-name:hover{text-decoration:underline}
 .p-meta{font-size:.82rem;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.tag{font-size:.74rem;font-weight:600;padding:1px 8px;border-radius:999px;background:#E3F0F5;color:var(--accent-dark)}
+.tag{font-size:.74rem;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--soft);color:var(--accent-dark)}
 .tag.prayer{background:#E1F0E8;color:#2B5E43}
 .tag.testimony{background:var(--gold-soft);color:#6B4A07}
 .tag.announcement{background:var(--ink);color:#fff}
@@ -230,7 +230,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .file{display:flex;flex-direction:column;gap:10px}
 .f-head{display:flex;gap:11px;align-items:flex-start}
-.f-ico{width:40px;height:40px;border-radius:10px;background:#E3F0F5;color:var(--accent-dark);display:grid;place-items:center;flex:none}
+.f-ico{width:40px;height:40px;border-radius:10px;background:var(--soft);color:var(--accent-dark);display:grid;place-items:center;flex:none}
 .f-head h3{font-size:1.1rem;overflow-wrap:anywhere}
 .meta{font-size:.8rem;color:var(--muted)}
 .f-desc{font-size:.92rem;overflow-wrap:anywhere}
@@ -259,8 +259,23 @@ button,input,select,textarea{font:inherit;color:inherit}
 .st-box{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#FAFCFD}
 .st-box.st-deceased,.st-box.st-inactive,.st-box.st-backslidden,.st-box.st-offshoot{font-size:.92rem}
 .st-box h3{font-size:1rem;margin:0 0 4px}.st-box p{margin:2px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.fset{border:1px solid var(--line);border-radius:12px;padding:4px 12px 2px;margin:4px 0 12px}.fset legend{font-weight:700;font-size:.9rem;padding:0 6px;color:var(--accent-dark)}
+.se-seg{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;background:#fff;padding:4px 0 8px;z-index:2}
+.se-row{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.se-row .orig{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}.se-row .orig b{color:var(--ink);font-weight:600}
+.se-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media (max-width:520px){.se-two{grid-template-columns:1fr}}
+.se-row input:not([type=checkbox]),.se-row select{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#F7FAFB;width:100%;min-width:0;font:inherit}
+.se-acts select{width:auto;flex:none}.se-acts .pin-opt{white-space:nowrap}
+.se-tab{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.se-tab .ti{width:36px;height:36px;border-radius:10px;background:var(--soft);color:var(--accent-dark);display:grid;place-items:center}
+.se-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sw-list{display:flex;gap:8px;flex-wrap:wrap}.sw-list label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.8rem;cursor:pointer}
+.sw-list .sw{width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.sw-list input{position:absolute;opacity:0;pointer-events:none}.sw-list input:checked+.sw{box-shadow:0 0 0 3px var(--ink)}.sw-list input:focus-visible+.sw{outline:2px solid var(--ink);outline-offset:3px}
+.logo-prev{width:96px;height:96px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center;background:#fff;overflow:hidden}.logo-prev img{max-width:88%;max-height:88%}
 .mem-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .facts b{color:var(--ink);font-weight:600}
+.facts.bapt{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
 .quote{font-family:var(--display);font-size:1.2rem;line-height:1.35;padding-left:14px;border-left:3px solid var(--gold)}
 
 /* modal */
@@ -294,7 +309,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .up-fill{height:100%;width:0;background:var(--accent);transition:width .3s}
 #upbar .up-row{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 #upbar.err .up-fill{background:#B3382C}
-.prev .vfile{display:flex;align-items:center;gap:8px;background:#EAF3F7;border-radius:10px;padding:8px 34px 8px 12px;position:relative;font-size:.88rem;max-width:100%}
+.prev .vfile{display:flex;align-items:center;gap:8px;background:var(--soft2);border-radius:10px;padding:8px 34px 8px 12px;position:relative;font-size:.88rem;max-width:100%}
 .prev .vfile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .alb-open{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;width:100%;cursor:pointer;color:inherit}
 .alb-open:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:12px}
@@ -313,7 +328,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .alb-it .vid{margin:0;aspect-ratio:1}
 .alb-it figcaption{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere;display:flex;gap:6px;align-items:flex-start;justify-content:space-between}
 .alb-it .x{border:0;background:none;color:#B3382C;font-size:.78rem;font-weight:600;cursor:pointer;padding:0;flex:none}
-.alb-doc{aspect-ratio:1;border-radius:10px;background:#EAF3F7;display:grid;place-items:center;color:var(--accent-dark);text-decoration:none;font-size:.82rem;padding:8px;text-align:center}
+.alb-doc{aspect-ratio:1;border-radius:10px;background:var(--soft2);display:grid;place-items:center;color:var(--accent-dark);text-decoration:none;font-size:.82rem;padding:8px;text-align:center}
 .urows{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:8px;background:#F7FAFB}
 .urow{display:flex;flex-direction:column;gap:2px}
 .urow input{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff}
@@ -330,7 +345,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .card-h h3{margin:0}
 .evlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .ev{display:flex;gap:10px;align-items:flex-start}
-.ev-d{flex:none;width:46px;text-align:center;border-radius:10px;background:#EAF3F7;color:var(--accent-dark);padding:4px 0;line-height:1.1}
+.ev-d{flex:none;width:46px;text-align:center;border-radius:10px;background:var(--soft2);color:var(--accent-dark);padding:4px 0;line-height:1.1}
 .ev-d b{display:block;font-size:1.15rem}
 .ev-d small{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em}
 .ev-b{min-width:0;flex:1}
@@ -356,7 +371,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .bd-sel select{flex:1}
 @media (max-width:900px){.side .mob-hide{display:none}}
 .lang-btn{border:1px solid var(--line);background:#fff;color:var(--accent-dark);border-radius:999px;padding:6px 12px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
-.lang-btn:hover{background:#EAF3F7}
+.lang-btn:hover{background:var(--soft2)}
 .lang-btn .sh{display:none}
 .vid-note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
 
@@ -381,7 +396,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   .auth-brand .mark{height:60px}
   .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
   .tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:.7rem;font-weight:500;color:var(--muted);text-decoration:none;border-radius:10px}
-  .tabs a.on{color:var(--accent-dark);background:#E3F0F5}
+  .tabs a.on{color:var(--accent-dark);background:var(--soft)}
   #toast{bottom:90px}
 }
 @media (min-width:1300px){
@@ -495,7 +510,7 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
 .sp-in b{font-family:var(--serif,'Alegreya',Georgia,serif);font-size:clamp(1.5rem,6vw,2rem);color:#17324D}
 .sp-in span{color:#5B7083;font-size:.95rem}
 .sp-dots{display:flex;gap:7px;margin-top:18px}
-.sp-dots i{width:8px;height:8px;border-radius:50%;background:#1D6A8A;opacity:.25;animation:spDot 1.2s infinite}
+.sp-dots i{width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:.25;animation:spDot 1.2s infinite}
 .sp-dots i:nth-child(2){animation-delay:.2s}.sp-dots i:nth-child(3){animation-delay:.4s}
 @keyframes spIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes spGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
@@ -505,6 +520,7 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
 </head>
 <body>
 <div id="splash" aria-hidden="true"><div class="sp-in"><img src="logo-mark.png" alt="" width="140" height="140"><b>Tubod SDA Church</b><span>Tubod, Isabel, Leyte</span><div class="sp-dots"><i></i><i></i><i></i></div></div></div>
+<script>try { var lk = JSON.parse(localStorage.getItem('tubodLook') || 'null'); if (lk){ var sp = document.getElementById('splash'); if (lk.logo) sp.querySelector('img').src = lk.logo; if (lk.name) sp.querySelector('b').textContent = lk.name; if (lk.tag) sp.querySelector('span').textContent = lk.tag; if (lk.accent){ document.documentElement.style.setProperty('--accent', lk.accent); document.documentElement.style.setProperty('--accent-dark', lk.dark); } } } catch (e) {}</script>
 <script>window.__sp0 = Date.now(); setTimeout(function () { var s = document.getElementById('splash'); if (s) s.remove(); }, 8000);</script>
 <div class="bg" id="bg"></div><div class="veil"></div>
 
@@ -568,7 +584,7 @@ const ICONS = {
   down:'M12 5v14M19 12l-7 7-7-7',
   church:'M12 2v4M10 4h4M12 6l5 5v11H7V11zM10 22v-5a2 2 0 0 1 4 0v5'
 };
-const LOGO = '<img src="logo-mark.png" alt="">';
+let LOGO = '<img src="logo-mark.png" alt="">';
 const icon = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 
 const CATS = {
@@ -577,9 +593,52 @@ const CATS = {
   testimony:{label:'Testimony', react:'Amen'},
   announcement:{label:'Announcement', react:'Amen'}
 };
-const LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
-const ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
-const NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['game','Bible Game','book','bible-game.html'],['me','My profile','user']];
+const DEF_LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
+const DEF_ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
+const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['game','Bible Game','book','bible-game.html'],['me','My profile','user']];
+let LIB_CATS = DEF_LIB_CATS, ROLES = DEF_ROLES, NAV = DEF_NAV, NAV_BIS = {}, NAV_HIDE = {};
+/* what admins changed on the Edit the site page */
+let SITE = {texts:{}, color:'blue', tabs:[], roles:[], libCats:[]}, siteSig = '';
+const COLORS = {blue:['Blue','#1D6A8A','#14516B','#E3F0F5','#EAF3F7'], navy:['Navy','#2B4C7E','#1E375D','#E4EAF4','#EBF0F7'], teal:['Teal','#147A74','#0E5C57','#E0F2F0','#E9F5F3'],
+  green:['Green','#2F7A4F','#225C3B','#E3F1E8','#EBF5EE'], purple:['Purple','#5E4B9C','#47387A','#ECE8F6','#F1EEF8'], maroon:['Maroon','#963A3A','#742B2B','#F5E6E6','#F8EDED'], brown:['Brown','#8A5A2B','#6A4420','#F3EBE1','#F7F1EA']};
+const TAB_ICONS = ['home','bell','folder','users','user','heart','chat','book','music','image','church','file','pin'];
+/* common texts admins may want to change (any other text can be added by typing it) */
+const SITE_TEXTS = ['Church library', 'Sermons, Sabbath School lessons, hymns and documents kept for the whole church family.',
+  'Everyone in the church family. Search a name to see if they are active.', 'Church announcements', 'Messages from the church leaders',
+  'Only church leaders can send announcements. You can say Amen and reply to any message.', 'This Sabbath', 'Upcoming events', 'Birthdays',
+  'Verse of the week', 'Worship schedule', 'Invite your family', 'Send the church page to Messenger, Facebook or a text.', 'Our church family',
+  'Ask the church admin or pastor for the code.', 'Welcome to the church family! Add your photo on My profile.'];
+function applySite(){
+  const st = S.settings || {};
+  const sig = (st.site || '') + '|' + (st.logoId || '');
+  if (sig === siteSig) return false;
+  const first = !siteSig; siteSig = sig;
+  let v = {}; try { v = JSON.parse(st.site || '{}') || {}; } catch (e) { v = {}; }
+  SITE = {texts:v.texts || {}, color:COLORS[v.color] ? v.color : 'blue', tabs:v.tabs || [], roles:v.roles || [], libCats:v.libCats || []};
+  ROLES = SITE.roles.length ? SITE.roles : DEF_ROLES;
+  if (SITE.libCats.length){
+    const list = SITE.libCats.filter(c => c.key !== 'other').map(c => [c.key, c.label]);
+    const oth = SITE.libCats.find(c => c.key === 'other');
+    LIB_CATS = list.concat([['other', oth ? oth.label : 'Other']]);
+  } else LIB_CATS = DEF_LIB_CATS;
+  const byKey = Object.fromEntries(SITE.tabs.map(t => [t.key, t]));
+  const order = SITE.tabs.map(t => t.key).concat(DEF_NAV.map(n => n[0]).filter(k => !byKey[k]));
+  NAV_BIS = {}; NAV_HIDE = {};
+  NAV = order.map(k => DEF_NAV.find(n => n[0] === k)).filter(Boolean).map(n => {
+    const t = byKey[n[0]] || {}; const out = n.slice(); if (t.label) out[1] = t.label; if (t.icon && ICONS[t.icon]) out[2] = t.icon;
+    if (t.bis) NAV_BIS[n[0]] = t.bis; if (t.hidden) NAV_HIDE[n[0]] = true; return out;
+  });
+  const c = COLORS[SITE.color], root = document.documentElement.style;
+  root.setProperty('--accent', c[1]); root.setProperty('--accent-dark', c[2]); root.setProperty('--soft', c[3]); root.setProperty('--soft2', c[4]);
+  const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.setAttribute('content', c[1]);
+  const logo = st.logoId ? imgUrl(st.logoId, 400) : '';
+  LOGO = `<img src="${logo || 'logo-mark.png'}" alt="">`;
+  const mk = $('#mark'); if (mk) mk.innerHTML = LOGO;
+  const fav = document.querySelector('link[rel=icon]'); if (fav) fav.href = logo || 'icon-192.png';
+  try { localStorage.setItem('tubodLook', JSON.stringify({logo, name:st.churchName || '', tag:st.tagline || '', accent:c[1], dark:c[2]})); } catch (e) {}
+  if (!first) textLayerRefresh();
+  return !first;
+}
 const MAX_FILE_MB = 15;
 
 /* ---------- state ---------- */
@@ -713,7 +772,7 @@ async function api(action, data = {}){
 function applySync(j){
   S.program = j.program || [];
   S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin';
-  S.settings = j.settings || {}; S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
+  S.settings = j.settings || {}; if (applySite()) setTimeout(() => { renderChrome(); mount(); }, 0); S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.events = j.events || [];
   S.waiting = j.members.filter(m => m.access === 'pending');
   S.profiles = Object.fromEntries(j.members.filter(m => m.access !== 'pending').map(m => [m.id, m]));
@@ -958,10 +1017,11 @@ function fromHash(){
   if (['home','news','library','members'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[3])).map(([r, label, ic, href]) => {
-    if (href) return `<a href="${href}">${icon(ic)}<span>${esc(label)}</span></a>`;
+  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[3])).map(([r, label0, ic, href]) => {
+    const bisL = LANG === 'ceb' && NAV_BIS[r], label = bisL || label0, nt = bisL ? ' data-notr' : '';
+    if (href) return `<a href="${href}"${nt}>${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : S.route === r);
-    return `<a href="#${r}" data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${kind === 'tabs' && label === 'Announcements' ? '<span class="lg">Announcements</span><span class="sh">News</span>' : `<span>${esc(label)}</span>`}</a>`;
+    return `<a href="#${r}"${nt} data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${kind === 'tabs' && label === 'Announcements' ? '<span class="lg">Announcements</span><span class="sh">News</span>' : `<span>${esc(label)}</span>`}</a>`;
   }).join('');
 }
 
@@ -1079,6 +1139,7 @@ async function loadGame(){
   gameBusy = false;
 }
 function gameCard(){
+  if (NAV_HIDE.game) return '';
   if (!GAME) return '<div id="gameCard"></div>';
   const ph = phNow(), sat = ph.getUTCDay() === 6, rows = GAME.challenge && GAME.challenge.length && sat ? GAME.challenge : GAME.lastChallenge || [];
   const top = (GAME.weekly || []).slice(0, 3);
@@ -1268,7 +1329,7 @@ function mount(){
       <div class="filters" id="libCats" role="group" aria-label="Library categories"></div><div class="grid" id="libList"></div>`;
   } else if (S.route === 'members'){
     v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Members</h1><p>Everyone in the church family. Search a name to see if they are active.</p><button class="btn primary" data-act="invite">Invite family</button>${S.isAdmin ? `<button class="btn" data-act="addperson">Add a person without an account</button>` : ''}</div>
-      <div class="tools"><input type="search" id="memQ" placeholder="Search by name or ministry" aria-label="Search members" value="${esc(S.memQ)}"></div>
+      <div class="tools"><input type="search" id="memQ" placeholder="Search by name, ministry or pastor" aria-label="Search members" value="${esc(S.memQ)}"></div>
       <div class="filters" id="memSts" role="group" aria-label="Member status" style="margin-bottom:12px"></div><div class="grid" id="memList"></div>`;
   } else {
     v.innerHTML = `${bannerHTML}<div id="profSlot"></div>`;
@@ -1619,7 +1680,7 @@ function renderLibrary(){
   const cats = $('#libCats'); if (!cats) return;
   cats.innerHTML = [['all','All'], ...LIB_CATS].map(([k, l]) => `<button type="button" class="chip ${S.libCat === k ? 'on' : ''}" data-act="libcat" data-c="${k}" aria-pressed="${S.libCat === k}">${esc(l)}</button>`).join('');
   const q = S.libQ.trim().toLowerCase();
-  const list = libFiles().filter(f => (S.libCat === 'all' || f.cat === S.libCat) && (!q || (f.title + ' ' + albumOf(f) + ' ' + descOf(f) + ' ' + (f.name || '')).toLowerCase().includes(q)));
+  const list = libFiles().filter(f => (S.libCat === 'all' || f.cat === S.libCat || (S.libCat === 'other' && !LIB_CATS.some(c => c[0] === f.cat))) && (!q || (f.title + ' ' + albumOf(f) + ' ' + descOf(f) + ' ' + (f.name || '')).toLowerCase().includes(q)));
   const entries = albumList(list).map(a => ({t:Math.max(...a.items.map(f => Number(f.createdAt) || 0)), html:albumCard(a)}))
     .concat(list.filter(f => !albumOf(f)).map(f => ({t:Number(f.createdAt) || 0, html:fileHTML(f)}))).sort((x, y) => y.t - x.t);
   $('#libList').innerHTML = !S.loaded.files ? '<div class="card empty" style="grid-column:1/-1">Loading files…</div>'
@@ -1658,7 +1719,7 @@ function renderMembers(){
     sts.innerHTML = [['all','All'], ...MST].filter(([k]) => k === 'all' || k === 'active' || cnt(k)).map(([k, l]) => `<button type="button" class="chip ${S.memSt === k ? 'on' : ''}" data-act="memst" data-c="${k}" aria-pressed="${S.memSt === k}">${esc(l)} <span data-notr>(${k === 'all' ? all.length : cnt(k)})</span></button>`).join('');
   }
   const list = all.filter(([, p]) => (S.memSt === 'all' || stOf(p) === S.memSt)
-      && (!q || ((p.name || '') + ' ' + (p.ministries || '') + ' ' + (p.role || '') + ' ' + mstLabel(stOf(p)) + ' ' + (p.statusNote || '')).toLowerCase().includes(q)))
+      && (!q || ((p.name || '') + ' ' + (p.ministries || '') + ' ' + (p.role || '') + ' ' + mstLabel(stOf(p)) + ' ' + (p.statusNote || '') + ' ' + (p.baptBy || '') + ' ' + (p.baptPlace || '')).toLowerCase().includes(q)))
     .sort((a, b) => (isDead(a[1]) - isDead(b[1])) || String(a[1].name).localeCompare(String(b[1].name)));
   $('#memList').innerHTML = !S.loaded.profiles ? '<div class="card empty" style="grid-column:1/-1">Loading members…</div>'
     : list.length ? list.map(([id, p]) => memCard(id, p)).join('')
@@ -1680,7 +1741,7 @@ function renderProfile(){
     slot.innerHTML = `<section class="card pf">
       <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
       <div class="pf-main">${av(id, 'xl')}<div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
-        ${S.isAdmin && !own ? `<div class="pf-btns"><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
+        ${S.isAdmin && !own ? `<div class="pf-btns"><button class="btn primary" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
         ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
         ${stOf(p) !== 'active' ? `<div class="st-box st-${stOf(p)}"><h3>${isDead(p) ? 'In loving memory' : 'Status: ' + mstLabel(stOf(p))}</h3>${p.statusDate ? `<p>${isDead(p) ? 'Passed away' : 'Since'} <b>${esc(stDate(p.statusDate))}</b></p>` : ''}${p.statusNote ? `<p data-notr>${esc(p.statusNote)}</p>` : ''}</div>` : ''}
@@ -1688,6 +1749,7 @@ function renderProfile(){
         ${p.bio ? `<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(p.bio)}</p>` : own ? `<p class="muted">Add your photo and a few words so the church family can get to know you.</p>` : ''}
         ${p.verse ? `<p class="quote">${esc(p.verse)}</p>` : ''}
         <div class="facts">${p.ministries ? `<span>Ministries <b>${esc(p.ministries)}</b></span>` : ''}${p.since ? `<span>Member since <b>${esc(p.since)}</b></span>` : ''}${p.bday ? `<span>Birthday <b>${MONTHS[Number(p.bday.slice(0, 2)) - 1]} ${Number(p.bday.slice(3))}</b></span>` : ''}</div>
+        ${p.baptDate || p.baptBy || p.baptPlace ? `<div class="facts bapt">${p.baptDate ? `<span>Baptized <b>${esc(baptText(p.baptDate))}</b></span>` : ''}${p.baptBy ? `<span>Baptized by <b data-notr>${esc(p.baptBy)}</b></span>` : ''}${p.baptPlace ? `<span>Place of baptism <b data-notr>${esc(p.baptPlace)}</b></span>` : ''}</div>` : ''}
       </div></section>
       ${mine2.length || own ? `<div class="sec-row"><h2 class="sec">Photos and videos</h2>${own ? `<button class="btn primary sm" data-act="myupload">${icon('upload')}Add photos or videos</button>` : ''}</div>${own || S.isAdmin ? storageHTML(id) : ''}
         ${pAlbums.length ? `<div class="grid">${pAlbums.sort((x, y) => Math.max(...y.items.map(f => +f.createdAt || 0)) - Math.max(...x.items.map(f => +f.createdAt || 0))).map(albumCard).join('')}</div>` : ''}
@@ -1700,37 +1762,63 @@ function renderProfile(){
 }
 
 /* ---------- profile, password ---------- */
-function openProfileModal(){
-  const p = S.profiles[S.uid] || {};
-  const m = openModal('Edit profile', `
+const baptText = d => /^\d{4}$/.test(d || '') ? d : stDate(d);
+function openProfileModal(uid){
+  uid = uid || S.uid;
+  const self = uid === S.uid, p = S.profiles[uid] || {}, adm = S.isAdmin;
+  const bd = p.baptDate || '', bdFull = /^\d{4}-\d{2}-\d{2}$/.test(bd);
+  const m = openModal(self ? 'Edit profile' : 'Edit member', `
     <form id="pForm" class="m-body" style="padding:0">
-      <label class="fld" for="pName">Your name<input id="pName" required maxlength="60" value="${esc(p.name || '')}" autocomplete="name"></label>
+      ${self ? '' : `<p class="muted">You are editing <b>${esc(p.name || '')}</b>${p.access === 'roll' ? ' (no account)' : ''}.</p>`}
+      <label class="fld" for="pName">${self ? 'Your name' : 'Full name'}<input id="pName" required maxlength="60" value="${esc(p.name || '')}" autocomplete="${self ? 'name' : 'off'}"></label>
       <label class="fld" for="pRole">Role in the church<input id="pRole" maxlength="60" list="roleList" value="${esc(p.role || '')}" placeholder="Member"><datalist id="roleList">${ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist></label>
       <label class="fld" for="pMin">Ministries<input id="pMin" maxlength="100" value="${esc(p.ministries || '')}" placeholder="Choir, Pathfinders, Deacons"></label>
       <label class="fld" for="pSince">Member since<input id="pSince" maxlength="4" inputmode="numeric" value="${esc(p.since || '')}" placeholder="Year"></label>
-      <label class="fld" for="pBio">About you<textarea id="pBio" maxlength="500" placeholder="A few words about you and your family">${esc(p.bio || '')}</textarea></label>
+      <label class="fld" for="pBio">${self ? 'About you' : 'About'}<textarea id="pBio" maxlength="500" placeholder="A few words about you and your family">${esc(p.bio || '')}</textarea></label>
       <label class="fld" for="pVerse">Favorite verse<textarea id="pVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(p.verse || '')}</textarea></label>
       <div class="fld"><span>Birthday (optional)</span><div class="bd-sel"><select id="pBdM" aria-label="Birthday month"><option value="">Month</option>${MONTHS.map((x, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${(p.bday || '').slice(0, 2) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${x}</option>`).join('')}</select><select id="pBdD" aria-label="Birthday day"><option value="">Day</option>${Array.from({length:31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => `<option value="${d}" ${(p.bday || '').slice(3) === d ? 'selected' : ''}>${Number(d)}</option>`).join('')}</select></div><small>Only the month and day are shown, so the church can greet you. Leave it empty to keep it private.</small></div>
-      <label class="fld" for="pPhone">Mobile number for text alerts<input id="pPhone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" value="${esc((S.me && S.me.phone) || '')}" placeholder="09171234567"><small>Only church leaders can see this. It is never shown to other members.</small></label>
-      <label class="pin-opt"><input type="checkbox" id="pSms" ${S.me && S.me.sms ? 'checked' : ''}> Text me church announcements</label>
+      ${adm ? `<fieldset class="fset"><legend>Baptism</legend>
+        <label class="fld" for="pBaD">Date of baptism<input id="pBaD" type="date" value="${esc(bdFull ? bd : '')}"><small>Only know the year? Leave the date empty and type the year below.</small></label>
+        <label class="fld" for="pBaY">Year of baptism<input id="pBaY" maxlength="4" inputmode="numeric" placeholder="Year" value="${esc(!bdFull ? bd : '')}"></label>
+        <label class="fld" for="pBaBy">Baptized by<input id="pBaBy" maxlength="80" list="pastorList" value="${esc(p.baptBy || '')}" placeholder="Name of the pastor"><datalist id="pastorList">${[...new Set(Object.values(S.profiles).map(x => x.baptBy).filter(Boolean))].map(x => `<option value="${esc(x)}">`).join('')}</datalist></label>
+        <label class="fld" for="pBaAt">Place of baptism<input id="pBaAt" maxlength="120" value="${esc(p.baptPlace || '')}" placeholder="For example: Tubod River, or the church"></label>
+      </fieldset>` : ''}
+      ${!self ? `<fieldset class="fset"><legend>Status</legend>${statusFields(p)}</fieldset>` : ''}
+      ${self ? `<label class="fld" for="pPhone">Mobile number for text alerts<input id="pPhone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" value="${esc((S.me && S.me.phone) || '')}" placeholder="09171234567"><small>Only church leaders can see this. It is never shown to other members.</small></label>
+      <label class="pin-opt"><input type="checkbox" id="pSms" ${S.me && S.me.sms ? 'checked' : ''}> Text me church announcements</label>` : ''}
       <label class="fld" for="pAv">Profile photo<input id="pAv" type="file" accept="image/*"><small>Optional. A face photo works best.</small></label>
+      ${!self && p.avatar ? `<label class="pin-opt"><input type="checkbox" id="pAvX"> Remove the profile photo</label>` : ''}
       <label class="fld" for="pCover">Cover photo<input id="pCover" type="file" accept="image/*"><small>Optional. A wide photo, such as your family or a church event.</small></label>
-      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="pSave">Save profile</button></div>
+      ${!self && p.cover ? `<label class="pin-opt"><input type="checkbox" id="pCoX"> Remove the cover photo</label>` : ''}
+      <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="pSave">${self ? 'Save profile' : 'Save'}</button></div>
     </form>`, true);
+  if (!self) wireStatus(m);
   $('#pForm', m).addEventListener('submit', async e => {
     e.preventDefault();
-    const btn = $('#pSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    const btn = $('#pSave', m), label = btn.textContent; btn.disabled = true; btn.textContent = 'Saving…';
+    const fail = msg => { toast(msg); btn.disabled = false; btn.textContent = label; };
     try {
-      const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value, phone:$('#pPhone', m).value, sms:$('#pSms', m).checked};
-      const bm = $('#pBdM', m).value, bd = $('#pBdD', m).value;
-      if ((bm && !bd) || (!bm && bd)){ toast('Choose both the month and the day of your birthday, or neither.'); btn.disabled = false; btn.textContent = 'Save profile'; return; }
-      body.bday = bm && bd ? bm + '-' + bd : '';
+      const body = {name:$('#pName', m).value, role:$('#pRole', m).value, ministries:$('#pMin', m).value, since:$('#pSince', m).value, bio:$('#pBio', m).value, verse:$('#pVerse', m).value};
+      if (self){ body.phone = $('#pPhone', m).value; body.sms = $('#pSms', m).checked; }
+      const bm = $('#pBdM', m).value, bdd = $('#pBdD', m).value;
+      if ((bm && !bdd) || (!bm && bdd)) return fail('Choose both the month and the day of the birthday, or neither.');
+      body.bday = bm && bdd ? bm + '-' + bdd : '';
+      if (adm){
+        const y = $('#pBaY', m).value.trim();
+        if (y && !/^\d{4}$/.test(y)) return fail('Type the year of baptism with 4 numbers, like 1998.');
+        Object.assign(body, {baptDate:$('#pBaD', m).value || y, baptBy:$('#pBaBy', m).value, baptPlace:$('#pBaAt', m).value});
+      }
+      if (!self){
+        const st = $('#msSt', m).value;
+        if (st === 'deceased' && !isDead(p) && !await confirmBox('Mark as deceased?', `${p.name} will be shown with "In loving memory".${p.access !== 'roll' ? ' Their account will be closed.' : ''}`, 'Yes, save')) return fail('Not saved.');
+        Object.assign(body, {uid, status:st, date:$('#msDate', m).value, note:$('#msNote', m).value, removeAvatar:!!($('#pAvX', m) || {}).checked, removeCover:!!($('#pCoX', m) || {}).checked});
+      }
       const af = $('#pAv', m).files[0], cf = $('#pCover', m).files[0];
       if (af) body.avatar = await shrink(af, {w:240, h:240, crop:true, q:.82, maxChars:300000});
       if (cf) body.cover = await shrink(cf, {w:1200, h:400, crop:true, q:.78, maxChars:900000});
-      await api('saveProfile', body); await sync();
-      closeModal(); toast('Profile saved.');
-    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save profile'; }
+      await api(self ? 'saveProfile' : 'adminSaveMember', body); await sync();
+      closeModal(); if (S.route === 'profile') renderProfile(); toast(self ? 'Profile saved.' : 'Member saved.');
+    } catch (err){ fail(errMsg(err)); }
   });
 }
 function openPasswordModal(){
@@ -1981,7 +2069,7 @@ function openSettingsModal(){
       <div style="display:flex;gap:8px;flex-wrap:wrap">${Number(st.liveUntil) > Date.now() ? '<button class="btn sm danger" type="button" data-act="endlive">End live now</button>' : '<button class="btn sm" type="button" data-act="golive">Go live now (3 hours)</button>'}<button class="btn sm" type="button" data-act="backup">Back up the church data now</button></div>
       <p class="muted" style="margin-top:-4px">A backup copy of the church sheet is also saved every week in Google Drive, in the Backups folder.</p>
       <label class="fld" for="sQuota">Storage limit for each member (GB)<input id="sQuota" type="number" min="0" max="10000" step="1" inputmode="numeric" value="${esc(st.memberQuotaGB == null || st.memberQuotaGB === '' ? '10' : st.memberQuotaGB)}"><small>How much each member may upload to the Library. Admins have no limit. 0 means no limit. All files share the church Google Drive.</small></label>
-      <button class="btn" type="button" data-act="members">Manage members</button>
+      <button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="siteedit">Edit the site</button>
       <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="sSave">Save settings</button></div>
     </form>`, true);
   $('#sForm', m).addEventListener('submit', async e => {
@@ -2011,7 +2099,7 @@ function svcWrite(list){ const box = $('#svcList'); if (box) box.innerHTML = svc
 function openMembersModal(){
   const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => `
     <div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${p.access === 'admin' ? 'Church admin' : p.access === 'roll' ? 'No account' : 'Member'}${p.role ? ' · ' + esc(p.role) : ''}</span>${stPill(p)}</div>
-    ${p.id === S.uid ? '<span class="meta">You</span>' : p.access === 'roll' ? `<button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>` : `<button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm" data-act="macc" data-uid="${esc(p.id)}" data-to="${p.access === 'admin' ? 'member' : 'admin'}">${p.access === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>`}</div>`).join('');
+    ${p.id === S.uid ? '<span class="meta">You</span>' : p.access === 'roll' ? `<button class="btn sm" data-act="medit" data-uid="${esc(p.id)}">Edit</button><button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>` : `<button class="btn sm" data-act="medit" data-uid="${esc(p.id)}">Edit</button><button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button><button class="btn sm" data-act="macc" data-uid="${esc(p.id)}" data-to="${p.access === 'admin' ? 'member' : 'admin'}">${p.access === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>`}</div>`).join('');
   const wait = (S.waiting || []).map(p => `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">Joined ${ago(p.createdAt)} · waiting for approval</span></div><button class="btn sm primary" data-act="macc" data-uid="${esc(p.id)}" data-to="member">Approve</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Decline</button></div>`).join('');
   openModal('Manage members', `${wait ? `<h3 style="margin-bottom:6px">Waiting for approval</h3><div class="mlist wait-list">${wait}</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">` : ''}<p class="muted">Admins can post announcements, pin and delete any post, and manage members.</p><div class="mlist">${rows}</div><div class="m-actions"><button class="btn" type="button" data-act="addperson">Add a person without an account</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`, true);
 }
@@ -2059,6 +2147,100 @@ function openAddPersonModal(){
       await api('addPerson', {name:$('#aName', m).value, role:$('#aRole', m).value, since:$('#aSince', m).value, status:$('#msSt', m).value, date:$('#msDate', m).value, note:$('#msNote', m).value});
       await sync(); closeModal(); toast('Added to the church list.');
     } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Add to the list'; }
+  });
+}
+/* ---------- Edit the site (admins): texts, logo and colors, menu tabs, lists ---------- */
+function openSiteModal(part){
+  part = part || 'texts';
+  const T = JSON.parse(JSON.stringify(SITE.texts || {}));
+  const textRow = (k, custom) => `<div class="se-row" data-k="${esc(k)}"><div class="orig" data-notr>Now: <b>${esc(k)}</b></div>
+    <div class="se-two"><input class="se-en" maxlength="500" placeholder="New text (English)" aria-label="New text (English)" value="${esc((T[k] || {}).en || '')}"><input class="se-bis" maxlength="500" placeholder="Bisaya (optional)" aria-label="Bisaya (optional)" value="${esc((T[k] || {}).bis || '')}"></div>
+    ${custom ? `<div class="se-acts"><button type="button" class="btn sm quiet" data-act="se-deltext">Remove this change</button></div>` : ''}</div>`;
+  const extra = Object.keys(T).filter(k => !SITE_TEXTS.includes(k));
+  const tabRows = NAV.map(n => {
+    const t = (SITE.tabs || []).find(x => x.key === n[0]) || {}, def = DEF_NAV.find(d => d[0] === n[0]);
+    return `<div class="se-row se-tabrow" data-k="${n[0]}"><div class="se-tab"><span class="ti">${icon(n[2])}</span><div class="orig" data-notr>Tab: <b>${esc(def[1])}</b></div></div>
+      <div class="se-two"><input class="se-lab" maxlength="30" placeholder="${esc(def[1])}" aria-label="Tab name" value="${esc(t.label || '')}"><input class="se-labb" maxlength="30" placeholder="Bisaya name (optional)" aria-label="Bisaya name (optional)" value="${esc(t.bis || '')}"></div>
+      <div class="se-acts"><select class="se-ic" aria-label="Icon">${TAB_ICONS.map(i => `<option value="${i}" ${n[2] === i ? 'selected' : ''}>${i}</option>`).join('')}</select>
+      ${n[0] === 'home' || n[0] === 'me' ? '' : `<label class="pin-opt"><input type="checkbox" class="se-hide" ${NAV_HIDE[n[0]] ? 'checked' : ''}> Hide this tab</label>`}
+      <button type="button" class="btn sm quiet" data-act="se-up" aria-label="Move up">${icon('up')}</button><button type="button" class="btn sm quiet" data-act="se-down" aria-label="Move down">${icon('down')}</button></div></div>`;
+  }).join('');
+  const catRow = (k, l) => `<div class="se-row se-catrow" data-k="${esc(k)}"><div class="se-acts"><input class="se-cat" maxlength="40" aria-label="Category name" value="${esc(l)}" style="flex:1">${k === 'other' ? '<span class="meta">Always kept</span>' : `<button type="button" class="btn sm quiet" data-act="se-delcat">Remove</button>`}</div></div>`;
+  const logoNow = S.settings.logoId ? imgUrl(S.settings.logoId, 400) : 'logo-mark.png';
+  const m = openModal('Edit the site', `<form id="seForm" class="m-body" style="padding:0">
+    <div class="se-seg" role="tablist">${[['texts','Texts'],['look','Logo and colors'],['menu','Menu tabs'],['lists','Lists']].map(([k, l]) => `<button type="button" class="chip ${part === k ? 'on' : ''}" data-act="se-part" data-p="${k}" aria-pressed="${part === k}">${l}</button>`).join('')}</div>
+    <section data-part="texts" ${part === 'texts' ? '' : 'hidden'}>
+      <p class="muted">Change any heading or text on the site. Leave a box empty to keep the text as it is. Members' posts and names are never changed.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px" id="seTexts">${SITE_TEXTS.map(k => textRow(k, false)).join('')}${extra.map(k => textRow(k, true)).join('')}</div>
+      <div class="se-row" style="margin-top:10px;background:var(--soft2)"><b>Change another text</b><small class="muted">Type it exactly as you see it on the site in English, then the new text.</small>
+        <input id="seNewK" maxlength="300" placeholder="Text as it is now" aria-label="Text as it is now"><div class="se-two"><input id="seNewEn" maxlength="500" placeholder="New text (English)" aria-label="New text (English)"><input id="seNewBis" maxlength="500" placeholder="Bisaya (optional)" aria-label="Bisaya (optional)"></div>
+        <div><button type="button" class="btn sm" data-act="se-addtext">Add</button></div></div>
+    </section>
+    <section data-part="look" ${part === 'look' ? '' : 'hidden'}>
+      <div class="fld"><span>Logo</span><div class="se-acts"><span class="logo-prev"><img id="seLogoImg" src="${esc(logoNow)}" alt="Current logo"></span>
+        <div style="display:flex;flex-direction:column;gap:6px"><input id="seLogo" type="file" accept="image/png,image/jpeg,image/webp" aria-label="New logo">${S.settings.logoId ? `<label class="pin-opt"><input type="checkbox" id="seLogoReset"> Go back to the original logo</label>` : ''}</div></div>
+        <small>A square PNG with a clear background looks best. It shows at the top, on the sign-in page, the loading screen and announcements. The app icon on phones' home screens stays the same.</small></div>
+      <div class="fld" style="margin-top:12px"><span>Main color</span><div class="sw-list" role="radiogroup" aria-label="Main color">${Object.entries(COLORS).map(([k, c]) => `<label><input type="radio" name="seColor" value="${k}" ${SITE.color === k ? 'checked' : ''}><span class="sw" style="background:${c[1]}"></span>${c[0]}</label>`).join('')}</div>
+        <small>Used for buttons, links and highlights.</small></div>
+    </section>
+    <section data-part="menu" ${part === 'menu' ? '' : 'hidden'}>
+      <p class="muted">Rename, hide or reorder the tabs. Home and My profile cannot be hidden. Hiding Bible Game also hides its card on the home page.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px" id="seTabs">${tabRows}</div>
+    </section>
+    <section data-part="lists" ${part === 'lists' ? '' : 'hidden'}>
+      <label class="fld" for="seRoles">Church roles (one on each line)<textarea id="seRoles" rows="8">${esc(ROLES.join('\n'))}</textarea><small>Shown as choices when someone fills in their role.</small></label>
+      <div class="fld" style="margin-top:12px"><span>Library categories</span><div style="display:flex;flex-direction:column;gap:6px" id="seCats">${LIB_CATS.map(([k, l]) => catRow(k, l)).join('')}</div>
+        <div style="margin-top:6px"><button type="button" class="btn sm" data-act="se-addcat">Add a category</button></div><small>Files in a removed category show under Other.</small></div>
+    </section>
+    <div class="m-actions"><button class="btn" type="button" data-act="settings">Back</button><button class="btn quiet" type="button" data-act="se-reset">Undo all changes</button><button class="btn primary" type="submit" id="seSave">Save</button></div>
+  </form>`, true);
+  const q = sel => $(sel, m);
+  m.addEventListener('click', async e => {
+    const b = e.target.closest('[data-act^="se-"]'); if (!b) return;
+    e.stopPropagation(); const a = b.dataset.act, row = b.closest('.se-row');
+    if (a === 'se-part'){ m.querySelectorAll('[data-part]').forEach(x => x.hidden = x.dataset.part !== b.dataset.p); m.querySelectorAll('[data-act=se-part]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); }
+    else if (a === 'se-deltext') row.remove();
+    else if (a === 'se-addtext'){
+      const k = q('#seNewK').value.trim(), en = q('#seNewEn').value.trim(), bi = q('#seNewBis').value.trim();
+      if (!k || (!en && !bi)){ toast('Type the text as it is now, and the new text.'); return; }
+      const old = [...m.querySelectorAll('#seTexts .se-row')].find(r => r.dataset.k === k);
+      if (old){ $('.se-en', old).value = en; $('.se-bis', old).value = bi; }
+      else { T[k] = {en, bis:bi}; q('#seTexts').insertAdjacentHTML('beforeend', textRow(k, true)); }
+      q('#seNewK').value = q('#seNewEn').value = q('#seNewBis').value = ''; toast('Added. Press Save to keep it.');
+    }
+    else if (a === 'se-up' && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+    else if (a === 'se-down' && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+    else if (a === 'se-delcat') row.remove();
+    else if (a === 'se-addcat'){ const oth = [...m.querySelectorAll('.se-catrow')].find(r => r.dataset.k === 'other'); const h = catRow('', ''); if (oth) oth.insertAdjacentHTML('beforebegin', h); else q('#seCats').insertAdjacentHTML('beforeend', h); const inp = [...m.querySelectorAll('.se-cat')].find(i => !i.value); if (inp) inp.focus(); }
+    else if (a === 'se-reset'){
+      if (!await confirmBox('Undo all changes to the site?', 'All changed texts, colors, tabs and lists go back to how they were at the start. The logo goes back to the original.', 'Undo all')){ openSiteModal(part); return; }
+      try { await api('saveSite', {site:{texts:{}, color:'blue', tabs:[], roles:[], libCats:[]}, resetLogo:true}); toast('The site is back to how it was.'); setTimeout(() => location.reload(), 600); }
+      catch (err){ toast(errMsg(err)); }
+    }
+  });
+  m.addEventListener('change', e => {
+    if (e.target.classList.contains('se-ic')) $('.ti', e.target.closest('.se-row')).innerHTML = icon(e.target.value);
+    if (e.target.id === 'seLogo' && e.target.files[0]) q('#seLogoImg').src = URL.createObjectURL(e.target.files[0]);
+  });
+  q('#seForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = q('#seSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    const fail = msg => { toast(msg); btn.disabled = false; btn.textContent = 'Save'; };
+    const texts = {};
+    m.querySelectorAll('#seTexts .se-row').forEach(r => { const en = $('.se-en', r).value.trim(), bi = $('.se-bis', r).value.trim(); if (en || bi) texts[r.dataset.k] = {en, bis:bi}; });
+    const tabs = [...m.querySelectorAll('.se-tabrow')].map(r => ({key:r.dataset.k, label:$('.se-lab', r).value.trim(), bis:$('.se-labb', r).value.trim(), icon:$('.se-ic', r).value, hidden:!!($('.se-hide', r) || {}).checked}));
+    const roles = q('#seRoles').value.split('\n').map(x => x.trim()).filter(Boolean);
+    const libCats = [...m.querySelectorAll('.se-catrow')].map(r => ({key:r.dataset.k, label:$('.se-cat', r).value.trim()}));
+    if (libCats.some(c => !c.label)) return fail('Give every library category a name, or remove it.');
+    const body = {site:{texts, color:(m.querySelector('input[name=seColor]:checked') || {}).value || 'blue', tabs, roles:roles.join('\n') === DEF_ROLES.join('\n') ? [] : roles,
+      libCats:libCats.map(c => c.key + '|' + c.label).join() === DEF_LIB_CATS.map(c => c[0] + '|' + c[1]).join() ? [] : libCats}};
+    const lf = q('#seLogo').files[0];
+    if (lf){
+      if (lf.size > 3 * 1024 * 1024) return fail('That logo picture is too big. Choose one under 3 MB.');
+      body.logo = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(lf); });
+    } else if ((q('#seLogoReset') || {}).checked) body.resetLogo = true;
+    try { await api('saveSite', body); toast('The site is updated.'); setTimeout(() => location.reload(), 600); }
+    catch (err){ fail(errMsg(err)); }
   });
 }
 async function memberAction(a, uid, to){
@@ -2134,6 +2316,8 @@ document.addEventListener('click', e => {
     case 'memst': S.memSt = el.dataset.c; renderMembers(); break;
     case 'mstatus': openStatusModal(el.dataset.uid, !!el.closest('.mlist')); break;
     case 'addperson': openAddPersonModal(); break;
+    case 'medit': openProfileModal(el.dataset.uid); break;
+    case 'siteedit': if (S.isAdmin) openSiteModal(); break;
     case 'upload': if (guard()) openUploadModal(); break;
     case 'delfile': deleteFile(id); break;
     case 'editsab': openSabbathModal(); break;
@@ -2324,6 +2508,15 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   // members
   'Everyone who has joined the church family page.':'Tanang miapil sa panid sa pamilya sa simbahan.', 'Search by name or ministry':'Pangitaa pinaagi sa ngalan o ministeryo',
   'Search members':'Pangitaa ang mga miyembro',
+  'Edit the site':'Usba ang site', 'Texts':'Mga teksto', 'Logo and colors':'Logo ug kolor', 'Menu tabs':'Mga tab sa menu', 'Lists':'Mga lista',
+  'Change another text':'Usba ang laing teksto', 'Main color':'Panguna nga kolor', 'Hide this tab':'Itago kini nga tab', 'Undo all changes':'Ibalik tanan',
+  'Add a category':'Idugang og kategorya', 'Library categories':'Mga kategorya sa librarya', 'Church roles (one on each line)':'Mga papel sa simbahan (usa kada linya)',
+  'The site is updated.':'Na-update na ang site.', 'Go back to the original logo':'Ibalik ang orihinal nga logo', 'Remove this change':'Tangtanga kini nga kausaban',
+  'Baptism':'Bunyag', 'Baptized':'Gibunyagan', 'Baptized by':'Gibunyagan ni', 'Place of baptism':'Dapit sa bunyag', 'Date of baptism':'Petsa sa bunyag', 'Year of baptism':'Tuig sa bunyag',
+  'Name of the pastor':'Ngalan sa pastor', 'For example: Tubod River, or the church':'Pananglitan: Suba sa Tubod, o ang simbahan', 'Only know the year? Leave the date empty and type the year below.':'Tuig ra ang nahibaw-an? Ayaw butangi ang petsa ug isulat ang tuig sa ubos.',
+  'Edit member':'Usba ang miyembro', 'Member saved.':'Na-save ang miyembro.', 'Remove the profile photo':'Tangtanga ang litrato sa profile', 'Remove the cover photo':'Tangtanga ang cover nga litrato',
+  'Search by name, ministry or pastor':'Pangitaa pinaagi sa ngalan, ministeryo o pastor', 'About':'Bahin', 'Not saved.':'Wala na-save.',
+  'Choose both the month and the day of the birthday, or neither.':'Pilia ang bulan ug adlaw sa pagkatawo, o ayaw tanan.', 'Type the year of baptism with 4 numbers, like 1998.':'Isulat ang tuig sa bunyag nga 4 ka numero, sama sa 1998.',
   'Active':'Aktibo', 'Inactive':'Dili aktibo', 'Backslidden':'Nahisalaag', 'Offshoot':'Nibulag (offshoot)', 'Deceased':'Namatay na', 'All':'Tanan',
   'In loving memory':'Sa mahigugmaong paghinumdom', 'Passed away':'Namatay', 'Since':'Sukad', 'Status':'Kahimtang', 'Member status':'Kahimtang sa miyembro',
   'Change status':'Usba ang kahimtang', 'Status saved.':'Na-save ang kahimtang.', 'No account':'Walay account', 'Since when (optional)':'Sukad kanus-a (kon gusto)',
@@ -2395,28 +2588,34 @@ function bisSeg(t){
   for (const [re, r] of BIS_RX) if (re.test(t)) return t.replace(re, r);
   return null;
 }
+/* a text the admin changed on the Edit the site page wins over the built-in English and Bisaya */
+function ovr(core){ const t = SITE.texts[core]; if (!t) return null; return (LANG === 'ceb' && t.bis) || t.en || null; }
+function xl(core){ const o = ovr(core); if (o != null) return o; return LANG === 'ceb' ? bisSeg(core) : null; }
+const textLayerOn = () => LANG === 'ceb' || Object.keys(SITE.texts).length > 0;
 function bis(v){
   const core = v.trim(); if (!core) return null;
   const lead = v.slice(0, v.indexOf(core)), trail = v.slice(v.indexOf(core) + core.length);
-  let r = bisSeg(core);
+  let r = xl(core);
   if (r == null && core.includes(' · ')){
     let changed = false;
-    const out = core.split(' · ').map(p => { const x = bisSeg(p); if (x != null){ changed = true; return x; } return p; });
+    const out = core.split(' · ').map(p => { const x = xl(p); if (x != null){ changed = true; return x; } return p; });
     if (changed) r = out.join(' · ');
   }
   return r == null ? null : lead + r + trail;
 }
 /* translate what is on screen, leaving members' own words (posts, comments, names) as they wrote them */
 const BIS_SKIP = 'script,style,textarea,.p-text,.tx,.cm-b p,.f-desc,[data-notr]';
-const bisDone = new WeakMap();
+let bisDone = new WeakMap();
 const BIS_TABS = {'Members':'Miyembro', 'My profile':'Ako', 'Announcements':'Pahibalo', 'News':'Pahibalo'};
 function bisText(n){
+  if (!textLayerOn()) return;
   const v = n.nodeValue; if (bisDone.get(n) === v) return;
   const p = n.parentElement; if (!p || p.closest(BIS_SKIP)) { bisDone.set(n, v); return; }
-  const r = p.closest('.tabs') && BIS_TABS[v.trim()] ? BIS_TABS[v.trim()] : bis(v); if (r != null && r !== v) n.nodeValue = r;
+  const r = LANG === 'ceb' && p.closest('.tabs') && BIS_TABS[v.trim()] ? BIS_TABS[v.trim()] : bis(v); if (r != null && r !== v) n.nodeValue = r;
   bisDone.set(n, n.nodeValue);
 }
 function bisAttrs(el){
+  if (!textLayerOn()) return;
   if (el.closest(BIS_SKIP + ',input[type=hidden]') && el.tagName !== 'TEXTAREA') return;
   ['placeholder', 'aria-label', 'title'].forEach(a => {
     const v = el.getAttribute(a); if (!v || el['_bis_' + a] === v) return;
@@ -2432,9 +2631,9 @@ function bisTree(root){
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
   while ((n = w.nextNode())) bisText(n);
 }
+function textLayerRefresh(){ bisDone = new WeakMap(); if (document.body) bisTree(document.body); }
 function startBisaya(){
-  if (LANG !== 'ceb') return;
-  document.documentElement.lang = 'ceb';
+  if (LANG === 'ceb') document.documentElement.lang = 'ceb';
   bisTree(document.body);
   new MutationObserver(ms => {
     for (const m of ms){

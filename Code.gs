@@ -8,7 +8,7 @@
  */
 
 const SCHEMA = {
-  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote'],
+  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote', 'baptDate', 'baptBy', 'baptPlace'],
   Posts:     ['id', 'authorId', 'cat', 'text', 'photos', 'pinned', 'createdAt', 'sms', 'svc'],
   Comments:  ['id', 'postId', 'authorId', 'text', 'createdAt'],
   Reactions: ['id', 'postId', 'uid', 'createdAt'],
@@ -223,7 +223,7 @@ function resetPasswordFromEditor() {
 
 /* ---------- web app entry points ---------- */
 function doGet() {
-  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, v: 7 });
+  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, v: 8 });
 }
 
 function doPost(e) {
@@ -262,7 +262,7 @@ const WRITE = {
   deleteComment: true, react: true, saveProfile: true, changePassword: true, uploadFile: true, finishUpload: true, deleteFile: true,
   saveSettings: true, setAccess: true, removeMember: true, resetPassword: true, saveProgram: true,
   saveEvent: true, deleteEvent: true, saveSabbath: true, goLive: true, saveScore: true,
-  setMemberStatus: true, addPerson: true
+  setMemberStatus: true, addPerson: true, adminSaveMember: true, saveSite: true
 };
 
 const ACTIONS = {
@@ -396,26 +396,38 @@ const ACTIONS = {
   },
 
   saveProfile: function (r, me) {
-    const patch = {
-      name: clean_(r.name, 60), title: clean_(r.role, 60), ministries: clean_(r.ministries, 100),
-      since: String(r.since || '').replace(/\D/g, '').slice(0, 4), bio: clean_(r.bio, 500, true), verse: clean_(r.verse, 300, true)
-    };
-    if (patch.name.length < 2) throw err_('Please enter your name.', 'invalid');
-    if (Object.prototype.hasOwnProperty.call(r, 'phone')) {
-      const raw = String(r.phone || '').trim(), ph = raw ? normPhone_(raw) : '';
-      if (raw && !ph) throw err_('Enter a Philippine mobile number like 09171234567.', 'invalid');
-      if (r.sms && !ph) throw err_('Add your mobile number to get text alerts.', 'invalid');
-      patch.phone = ph;
-      patch.sms = (r.sms && ph) ? '1' : '';
+    update_('Members', me.id, profilePatch_(r, me, false));
+    return {};
+  },
+
+  /* An admin edits any member's details, including people listed without an account. */
+  adminSaveMember: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can edit other members.', 'denied');
+    const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
+    if (!who) throw err_('That member is no longer here.', 'missing');
+    const st = Object.prototype.hasOwnProperty.call(r, 'status') ? statusFields_(r) : null;
+    const dying = st && st.mstatus === 'deceased' && who.mstatus !== 'deceased';
+    if (dying && who.id === me.id) throw err_('You cannot mark yourself as deceased.', 'denied');
+    if (dying && who.access === 'admin' && readAll_('Members').filter(function (m) { return m.access === 'admin' && m.mstatus !== 'deceased'; }).length <= 1)
+      throw err_('The church needs at least one admin.', 'denied');
+    const patch = Object.assign(profilePatch_(r, who, true), st || {});
+    if (dying && who.access === 'admin') patch.access = 'member';
+    update_('Members', who.id, patch);
+    if (dying) remove_('Sessions', function (x) { return x.uid === who.id; });
+    return {};
+  },
+
+  /* What admins can change about the site itself: texts, logo, colors, menu tabs, roles and library categories. */
+  saveSite: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can edit the site.', 'denied');
+    const upd = {};
+    if (r.site) {
+      upd.site = JSON.stringify(cleanSite_(r.site));
+      if (upd.site.length > 45000) throw err_('That is too much text to save. Make some of the changed texts shorter, or remove a few.', 'too_big');
     }
-    if (Object.prototype.hasOwnProperty.call(r, 'bday')) {
-      const b = String(r.bday || '').trim();
-      if (b && !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(b)) throw err_('Choose your birthday month and day.', 'invalid');
-      patch.bday = b;
-    }
-    if (r.avatar) { trash_(me.avatar); patch.avatar = saveImage_(r.avatar, 'avatar', memberFolder_(me)); }
-    if (r.cover) { trash_(me.cover); patch.cover = saveImage_(r.cover, 'cover', memberFolder_(me)); }
-    update_('Members', me.id, patch);
+    if (r.logo) { trash_(getSetting_('logoId')); upd.logoId = saveImage_(r.logo, 'logo'); }
+    else if (r.resetLogo) { trash_(getSetting_('logoId')); upd.logoId = ''; }
+    setSettings_(upd);
     return {};
   },
 
@@ -439,7 +451,7 @@ const ACTIONS = {
     const f = memberFolder_(me).createFile(Utilities.newBlob(bytes, mime, name));
     f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     append_('Files', {
-      id: id_('f'), title: title, cat: FILE_CATS.indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
+      id: id_('f'), title: title, cat: fileCats_().indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
       driveId: f.getId(), name: name, mime: mime, size: String(bytes.length), authorId: me.id, createdAt: String(Date.now())
     });
     return {};
@@ -507,7 +519,7 @@ const ACTIONS = {
     f.setDescription('');
     f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     append_('Files', {
-      id: id_('f'), title: title, cat: FILE_CATS.indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
+      id: id_('f'), title: title, cat: fileCats_().indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
       driveId: f.getId(), name: name, mime: mime, size: String(f.getSize()), authorId: me.id, createdAt: String(Date.now())
     });
     return {};
@@ -834,7 +846,80 @@ function clean_(v, max, multiline) {
 }
 function pub_(m) {
   return { id: m.id, name: m.name, access: m.access, role: m.title, ministries: m.ministries, since: m.since, bio: m.bio, verse: m.verse, avatar: m.avatar, cover: m.cover, bday: m.bday || '', createdAt: Number(m.createdAt) || 0,
-    status: MSTATUS[m.mstatus] ? m.mstatus : 'active', statusDate: m.mstatusDate || '', statusNote: m.mstatusNote || '' };
+    status: MSTATUS[m.mstatus] ? m.mstatus : 'active', statusDate: m.mstatusDate || '', statusNote: m.mstatusNote || '',
+    baptDate: m.baptDate || '', baptBy: m.baptBy || '', baptPlace: m.baptPlace || '' };
+}
+function profilePatch_(r, who, byAdmin) {
+  const has = function (k) { return Object.prototype.hasOwnProperty.call(r, k); };
+  const patch = {
+    name: clean_(r.name, 60), title: clean_(r.role, 60), ministries: clean_(r.ministries, 100),
+    since: String(r.since || '').replace(/\D/g, '').slice(0, 4), bio: clean_(r.bio, 500, true), verse: clean_(r.verse, 300, true)
+  };
+  if (patch.name.length < 2) throw err_(byAdmin ? 'Please enter the full name.' : 'Please enter your name.', 'invalid');
+  if (has('phone') && !byAdmin) {
+    const raw = String(r.phone || '').trim(), ph = raw ? normPhone_(raw) : '';
+    if (raw && !ph) throw err_('Enter a Philippine mobile number like 09171234567.', 'invalid');
+    if (r.sms && !ph) throw err_('Add your mobile number to get text alerts.', 'invalid');
+    patch.phone = ph;
+    patch.sms = (r.sms && ph) ? '1' : '';
+  }
+  if (has('bday')) {
+    const b = String(r.bday || '').trim();
+    if (b && !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(b)) throw err_('Choose the birthday month and day.', 'invalid');
+    patch.bday = b;
+  }
+  /* baptism is part of the church record, so only admins change it */
+  if ((byAdmin || who.access === 'admin') && has('baptDate')) {
+    const d = String(r.baptDate || '').trim();
+    if (d && !/^\d{4}(-\d{2}-\d{2})?$/.test(d)) throw err_('Enter the baptism date, or just the year.', 'invalid');
+    if (d.length === 10 && isNaN(new Date(d + 'T00:00:00Z'))) throw err_('Enter the baptism date, or just the year.', 'invalid');
+    patch.baptDate = d; patch.baptBy = clean_(r.baptBy, 80); patch.baptPlace = clean_(r.baptPlace, 120);
+  }
+  const dest = who.access === 'roll' ? folder_() : memberFolder_(who);
+  if (r.avatar) { trash_(who.avatar); patch.avatar = saveImage_(r.avatar, 'avatar', dest); }
+  else if (byAdmin && r.removeAvatar) { trash_(who.avatar); patch.avatar = ''; }
+  if (r.cover) { trash_(who.cover); patch.cover = saveImage_(r.cover, 'cover', dest); }
+  else if (byAdmin && r.removeCover) { trash_(who.cover); patch.cover = ''; }
+  return patch;
+}
+const SITE_TABS = ['home', 'news', 'library', 'members', 'game', 'me'];
+const SITE_ICONS = ['home', 'bell', 'folder', 'users', 'user', 'heart', 'chat', 'book', 'music', 'image', 'church', 'file', 'pin'];
+const SITE_COLORS = ['blue', 'navy', 'teal', 'green', 'purple', 'maroon', 'brown'];
+function cleanSite_(v) {
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { v = {}; } }
+  v = v && typeof v === 'object' ? v : {};
+  const out = { texts: {}, color: SITE_COLORS.indexOf(v.color) >= 0 ? v.color : 'blue', tabs: [], roles: [], libCats: [] };
+  let n = 0;
+  Object.keys(v.texts || {}).forEach(function (k) {
+    const key = clean_(k, 300), t = v.texts[k] || {}, en = clean_(t.en, 500), bis = clean_(t.bis, 500);
+    if (key && (en || bis) && n < 200) { out.texts[key] = { en: en, bis: bis }; n++; }
+  });
+  const seen = {};
+  (Array.isArray(v.tabs) ? v.tabs : []).forEach(function (t) {
+    if (!t || SITE_TABS.indexOf(t.key) < 0 || seen[t.key]) return;
+    seen[t.key] = true;
+    out.tabs.push({ key: t.key, label: clean_(t.label, 30), bis: clean_(t.bis, 30), icon: SITE_ICONS.indexOf(t.icon) >= 0 ? t.icon : '',
+      hidden: !!t.hidden && t.key !== 'home' && t.key !== 'me' });
+  });
+  (Array.isArray(v.roles) ? v.roles : []).forEach(function (x) { const t = clean_(x, 60); if (t && out.roles.length < 60 && out.roles.indexOf(t) < 0) out.roles.push(t); });
+  const keys = {};
+  (Array.isArray(v.libCats) ? v.libCats : []).forEach(function (c) {
+    if (!c || out.libCats.length >= 30) return;
+    const label = clean_(c.label, 40);
+    let key = String(c.key || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30);
+    if (!label) return;
+    if (!key) key = 'c-' + Utilities.getUuid().replace(/-/g, '').slice(0, 8);
+    if (keys[key]) return;
+    keys[key] = true;
+    out.libCats.push({ key: key, label: label });
+  });
+  return out;
+}
+/* library categories: the built-in ones plus any the admins added on the Edit the site page */
+function fileCats_() {
+  let extra = [];
+  try { extra = (JSON.parse(getSetting_('site') || '{}').libCats || []).map(function (c) { return c.key; }); } catch (e) { extra = []; }
+  return FILE_CATS.concat(extra);
 }
 const MSTATUS = { active: true, inactive: true, backslidden: true, offshoot: true, deceased: true };
 function statusFields_(r) {
