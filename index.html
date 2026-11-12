@@ -275,6 +275,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sw-list .sw{width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
 .sw-list input{position:absolute;opacity:0;pointer-events:none}.sw-list input:checked+.sw{box-shadow:0 0 0 3px var(--ink)}.sw-list input:focus-visible+.sw{outline:2px solid var(--ink);outline-offset:3px}
 .logo-prev{width:96px;height:96px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center;background:#fff;overflow:hidden}.logo-prev img{max-width:88%;max-height:88%}
+.auth-new{margin:12px 0 0;text-align:center;font-size:.92rem;color:var(--muted)}.auth-new .linkish{color:var(--accent);font-weight:600}
+.vrow.done{opacity:.6}.vrow .mi{gap:2px}
 .give .card-h{display:flex;justify-content:space-between;align-items:center}
 .give-qr{text-align:center;margin:8px 0}.give-qr img{max-width:200px;width:70%;border:1px solid var(--line);border-radius:12px;cursor:zoom-in;background:#fff;padding:6px}.give-qr small{display:block;color:var(--muted);font-size:.8rem;margin-top:4px}
 .give-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0 0}.give-dl dt{color:var(--muted)}.give-dl dd{margin:0;font-weight:600;overflow-wrap:anywhere}
@@ -869,7 +871,7 @@ async function api(action, data = {}){
 }
 function applySync(j){
   S.program = j.program || [];
-  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin'; S.lv = j.me.access; S.canPost = S.isAdmin || S.lv === 'editor'; S.canMem = S.isAdmin || S.lv === 'clerk'; S.canAttend = S.canPost || S.canMem; S.groups = j.groups || [];
+  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin'; S.lv = j.me.access; S.canPost = S.isAdmin || S.lv === 'editor'; S.canMem = S.isAdmin || S.lv === 'clerk'; S.canAttend = S.canPost || S.canMem; S.groups = j.groups || []; S.newVisitors = j.newVisitors || 0;
   S.settings = j.settings || {}; if (applySite()) setTimeout(() => { renderChrome(); mount(); }, 0); S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.events = j.events || [];
   S.waiting = j.members.filter(m => m.access === 'pending');
@@ -1068,20 +1070,57 @@ function showAuth(mode, msg){
         <label class="fld" for="lgUser">Username<input id="lgUser" autocomplete="username" autocapitalize="none" required></label>
         <label class="fld" for="lgPass">Password<input id="lgPass" type="password" autocomplete="current-password" required></label>
         <div class="err" id="authErr" role="alert">${esc(msg || '')}</div>
-        <button class="btn primary" type="submit">Sign in</button></form>`
+        <button class="btn primary" type="submit">Sign in</button></form>
+        <p class="auth-new">First time here? <button type="button" class="linkish" data-act="visitorintro">Introduce yourself to the church</button></p>`
       : `<form id="authJoin">
         <label class="fld" for="jnName">Your full name<input id="jnName" autocomplete="name" maxlength="60" required></label>
         <label class="fld" for="jnUser">Choose a username<input id="jnUser" autocomplete="username" autocapitalize="none" maxlength="40" required><small>Letters and numbers only, no spaces. You will use it to sign in.</small></label>
         <label class="fld" for="jnPass">Choose a password<input id="jnPass" type="password" autocomplete="new-password" minlength="6" required><small>At least 6 characters.</small></label>
         <label class="fld" for="jnCode">Church join code<input id="jnCode" autocapitalize="characters" autocomplete="off" required><small>Ask the church admin or pastor for the code.</small></label>
         <div class="err" id="authErr" role="alert">${esc(msg || '')}</div>
-        <button class="btn primary" type="submit">Join</button></form>`}`;
+        <button class="btn primary" type="submit">Join</button></form>
+        <p class="auth-new">Just visiting, no account yet? <button type="button" class="linkish" data-act="visitorintro">Introduce yourself to the church</button></p>`}`;
   }
   a.innerHTML = `<div class="card auth-card"><div style="display:flex;justify-content:flex-end;margin:-8px -6px -8px 0"><button class="lang-btn" type="button" data-act="lang" data-notr>${LANG === 'ceb' ? 'English' : 'Bisaya'}</button></div>${head}${body}</div>`;
   const f = $('input', a); if (f && mode !== 'offline') f.focus();
   renderChrome();
 }
 function hideAuth(){ if (S.pending){ showAuth('pending'); return; } const a = $('#auth'); if (a) a.remove(); }
+function openVisitorModal(){
+  const m = openModal('Welcome! Introduce yourself', `<form id="viForm" class="m-body" style="padding:0">
+    <p class="muted">New to ${esc(S.settings.churchName || 'the church')}? Leave your name and how to reach you, and a church leader will welcome you. You do not need an account.</p>
+    <label class="fld" for="viName">Your name<input id="viName" maxlength="60" required autocomplete="name"></label>
+    <label class="fld" for="viContact">How can we reach you?<input id="viContact" maxlength="80" required placeholder="Mobile number, Messenger or email"></label>
+    <label class="fld" for="viHeard">How did you hear about us? (optional)<input id="viHeard" maxlength="80" placeholder="A friend, Facebook, walked by…"></label>
+    <label class="fld" for="viMsg">Anything you'd like to say? (optional)<textarea id="viMsg" maxlength="500" placeholder="A prayer request, a question, or just hello"></textarea></label>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="viSave">Send</button></div></form>`, true);
+  $('#viForm', m).addEventListener('submit', async e => {
+    e.preventDefault(); const btn = $('#viSave', m); btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await api('visitorCard', {name:$('#viName', m).value, contact:$('#viContact', m).value, heard:$('#viHeard', m).value, message:$('#viMsg', m).value});
+      closeModal();
+      openModal('Thank you! 🙏', `<div class="m-body"><p>Thank you for introducing yourself. A church leader will reach out to welcome you. We hope to see you this Sabbath!</p><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Close</button></div></div>`);
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Send'; }
+  });
+}
+/* leaders see who introduced themselves */
+function openVisitorsModal(){
+  openModal('New visitors', '<p class="muted" style="padding:0 20px 20px">Loading…</p>', true);
+  api('listVisitors').then(r => {
+    const m = $('#modal'); if (!m) return;
+    const list = r.visitors || [];
+    const row = v => `<div class="mrow vrow ${v.handled ? 'done' : ''}">${av(null, 'sm')}<div class="mi"><b data-notr>${esc(v.name)}</b><span class="meta" data-notr>${esc(v.contact)}${v.heard ? ' · heard: ' + esc(v.heard) : ''}</span>${v.message ? `<span class="meta" data-notr style="white-space:pre-wrap">${esc(v.message)}</span>` : ''}<span class="meta">${ago(v.createdAt)}${v.handled ? ' · followed up by ' + esc(v.handledBy) : ''}</span></div>
+      <div class="se-acts"><button class="btn sm ${v.handled ? 'quiet' : 'primary'}" data-act="vdone" data-id="${esc(v.id)}" data-on="${v.handled ? '' : '1'}">${v.handled ? 'Mark new' : 'Followed up'}</button><button class="btn sm danger" data-act="vdel" data-id="${esc(v.id)}">Remove</button></div></div>`;
+    const sheet = $('.sheet', m); sheet.querySelectorAll(':scope > :not(header)').forEach(x => x.remove());
+    sheet.insertAdjacentHTML('beforeend', `<div class="m-body">${list.length ? `<div class="mlist">${list.map(row).join('')}</div>` : '<p class="muted">No visitor messages yet. When someone taps “Introduce yourself” on the sign-in page, they show up here.</p>'}<div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div></div>`);
+  }).catch(err => { const m = $('#modal'); if (m) toast(errMsg(err)); });
+}
+async function visitorAction(a, el){
+  try {
+    if (a === 'vdone'){ await api('handleVisitor', {id:el.dataset.id, handled:!!el.dataset.on}); await sync(); openVisitorsModal(); }
+    else if (a === 'vdel'){ if (!await confirmBox('Remove this visitor message?', 'It will be deleted for everyone.', 'Remove')){ openVisitorsModal(); return; } await api('handleVisitor', {id:el.dataset.id, remove:true}); await sync(); openVisitorsModal(); }
+  } catch (err){ toast(errMsg(err)); }
+}
 async function authSubmit(kind, form){
   const err = $('#authErr'), btn = $('button[type=submit]', form), old = btn.textContent;
   err.textContent = ''; btn.disabled = true; btn.textContent = 'Please wait…';
@@ -1228,13 +1267,18 @@ async function deleteEvent(id){
   try { await api('deleteEvent', {id}); await sync(); openEventsModal(); toast('Event removed.'); } catch (err){ toast(errMsg(err)); }
 }
 function birthdaysCard(){
-  const n = phNow(), list = [];
+  const n = phNow(), rows = [];
+  const annYears = a => { const m = /^(\d{4})-/.exec(a || ''); return m ? n.getUTCFullYear() - Number(m[1]) : 0; };
   for (let i = 0; i < 8; i++){
-    const d = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + i)), md = d.toISOString().slice(5, 10);
-    Object.values(S.profiles).filter(p => p.bday === md && !isDead(p)).forEach(p => list.push({p, i, d}));
+    const d = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + i)), md = d.toISOString().slice(5, 10), dl = `${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}`;
+    Object.values(S.profiles).filter(p => !isDead(p)).forEach(p => {
+      if (p.bday === md) rows.push({id:p.id, i, icon:'🎂', today:`Happy birthday, ${p.name}! 🎂`, later:`${p.name} · birthday · ${dl}`});
+      if ((p.anniv || '').slice(-5) === md){ const y = annYears(p.anniv); rows.push({id:p.id, i, icon:'💍', today:`Happy${y ? ' ' + y + (y === 1 ? 'st' : y === 2 ? 'nd' : y === 3 ? 'rd' : 'th') : ''} anniversary, ${p.name}! 💍`, later:`${p.name} · wedding${y ? ' (' + y + ' yrs)' : ''} · ${dl}`}); }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(p.baptDate || '') && p.baptDate.slice(5) === md){ const y = n.getUTCFullYear() - Number(p.baptDate.slice(0, 4)); rows.push({id:p.id, i, icon:'💧', today:`${p.name}: ${y > 0 ? y + ' years since baptism 💧' : 'baptism anniversary 💧'}`, later:`${p.name} · baptism${y > 0 ? ' (' + y + ' yrs)' : ''} · ${dl}`}); }
+    });
   }
-  if (!list.length) return '';
-  return `<div class="card bday"><h3>Birthdays</h3><ul style="list-style:none;margin:0;padding:0">${list.map(({p, i, d}) => `<li class="${i ? '' : 'today'}">${av(p.id, 'sm')}<span>${i ? `${esc(p.name)} · ${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}` : `Happy birthday, ${esc(p.name)}! 🎂`}</span></li>`).join('')}</ul></div>`;
+  if (!rows.length) return '';
+  return `<div class="card bday"><h3>Birthdays &amp; anniversaries</h3><ul style="list-style:none;margin:0;padding:0">${rows.map(r => `<li class="${r.i ? '' : 'today'}">${av(r.id, 'sm')}<span>${esc(r.i ? r.later : r.today)}</span></li>`).join('')}</ul></div>`;
 }
 /* Bible game: this week's Sabbath Challenge (or last week's winners) and top players */
 let GAME = null, gameAt = 0, gameBusy = false;
@@ -1267,16 +1311,17 @@ function renderSide(){
   const st = S.settings, n = Object.values(S.profiles).filter(p => !isDead(p)).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${thisSabbathCard()}${rosterCard()}${eventsCard()}${birthdaysCard()}${givingCard()}${gameCard()}${sched}${verse}
+  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${givingCard()}${thisSabbathCard()}${rosterCard()}${eventsCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
     <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
     <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
 }
 function renderBanner(){
   const b = $('#banner'); if (!b) return;
   const wait = S.isAdmin && S.waiting && S.waiting.length ? `<div class="note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between"><span><b>${S.waiting.length}</b> new ${S.waiting.length === 1 ? 'person is' : 'people are'} waiting for your approval.</span><button class="btn sm primary" data-act="members">Review</button></div>` : '';
+  const vis = S.canMem && S.newVisitors ? `<div class="note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between"><span><b>${S.newVisitors}</b> new visitor${S.newVisitors === 1 ? '' : 's'} introduced ${S.newVisitors === 1 ? 'themselves' : 'themselves'}.</span><button class="btn sm primary" data-act="visitors">See</button></div>` : '';
   const off = navigator.onLine === false ? `<div class="note warn">You are offline. You are seeing the posts saved on this phone. New posts load when the signal comes back.</div>`
     : S.offline ? `<div class="note warn">Cannot reach the church server right now. You are seeing the last posts that loaded.</div>` : '';
-  b.innerHTML = off + wait;
+  b.innerHTML = off + wait + vis;
 }
 /* worship times (weekly, Philippine time) */
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -1891,6 +1936,7 @@ function openProfileModal(uid){
       <label class="fld" for="pBio">${self ? 'About you' : 'About'}<textarea id="pBio" maxlength="500" placeholder="A few words about you and your family">${esc(p.bio || '')}</textarea></label>
       <label class="fld" for="pVerse">Favorite verse<textarea id="pVerse" maxlength="300" placeholder="Write the verse and its reference">${esc(p.verse || '')}</textarea></label>
       <div class="fld"><span>Birthday (optional)</span><div class="bd-sel"><select id="pBdM" aria-label="Birthday month"><option value="">Month</option>${MONTHS.map((x, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${(p.bday || '').slice(0, 2) === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${x}</option>`).join('')}</select><select id="pBdD" aria-label="Birthday day"><option value="">Day</option>${Array.from({length:31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => `<option value="${d}" ${(p.bday || '').slice(3) === d ? 'selected' : ''}>${Number(d)}</option>`).join('')}</select></div><small>Only the month and day are shown, so the church can greet you. Leave it empty to keep it private.</small></div>
+      ${(() => { const a = p.anniv || '', ay = /^\d{4}-/.test(a) ? a.slice(0, 4) : '', amd = a.slice(-5), am = amd.length === 5 ? amd.slice(0, 2) : '', ad = amd.length === 5 ? amd.slice(3) : ''; return `<div class="fld"><span>Wedding anniversary (optional)</span><div class="bd-sel"><select id="pAnM" aria-label="Anniversary month"><option value="">Month</option>${MONTHS.map((x, i) => `<option value="${String(i + 1).padStart(2, '0')}" ${am === String(i + 1).padStart(2, '0') ? 'selected' : ''}>${x}</option>`).join('')}</select><select id="pAnD" aria-label="Anniversary day"><option value="">Day</option>${Array.from({length:31}, (_, i) => String(i + 1).padStart(2, '0')).map(d => `<option value="${d}" ${ad === d ? 'selected' : ''}>${Number(d)}</option>`).join('')}</select><input id="pAnY" maxlength="4" inputmode="numeric" placeholder="Year" value="${esc(ay)}" style="max-width:90px" aria-label="Anniversary year"></div><small>For married couples. The year is optional (it shows how many years).</small></div>`; })()}
       ${adm ? `<fieldset class="fset"><legend>Baptism</legend>
         <label class="fld" for="pBaD">Date of baptism<input id="pBaD" type="date" value="${esc(bdFull ? bd : '')}"><small>Only know the year? Leave the date empty and type the year below.</small></label>
         <label class="fld" for="pBaY">Year of baptism<input id="pBaY" maxlength="4" inputmode="numeric" placeholder="Year" value="${esc(!bdFull ? bd : '')}"></label>
@@ -1917,6 +1963,10 @@ function openProfileModal(uid){
       const bm = $('#pBdM', m).value, bdd = $('#pBdD', m).value;
       if ((bm && !bdd) || (!bm && bdd)) return fail('Choose both the month and the day of the birthday, or neither.');
       body.bday = bm && bdd ? bm + '-' + bdd : '';
+      const am = $('#pAnM', m).value, ad = $('#pAnD', m).value, ay = $('#pAnY', m).value.trim();
+      if ((am && !ad) || (!am && ad)) return fail('Choose both the month and the day of the anniversary, or neither.');
+      if (ay && !/^\d{4}$/.test(ay)) return fail('Type the anniversary year with 4 numbers, like 2015.');
+      body.anniv = am && ad ? ((ay ? ay + '-' : '') + am + '-' + ad) : '';
       if (adm){
         const y = $('#pBaY', m).value.trim();
         if (y && !/^\d{4}$/.test(y)) return fail('Type the year of baptism with 4 numbers, like 1998.');
@@ -2367,7 +2417,7 @@ function openSiteModal(part){
 }
 /* ---------- leader tools: records, attendance, member list ---------- */
 function toolButtons(){
-  return [S.canMem ? '<button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="records">Records and history</button><button class="btn" type="button" data-act="directory">Print member directory</button><button class="btn" type="button" data-act="exportmem">Download member list</button>' : '',
+  return [S.canMem ? `<button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="visitors">New visitors${S.newVisitors ? ' (' + S.newVisitors + ')' : ''}</button><button class="btn" type="button" data-act="records">Records and history</button><button class="btn" type="button" data-act="directory">Print member directory</button><button class="btn" type="button" data-act="exportmem">Download member list</button>` : '',
     S.canPost && !S.isAdmin ? '<button class="btn" type="button" data-act="editsab">This Sabbath</button><button class="btn" type="button" data-act="editprog">Worship program</button><button class="btn" type="button" data-act="addev">Add an event</button>' : '',
     '<button class="btn" type="button" data-act="gogroups">Ministry groups</button>'].join('');
 }
@@ -2387,7 +2437,7 @@ function exportMembers(){
   downloadCSV(`members-${phISO()}.csv`, rows);
   toast('The member list is downloading. Keep it private: do not post it online.');
 }
-const LOG_KINDS = [['status','Status'],['member','Member details'],['access','Roles and approvals'],['officers','Officers'],['giving','Giving'],['roster','Duty roster'],['group','Groups'],['post','Posts and files'],['file','Posts and files'],['site','Site and settings'],['settings','Site and settings']];
+const LOG_KINDS = [['status','Status'],['member','Member details'],['access','Roles and approvals'],['officers','Officers'],['giving','Giving'],['roster','Duty roster'],['visitor','Visitors'],['group','Groups'],['post','Posts and files'],['file','Posts and files'],['site','Site and settings'],['settings','Site and settings']];
 const kindName = k => (LOG_KINDS.find(x => x[0] === k) || [k, k])[1];
 const when = ms => { const d = new Date(ms + TZ * 36e5); return `${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}, ${d.getUTCFullYear()} ${time12(d.toISOString().slice(11, 16))}`; };
 async function openRecordsModal(tab){
@@ -2840,6 +2890,9 @@ document.addEventListener('click', e => {
     case 'zoomqr': openPhoto(imgUrl(el.dataset.id, 1200), {id:el.dataset.id, meta:'GCash QR code'}); break;
     case 'editroster': if (S.canPost) openRosterModal(); break;
     case 'directory': if (S.canMem) openDirectory(); break;
+    case 'visitorintro': openVisitorModal(); break;
+    case 'visitors': if (S.canMem) openVisitorsModal(); break;
+    case 'vdone': case 'vdel': visitorAction(a, el); break;
     case 'opengroup': closeModal(); go('group', el.dataset.id); break;
     case 'newgroup': openGroupModal(''); break;
     case 'editgroup': openGroupModal(el.dataset.id); break;
@@ -3040,6 +3093,13 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   // members
   'Everyone who has joined the church family page.':'Tanang miapil sa panid sa pamilya sa simbahan.', 'Search by name or ministry':'Pangitaa pinaagi sa ngalan o ministeryo',
   'Search members':'Pangitaa ang mga miyembro',
+  'Birthdays & anniversaries':'Mga adlawng natawhan ug anibersaryo', 'Birthdays &amp; anniversaries':'Mga adlawng natawhan ug anibersaryo', 'Wedding anniversary (optional)':'Anibersaryo sa kasal (kon gusto)', 'Anniversary month':'Bulan sa anibersaryo', 'Anniversary day':'Adlaw sa anibersaryo', 'Anniversary year':'Tuig sa anibersaryo',
+  'For married couples. The year is optional (it shows how many years).':'Para sa magtiayon. Ang tuig opsyonal (ipakita ang gidaghanon sa tuig).', 'Choose both the month and the day of the anniversary, or neither.':'Pilia ang bulan ug adlaw sa anibersaryo, o ayaw tanan.', 'Type the anniversary year with 4 numbers, like 2015.':'Isulat ang tuig sa anibersaryo nga 4 ka numero, sama sa 2015.',
+  'New visitors':'Bag-ong mga bisita', 'See':'Tan-awa', 'Welcome! Introduce yourself':'Maayong pag-abot! Ipaila ang imong kaugalingon', 'Thank you! 🙏':'Salamat! 🙏',
+  'Introduce yourself to the church':'Ipaila ang imong kaugalingon sa simbahan', 'Your name':'Imong ngalan', 'How can we reach you?':'Unsaon ka namo pagkontak?', 'How did you hear about us? (optional)':'Giunsa nimo kami pagkahibalo? (kon gusto)', "Anything you'd like to say? (optional)":'Naa bay gusto nimong isulti? (kon gusto)',
+  'Send':'Ipadala', 'Followed up':'Na-follow up', 'Mark new':'Markahi nga bag-o', 'Remove this visitor message?':'Tangtanga kini nga mensahe sa bisita?', 'It will be deleted for everyone.':'Mapapas kini para sa tanan.',
+  'No visitor messages yet. When someone taps “Introduce yourself” on the sign-in page, they show up here.':'Wala pay mensahe sa bisita. Kon adunay mo-tap sa “Ipaila ang imong kaugalingon” sa sign-in page, makita sila dinhi.',
+  'Mobile number, Messenger or email':'Numero sa cellphone, Messenger o email', 'A friend, Facebook, walked by…':'Usa ka higala, Facebook, nilabay…', 'A prayer request, a question, or just hello':'Usa ka hangyo sa pag-ampo, pangutana, o kumusta lang',
   'Online giving':'Online nga paghatag', 'Tithe & offering':'Ikapulo ug halad', 'Tithe &amp; offering':'Ikapulo ug halad', 'GCash name':'Ngalan sa GCash', 'GCash number':'Numero sa GCash',
   'GCash account name':'Ngalan sa GCash account', 'GCash QR code picture (optional)':'Litrato sa GCash QR code (kon gusto)', 'Set up giving':'I-set up ang paghatag', 'Giving details saved.':'Na-save ang detalye sa paghatag.',
   'Tap the code to make it bigger':'I-tap ang code para modako', 'Copy':'Kopyaha', 'Remove the QR code picture':'Tangtanga ang litrato sa QR code',
@@ -3143,6 +3203,14 @@ const BIS_RX = [
   [/^(\d+) members? · (\d+) posts?$/, '$1 ka miyembro · $2 ka post'],
   [/^Attendance saved: (\d+) present\.$/, 'Na-save ang pagtambong: $1 ang mitambong.'],
   [/^Away for (\d+) Sabbaths in a row$/, '$1 ka Igpapahulay nga sunod-sunod nga wala'],
+  [/^Happy birthday, (.+)! 🎂$/, (m, x) => `Malipayong adlaw nga natawhan, ${x}! 🎂`],
+  [/^Happy (\d+(?:st|nd|rd|th)) anniversary, (.+)! 💍$/, (m, y, x) => `Malipayong ika-${y} anibersaryo, ${x}! 💍`],
+  [/^Happy anniversary, (.+)! 💍$/, (m, x) => `Malipayong anibersaryo, ${x}! 💍`],
+  [/^(.+): (\d+) years since baptism 💧$/, (m, x, y) => `${x}: ${y} ka tuig sukad sa bunyag 💧`],
+  [/^(.+): baptism anniversary 💧$/, (m, x) => `${x}: anibersaryo sa bunyag 💧`],
+  [/^(.+) · birthday · (.+)$/, (m, x, d) => `${x} · adlawng natawhan · ${bisSeg(d) || d}`],
+  [/^(.+) · wedding(?: \((\d+) yrs\))? · (.+)$/, (m, x, y, d) => `${x} · kasal${y ? ' (' + y + ' tuig)' : ''} · ${bisSeg(d) || d}`],
+  [/^(.+) · baptism(?: \((\d+) yrs\))? · (.+)$/, (m, x, y, d) => `${x} · bunyag${y ? ' (' + y + ' tuig)' : ''} · ${bisSeg(d) || d}`],
   [/^Status: (.+)$/, (m, x) => 'Kahimtang: ' + (BIS[x] || x)],
   [/^Happy birthday, (.+)! 🎂$/, 'Malipayong adlaw nga natawhan, $1! 🎂'],
   [/^new (person is|people are) waiting for your approval\.$/, 'ka bag-ong miyembro ang naghulat sa imong pag-aprobar.'],
