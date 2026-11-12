@@ -1,6 +1,8 @@
 /* Tubod SDA Church: keeps the site working with weak or no signal.
    Put this file next to index.html on GitHub. The site registers it by itself. */
-const VERSION = 'tubod-v1';
+/* OneSignal push (only does anything once an App ID is set in config.js and you have subscribed). Guarded so the site still works offline if it cannot load. */
+try { self.importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch (e) { /* offline or not configured: the site still works */ }
+const VERSION = 'tubod-v2';
 const CORE = ['./', './index.html', './config.js', './manifest.json', './logo-mark.png', './icon-192.png', './icon-512.png', './bible-game.html'];
 const PICS = 'tubod-pics-v1';
 const MAX_PICS = 250;
@@ -60,4 +62,15 @@ self.addEventListener('fetch', e => {
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com'){ e.respondWith(staleWhileRevalidate(req, VERSION)); return; }
   // small Drive pictures only (=w400 and the like); full-size originals are too big to keep on a phone
   if (url.hostname === 'lh3.googleusercontent.com' && /=w\d{2,4}$/.test(url.pathname + url.search)){ e.respondWith(picture(req)); return; }
+});
+
+/* tapping a church notification opens the church page */
+self.addEventListener('notificationclick', e => {
+  if (e.notification && e.notification.tag && e.notification.tag !== 'tubod-ann') return; // let OneSignal handle its own notifications
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
+    const open = list.find(c => c.url.indexOf(self.registration.scope) === 0);
+    if (open) { open.focus(); if (open.navigate) open.navigate('./#news').catch(() => {}); return; }
+    return self.clients.openWindow('./#news');
+  }));
 });
