@@ -275,6 +275,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sw-list .sw{width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
 .sw-list input{position:absolute;opacity:0;pointer-events:none}.sw-list input:checked+.sw{box-shadow:0 0 0 3px var(--ink)}.sw-list input:focus-visible+.sw{outline:2px solid var(--ink);outline-offset:3px}
 .logo-prev{width:96px;height:96px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center;background:#fff;overflow:hidden}.logo-prev img{max-width:88%;max-height:88%}
+.off-empty{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.off-empty h3{margin:0 0 2px}
+.officers .card-h{display:flex;justify-content:space-between;align-items:center}.officers .card-h .meta{font-weight:400}
+.off-list{margin:8px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:0}@media (max-width:560px){.off-list{grid-template-columns:1fr}}
+.off-row{display:grid;grid-template-columns:minmax(120px,44%) 1fr;gap:10px;padding:7px 2px;border-bottom:1px solid var(--line)}
+.off-row dt{color:var(--muted);margin:0}.off-row dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.off-edit{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px}
+.off-edit input{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;background:#F7FAFB;min-width:0}
+.off-edit .mv{display:flex}.off-edit .icon-btn.danger{color:var(--danger)}
 .lv-help{margin:0 0 10px;font-size:.9rem}.lv-help summary{cursor:pointer;color:var(--accent-dark);font-weight:600}.lv-help ul{margin:6px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:4px}
 .msel{border:1px solid var(--line);border-radius:999px;padding:5px 10px;font:inherit;font-size:.85rem;background:#fff;max-width:100%}
 .rec-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}.rec-tools > input[type=search]{flex:1 1 200px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;background:#F7FAFB}
@@ -583,6 +591,27 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
 
 const RAW_URL = String((window.CHURCH_CONFIG && window.CHURCH_CONFIG.API_URL) || '').trim();
 const API_URL = /^https:\/\/script\.google(usercontent)?\.com\//.test(RAW_URL) ? RAW_URL : '';
+/* OneSignal: notifications even when the church page is fully closed. Off unless an App ID is set in config.js. */
+const OS_APP_ID = String((window.CHURCH_CONFIG && window.CHURCH_CONFIG.ONESIGNAL_APP_ID) || '').trim();
+const pushConfigured = () => !!OS_APP_ID;
+let OS = null, osReady = false;
+function osLoad(){
+  if (!pushConfigured() || window.OneSignalDeferred) return;
+  window.OneSignalDeferred = [];
+  window.OneSignalDeferred.push(async OneSignal => {
+    OS = OneSignal;
+    try {
+      await OneSignal.init({ appId: OS_APP_ID, serviceWorkerPath: 'sw.js', serviceWorkerParam: { scope: './' }, allowLocalhostAsSecureOrigin: true, autoResubscribe: true });
+      osReady = true;
+      if (S.route === 'profile' && S.profileId === S.uid) renderProfile();
+    } catch (e) { /* the simpler notifications still work */ }
+  });
+  const sc = document.createElement('script'); sc.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'; sc.defer = true;
+  sc.onerror = () => { osReady = false; };
+  document.head.appendChild(sc);
+}
+const osSub = () => (OS && OS.User && OS.User.PushSubscription) || null;
+const osOn = () => { const u = osSub(); return !!(u && u.optedIn); };
 
 /* ---------- helpers ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -786,7 +815,7 @@ const photoImg = id => { const u = imgUrl(id, 1600); return u ? `<img src="${u}"
 async function api(action, data = {}){
   if (!API_URL) throw new Error('This site is not connected yet. See SETUP.md.');
   let res;
-  try { res = await fetch(API_URL, {method:'POST', body:JSON.stringify({action, token:S.token, ...data})}); }
+  try { res = await fetch(API_URL, {method:'POST', body:JSON.stringify({action, token:S.token, withSync:true, ...data})}); }
   catch (e){ const err = new Error('Cannot reach the church server. Check your internet and try again.'); err.code = 'network'; throw err; }
   let j;
   try { j = await res.json(); }
@@ -796,6 +825,7 @@ async function api(action, data = {}){
     if (j.code === 'auth' && action !== 'login') forceSignOut('Please sign in again.');
     throw err;
   }
+  if (j.sync){ _syncStash = j.sync; _syncStashAt = Date.now(); }
   return j;
 }
 function applySync(j){
@@ -812,7 +842,13 @@ function applySync(j){
   if (!S.pending && wasPending && $('#auth')){ const a = $('#auth'); a.remove(); setTimeout(() => { mount(); fromHash(); toast('Your account is approved. Welcome to the church family!'); }, 0); }
   schedule();
 }
-async function sync(){ const j = await api('sync'); applySync(j); if (!j.pending){ saveCache(j); notifyNew(); } }
+let _syncStash = null, _syncStashAt = 0;
+async function sync(){
+  let j;
+  if (_syncStash && Date.now() - _syncStashAt < 6000){ j = _syncStash; _syncStash = null; }
+  else { _syncStash = null; j = await api('sync'); }
+  applySync(j); if (!j.pending){ saveCache(j); notifyNew(); }
+}
 
 /* last good copy of the church page, so the next visit shows something at once */
 const CACHE_KEY = 'tubodCache1';
@@ -1358,6 +1394,7 @@ function mount(){
       <div class="filters" id="libCats" role="group" aria-label="Library categories"></div><div class="grid" id="libList"></div>`;
   } else if (S.route === 'members'){
     v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Members</h1><p>Everyone in the church family. Search a name to see if they are active.</p><button class="btn primary" data-act="invite">Invite family</button><button class="btn" data-act="gogroups">Ministry groups</button>${S.canMem ? `<button class="btn" data-act="addperson">Add a person without an account</button>` : ''}</div>
+      <div id="officersSlot"></div>
       <div class="tools"><input type="search" id="memQ" placeholder="Search by name, ministry or pastor" aria-label="Search members" value="${esc(S.memQ)}"></div>
       <div class="filters" id="memSts" role="group" aria-label="Member status" style="margin-bottom:12px"></div><div class="grid" id="memList"></div>`;
   } else {
@@ -1374,7 +1411,7 @@ function refresh(){
   else if (S.route === 'group') renderGroup();
   else if (S.route === 'news') renderChat();
   else if (S.route === 'library') renderLibrary();
-  else if (S.route === 'members') renderMembers();
+  else if (S.route === 'members'){ renderOfficers(); renderMembers(); }
   else renderProfile();
 }
 const schedule = (() => { let t = 0; return () => { if (!t) t = requestAnimationFrame(() => { t = 0; if (!$('#auth')) refresh(); }); }; })();
@@ -1774,7 +1811,7 @@ function renderProfile(){
       <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
       <div class="pf-main">${av(id, 'xl')}<div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
         ${S.canMem && !own ? `<div class="pf-btns"><button class="btn primary" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
-        ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${notifOn() ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
+        ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${(pushConfigured() ? osOn() : notifOn()) ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
         ${stOf(p) !== 'active' ? `<div class="st-box st-${stOf(p)}"><h3>${isDead(p) ? 'In loving memory' : 'Status: ' + mstLabel(stOf(p))}</h3>${p.statusDate ? `<p>${isDead(p) ? 'Passed away' : 'Since'} <b>${esc(stDate(p.statusDate))}</b></p>` : ''}${p.statusNote ? `<p data-notr>${esc(p.statusNote)}</p>` : ''}</div>` : ''}
         ${p.access === 'roll' ? `<p class="muted"><span>Listed by the church.</span>${isDead(p) ? '' : ' <span>This person does not have an account on the site yet.</span>'}</p>` : ''}
@@ -2308,7 +2345,7 @@ function exportMembers(){
   downloadCSV(`members-${phISO()}.csv`, rows);
   toast('The member list is downloading. Keep it private: do not post it online.');
 }
-const LOG_KINDS = [['status','Status'],['member','Member details'],['access','Roles and approvals'],['group','Groups'],['post','Posts and files'],['file','Posts and files'],['site','Site and settings'],['settings','Site and settings']];
+const LOG_KINDS = [['status','Status'],['member','Member details'],['access','Roles and approvals'],['officers','Officers'],['group','Groups'],['post','Posts and files'],['file','Posts and files'],['site','Site and settings'],['settings','Site and settings']];
 const kindName = k => (LOG_KINDS.find(x => x[0] === k) || [k, k])[1];
 const when = ms => { const d = new Date(ms + TZ * 36e5); return `${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}, ${d.getUTCFullYear()} ${time12(d.toISOString().slice(11, 16))}`; };
 async function openRecordsModal(tab){
@@ -2526,6 +2563,19 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return 
 const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
 const notifOn = () => lsGet(NOTIF_KEY) === '1' && 'Notification' in window && Notification.permission === 'granted';
 async function toggleNotif(){
+  if (pushConfigured()){
+    if (!osReady || !OS){ toast('Notifications are still starting up. Try again in a moment.'); return; }
+    try {
+      const u = osSub();
+      if (u && u.optedIn){ await u.optOut(); toast('Notifications are off on this phone.'); }
+      else {
+        if (OS.Notifications && OS.Notifications.permission !== true){ const ok = await OS.Notifications.requestPermission(); if (ok === false){ toast('Notifications are blocked. Allow them for this site in your browser settings.'); return; } }
+        if (u && u.optIn) await u.optIn();
+        toast('Notifications are on. You will get new announcements even when the church page is closed.');
+      }
+    } catch (e){ toast('Could not change notifications. Allow them for this site in your browser settings, then try again.'); }
+    renderProfile(); return;
+  }
   if (!('Notification' in window)){ toast('This phone or browser cannot show notifications from the church page.'); return; }
   if (notifOn()){ lsSet(NOTIF_KEY, null); toast('Notifications are off on this phone.'); renderProfile(); return; }
   const r = await Notification.requestPermission();
@@ -2534,7 +2584,7 @@ async function toggleNotif(){
   toast('Notifications are on. New announcements pop up while the church page is open or in the background.'); renderProfile();
 }
 function notifyNew(){
-  if (!notifOn()) return;
+  if (pushConfigured() || !notifOn()) return;
   const seen = Number(lsGet(ANN_SEEN)) || Date.now();
   const fresh = S.posts.filter(p => p.cat === 'announcement' && (p.createdAt || 0) > seen && p.authorId !== S.uid).sort((a, b) => b.createdAt - a.createdAt);
   lsSet(ANN_SEEN, String(Math.max(seen, ...S.posts.map(p => p.createdAt || 0))));
@@ -2543,6 +2593,42 @@ function notifyNew(){
   const opt = {body:String(fresh[0].text || '').slice(0, 180), icon:'icon-192.png', badge:'icon-192.png', tag:'tubod-ann'};
   const show = () => { try { new Notification(title, opt); } catch (e) {} };
   if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification(title, opt) : show()).catch(show); else show();
+}
+/* ---------- church officers for the year ---------- */
+const OFFICER_ROLES = ['Pastor','District Pastor','First Elder','Elder','Head Deacon','Deacon','Head Deaconess','Deaconess','Church Clerk','Assistant Clerk','Treasurer','Assistant Treasurer','Sabbath School Superintendent','Assistant Superintendent','Personal Ministries Leader','Adventist Youth Leader','Pathfinder Director','Adventurer Director',"Children's Ministries Leader",'Music Director','Choir Director','Health Ministries Leader','Communication Secretary',"Women's Ministries Leader",'Family Ministries Leader','Stewardship Leader','Interest Coordinator','Deacon on duty'];
+function officersInfo(){ try { const v = JSON.parse(S.settings.officers || '{}'); return {year:String(v.year || ''), list:Array.isArray(v.list) ? v.list : []}; } catch (e){ return {year:'', list:[]}; } }
+function renderOfficers(){
+  const slot = $('#officersSlot'); if (!slot) return;
+  const o = officersInfo();
+  if (!o.list.length){ slot.innerHTML = S.canMem ? `<div class="card off-empty"><div><h3>Church officers</h3><p class="muted">List this year's elected officers so the church family knows who serves where.</p></div><button class="btn sm primary" data-act="editofficers">Add officers</button></div>` : ''; return; }
+  slot.innerHTML = `<section class="card officers"><div class="card-h"><h3>Church officers${o.year ? ` <span class="meta">${esc(o.year)}</span>` : ''}</h3>${S.canMem ? '<button class="btn sm quiet" data-act="editofficers">Edit</button>' : ''}</div>
+    <dl class="off-list">${o.list.map(x => `<div class="off-row"><dt data-notr>${esc(x.role)}</dt><dd data-notr>${esc(x.name) || '<span class="muted">—</span>'}</dd></div>`).join('')}</dl></section>`;
+}
+function openOfficersModal(){
+  const o = officersInfo();
+  const rows = o.list.length ? o.list : [{role:'Pastor', name:''}, {role:'First Elder', name:''}, {role:'Church Clerk', name:''}, {role:'Treasurer', name:''}];
+  const rowHTML = x => `<div class="off-edit"><input class="of-role" list="offRoles" maxlength="60" value="${esc(x.role || '')}" placeholder="Position" aria-label="Position"><input class="of-name" maxlength="120" value="${esc(x.name || '')}" placeholder="Name" aria-label="Name"><span class="mv"><button type="button" class="icon-btn" data-act="ofup" aria-label="Move up">${icon('up')}</button><button type="button" class="icon-btn" data-act="ofdown" aria-label="Move down">${icon('down')}</button><button type="button" class="icon-btn danger" data-act="ofdel" aria-label="Remove">${icon('x')}</button></span></div>`;
+  const m = openModal('Church officers', `<form id="ofForm" class="m-body" style="padding:0">
+    <label class="fld" for="ofYear" style="max-width:160px">Year<input id="ofYear" maxlength="4" inputmode="numeric" value="${esc(o.year || String(new Date().getFullYear()))}" placeholder="Year"></label>
+    <datalist id="offRoles">${OFFICER_ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist>
+    <div id="ofRows">${rows.map(rowHTML).join('')}</div>
+    <div><button type="button" class="btn sm" data-act="ofadd">Add a position</button></div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="ofSave">Save</button></div></form>`, true);
+  m.addEventListener('click', e => {
+    const b = e.target.closest('[data-act^="of"]'); if (!b) return;
+    const a = b.dataset.act, row = b.closest('.off-edit');
+    if (a === 'ofadd'){ $('#ofRows', m).insertAdjacentHTML('beforeend', rowHTML({role:'', name:''})); const last = $('#ofRows', m).lastElementChild; $('.of-role', last).focus(); }
+    else if (a === 'ofdel') row.remove();
+    else if (a === 'ofup' && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+    else if (a === 'ofdown' && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+  });
+  $('#ofForm', m).addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#ofSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    const list = [...m.querySelectorAll('.off-edit')].map(r => ({role:$('.of-role', r).value, name:$('.of-name', r).value})).filter(x => x.role.trim() || x.name.trim());
+    try { await api('saveOfficers', {year:$('#ofYear', m).value, list}); await sync(); closeModal(); if (S.route === 'members') renderOfficers(); toast('Church officers saved.'); }
+    catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save'; }
+  });
 }
 async function memberAction(a, uid, to){
   const p = S.profiles[uid] || (S.waiting || []).find(x => x.id === uid); if (!p) return;
@@ -2622,6 +2708,7 @@ document.addEventListener('click', e => {
     case 'records': if (S.canMem) openRecordsModal(); break;
     case 'exportmem': if (S.canMem) exportMembers(); break;
     case 'gogroups': closeModal(); go('groups'); break;
+    case 'editofficers': if (S.canMem) openOfficersModal(); break;
     case 'opengroup': closeModal(); go('group', el.dataset.id); break;
     case 'newgroup': openGroupModal(''); break;
     case 'editgroup': openGroupModal(el.dataset.id); break;
@@ -2697,7 +2784,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) poll
 function hideSplash(){
   const sp = document.getElementById('splash'); if (!sp || sp.dataset.going) return;
   sp.dataset.going = '1';
-  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 2000 - (Date.now() - (window.__sp0 || 0))));
+  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 400); }, Math.max(0, 550 - (Date.now() - (window.__sp0 || 0))));
 }
 async function bootSession(){
   if (!API_URL){ showAuth('setup'); return; }
@@ -2822,6 +2909,8 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   // members
   'Everyone who has joined the church family page.':'Tanang miapil sa panid sa pamilya sa simbahan.', 'Search by name or ministry':'Pangitaa pinaagi sa ngalan o ministeryo',
   'Search members':'Pangitaa ang mga miyembro',
+  'Church officers':'Mga opisyal sa simbahan', 'Add officers':'Idugang ang mga opisyal', 'Add a position':'Idugang og posisyon', 'Position':'Posisyon', 'Church officers saved.':'Na-save ang mga opisyal sa simbahan.',
+  "List this year's elected officers so the church family knows who serves where.":'Ilista ang mga napiling opisyal karong tuiga aron mahibaw-an sa pamilya sa simbahan kon kinsa ang nag-alagad.', 'Officers':'Mga opisyal', 'Year':'Tuig',
   'Leader tools':'Mga gamit sa lider', 'Records and history':'Mga rekord ug kasaysayan', 'Download member list':'I-download ang lista sa miyembro', 'Attendance':'Pagtambong',
   'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
   'Church admin':'Admin sa simbahan', 'Clerk / pastor':'Klerk / pastor', 'Announcements and program':'Pahibalo ug programa', 'No account':'Walay account',
@@ -2999,7 +3088,10 @@ function boot(){
   mount();
   setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard(); if (S.uid) renderStrip(); }, 60000);
   window.addEventListener('online', () => { renderBanner(); if (S.uid) sync().catch(() => {}); });
-  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  if ('serviceWorker' in navigator){
+    if (pushConfigured()) window.addEventListener('load', osLoad);
+    else window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
   window.addEventListener('offline', renderBanner);
   bootSession().finally(hideSplash);
 }

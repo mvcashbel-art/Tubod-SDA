@@ -8,8 +8,8 @@
  */
 
 const SCHEMA = {
-  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote', 'baptDate', 'baptBy', 'baptPlace'],
-  Posts:     ['id', 'authorId', 'cat', 'text', 'photos', 'pinned', 'createdAt', 'sms', 'svc'],
+  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote', 'baptDate', 'baptBy', 'baptPlace', 'household', 'groups'],
+  Posts:     ['id', 'authorId', 'cat', 'text', 'photos', 'pinned', 'createdAt', 'sms', 'svc', 'grp'],
   Comments:  ['id', 'postId', 'authorId', 'text', 'createdAt'],
   Reactions: ['id', 'postId', 'uid', 'createdAt'],
   Files:     ['id', 'title', 'cat', 'desc', 'driveId', 'name', 'mime', 'size', 'authorId', 'createdAt'],
@@ -18,8 +18,46 @@ const SCHEMA = {
   SmsOutbox: ['time', 'postId', 'number', 'text', 'status'],
   Program:   ['id', 'svcId', 'date', 'items', 'updatedAt'],
   Events:    ['id', 'title', 'date', 'time', 'place', 'desc', 'remind', 'createdBy', 'createdAt'],
-  Scores:    ['id', 'uid', 'mode', 'score', 'correct', 'total', 'week', 'day', 'createdAt']
+  Scores:    ['id', 'uid', 'mode', 'score', 'correct', 'total', 'week', 'day', 'createdAt'],
+  Log:       ['id', 'time', 'by', 'byName', 'kind', 'targetId', 'targetName', 'detail'],
+  Attendance: ['id', 'date', 'uids', 'by', 'at'],
+  Groups:    ['id', 'name', 'desc', 'createdAt', 'createdBy']
 };
+/* who may do what: admin = everything; clerk = members, records and attendance; editor = announcements, This Sabbath, events, program and attendance */
+const LEVELS = ['admin', 'clerk', 'editor', 'member'];
+function canMem_(me) { return me.access === 'admin' || me.access === 'clerk'; }
+function canPost_(me) { return me.access === 'admin' || me.access === 'editor'; }
+function canAttend_(me) { return me.access === 'admin' || me.access === 'clerk' || me.access === 'editor'; }
+function needMem_(me) { if (!canMem_(me)) throw err_('Only the church clerk, pastor or an admin can do that.', 'denied'); }
+function needPost_(me) { if (!canPost_(me)) throw err_('Only church leaders can do that.', 'denied'); }
+/* Sends a phone notification through OneSignal to members who turned it on, even when the site is closed.
+   Does nothing until ONESIGNAL_APP_ID and ONESIGNAL_API_KEY are set in Project Settings > Script properties. Best-effort: never blocks posting. */
+function osPush_(title, body) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const appId = props.getProperty('ONESIGNAL_APP_ID'), key = props.getProperty('ONESIGNAL_API_KEY');
+    if (!appId || !key) return;
+    UrlFetchApp.fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'post', contentType: 'application/json',
+      headers: { Authorization: 'Basic ' + key },
+      payload: JSON.stringify({ app_id: appId, included_segments: ['Subscribed Users'],
+        headings: { en: String(title || 'Tubod SDA Church').slice(0, 80) },
+        contents: { en: String(body || '').replace(/\s+/g, ' ').trim().slice(0, 200) || 'New announcement' } }),
+      muteHttpExceptions: true
+    });
+  } catch (e) { /* push is best-effort */ }
+}
+/* the record of changes, so leaders can always see who changed what */
+function log_(me, kind, target, detail) {
+  append_('Log', { id: id_('l'), time: String(nowMs_()), by: me ? me.id : 'system', byName: me ? me.name : 'System', kind: kind,
+    targetId: target ? target.id || '' : '', targetName: target ? target.name || '' : '', detail: String(detail || '').slice(0, 1000) });
+}
+const ST_LABEL = { active: 'Active', inactive: 'Inactive', backslidden: 'Backslidden', offshoot: 'Offshoot', deceased: 'Deceased' };
+function statusLog_(me, who, st) {
+  const from = who.mstatus || 'active', to = st.mstatus || 'active';
+  if (from === to && (who.mstatusDate || '') === st.mstatusDate && (who.mstatusNote || '') === st.mstatusNote) return;
+  log_(me, 'status', who, ST_LABEL[from] + ' → ' + ST_LABEL[to] + (st.mstatusDate ? ' · ' + st.mstatusDate : '') + (st.mstatusNote ? ' · ' + st.mstatusNote : ''));
+}
 const POST_CATS = ['share', 'prayer', 'testimony', 'announcement'];
 const FILE_CATS = ['sermons', 'sabbath-school', 'music', 'documents', 'media', 'other'];
 const SESSION_DAYS = 90;
@@ -107,6 +145,7 @@ function worshipReminders() {
       props.setProperty('REMINDED', done.slice(-30).join(','));
       bump_();
     });
+    osPush_(getSetting_('churchName') || 'Tubod SDA Church', post.text);
     if (getSetting_('autoSms') === '1' && smsProvider_() === 'SEMAPHORE') {
       try { smsSend_(post, false); } catch (e) { Logger.log('Reminder text not sent: ' + e.message); }
     }
@@ -172,6 +211,7 @@ function eventReminders_(now) {
       props.setProperty('EV_REMINDED', done.slice(-40).join(','));
       bump_();
     });
+    osPush_(getSetting_('churchName') || 'Tubod SDA Church', text);
   });
 }
 
@@ -223,7 +263,7 @@ function resetPasswordFromEditor() {
 
 /* ---------- web app entry points ---------- */
 function doGet() {
-  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, v: 8 });
+  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, v: 10 });
 }
 
 function doPost(e) {
@@ -242,6 +282,10 @@ function doPost(e) {
       const lock = LockService.getScriptLock();
       lock.waitLock(20000);
       try { out = fn(req, me); if (NOBUMP[req.action] !== true) bump_(); } finally { lock.releaseLock(); }
+      /* Send the refreshed church data back with this same reply, so the app needs only one trip to the server instead of two. */
+      if (req.withSync === true && me && me.access !== 'pending' && req.action !== 'logout') {
+        try { out = Object.assign({}, out, { sync: ACTIONS.sync({ token: req.token }, me) }); } catch (e) {}
+      }
     } else {
       out = fn(req, me);
     }
@@ -262,7 +306,9 @@ const WRITE = {
   deleteComment: true, react: true, saveProfile: true, changePassword: true, uploadFile: true, finishUpload: true, deleteFile: true,
   saveSettings: true, setAccess: true, removeMember: true, resetPassword: true, saveProgram: true,
   saveEvent: true, deleteEvent: true, saveSabbath: true, goLive: true, saveScore: true,
-  setMemberStatus: true, addPerson: true, adminSaveMember: true, saveSite: true
+  setMemberStatus: true, addPerson: true, adminSaveMember: true, saveSite: true,
+  saveAttendance: true, saveGroup: true, deleteGroup: true, joinGroup: true, setGroupMember: true,
+  saveOfficers: true
 };
 
 const ACTIONS = {
@@ -304,7 +350,10 @@ const ACTIONS = {
     }
     if (m.mstatus === 'deceased') throw err_('This account is closed. Talk to the church admin.', 'closed');
     purgeSessions_();
-    return { token: newSession_(m.id) };
+    const tok = newSession_(m.id);
+    let firstSync = null;
+    try { firstSync = ACTIONS.sync({ token: tok }, m); } catch (e) {}
+    return { token: tok, sync: firstSync };
   },
 
   logout: function (r) {
@@ -319,16 +368,16 @@ const ACTIONS = {
         settings: { churchName: getSetting_('churchName') || 'Tubod SDA Church', tagline: getSetting_('tagline') || '', bgId: getSetting_('bgId') || '' },
         members: [], posts: [], comments: [], reactions: [], files: [], program: [], events: [] };
     }
-    const admin = me.access === 'admin';
+    const lv = me.access === 'admin' ? 'a' : canPost_(me) ? 'e' : 'm';
     const rev = rev_();
     /* Reading every tab of the sheet is the slow part, so the answer is kept for each revision.
        Any change to the site changes the revision, which throws the old copy away. */
-    const key = 'sync_' + rev + (admin ? '_a' : '_m');
+    const key = 'sync_' + rev + '_' + lv;
     let body = null;
     const hit = cacheGetBig_(key);
     if (hit) { try { body = JSON.parse(hit); } catch (e) { body = null; } }
     if (!body) {
-      body = buildSync_(admin, rev);
+      body = buildSync_(lv, rev);
       cachePutBig_(key, JSON.stringify(body), 3600);
     }
     body.me = { id: me.id, access: me.access, name: me.name, phone: me.phone, sms: me.sms === '1' };
@@ -337,7 +386,14 @@ const ACTIONS = {
 
   post: function (r, me) {
     const cat = POST_CATS.indexOf(r.cat) >= 0 ? r.cat : 'share';
-    if (cat === 'announcement' && me.access !== 'admin') throw err_('Only church leaders can send announcements.', 'denied');
+    if (cat === 'announcement' && !canPost_(me)) throw err_('Only church leaders can send announcements.', 'denied');
+    let grp = '';
+    if (r.grp) {
+      const g = readAll_('Groups').filter(function (x) { return x.id === r.grp; })[0];
+      if (!g) throw err_('That group is gone.', 'missing');
+      if (me.access !== 'admin' && String(me.groups || '').split(',').indexOf(g.id) < 0) throw err_('Join the group first to post in it.', 'denied');
+      grp = g.id;
+    }
     const text = clean_(r.text, 3000, true);
     const photos = (Array.isArray(r.photos) ? r.photos : []).slice(0, 10);
     if (!text && !photos.length) throw err_('Write something or add a photo first.', 'invalid');
@@ -349,7 +405,8 @@ const ACTIONS = {
       if (sv) svc = sv.id + '|' + (r.svcDate && validSvcDate_(sv, r.svcDate, nowMs_()) ? r.svcDate : openDate_(sv, nowMs_()));
     }
     const id = id_('p');
-    append_('Posts', { id: id, authorId: me.id, cat: cat, text: text, photos: ids.join(','), pinned: (me.access === 'admin' && r.pinned) ? '1' : '', createdAt: String(Date.now()), svc: svc });
+    append_('Posts', { id: id, authorId: me.id, cat: cat, text: text, photos: ids.join(','), pinned: (canPost_(me) && r.pinned) ? '1' : '', createdAt: String(Date.now()), svc: svc, grp: grp });
+    if (cat === 'announcement' && !grp) osPush_(getSetting_('churchName') || 'Tubod SDA Church', text);
     return { id: id };
   },
 
@@ -357,6 +414,7 @@ const ACTIONS = {
     const p = readAll_('Posts').filter(function (x) { return x.id === r.id; })[0];
     if (!p) return {};
     if (p.authorId !== me.id && me.access !== 'admin') throw err_('You can only delete your own posts.', 'denied');
+    if (p.authorId !== me.id) log_(me, 'post', { id: p.authorId, name: nameOf_(p.authorId) }, 'Deleted a post: ' + String(p.text || '(photos)').slice(0, 80));
     (p.photos ? p.photos.split(',') : []).forEach(trash_);
     remove_('Comments', function (c) { return c.postId === p.id; });
     remove_('Reactions', function (x) { return x.postId === p.id; });
@@ -365,7 +423,7 @@ const ACTIONS = {
   },
 
   pinPost: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can pin posts.', 'denied');
+    needPost_(me);
     const p = readAll_('Posts').filter(function (x) { return x.id === r.id; })[0];
     if (p) update_('Posts', p.id, { pinned: p.pinned === '1' ? '' : '1' });
     return {};
@@ -383,6 +441,7 @@ const ACTIONS = {
     const c = readAll_('Comments').filter(function (x) { return x.id === r.id; })[0];
     if (!c) return {};
     if (c.authorId !== me.id && me.access !== 'admin') throw err_('You can only delete your own comments.', 'denied');
+    if (c.authorId !== me.id) log_(me, 'post', { id: c.authorId, name: nameOf_(c.authorId) }, 'Deleted a comment: ' + String(c.text || '').slice(0, 80));
     remove_('Comments', function (x) { return x.id === c.id; });
     return {};
   },
@@ -402,7 +461,7 @@ const ACTIONS = {
 
   /* An admin edits any member's details, including people listed without an account. */
   adminSaveMember: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can edit other members.', 'denied');
+    needMem_(me);
     const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
     if (!who) throw err_('That member is no longer here.', 'missing');
     const st = Object.prototype.hasOwnProperty.call(r, 'status') ? statusFields_(r) : null;
@@ -411,8 +470,13 @@ const ACTIONS = {
     if (dying && who.access === 'admin' && readAll_('Members').filter(function (m) { return m.access === 'admin' && m.mstatus !== 'deceased'; }).length <= 1)
       throw err_('The church needs at least one admin.', 'denied');
     const patch = Object.assign(profilePatch_(r, who, true), st || {});
-    if (dying && who.access === 'admin') patch.access = 'member';
+    if (dying && who.access !== 'member' && who.access !== 'roll') patch.access = 'member';
     update_('Members', who.id, patch);
+    const changed = Object.keys(patch).filter(function (k) { return ['mstatus', 'mstatusDate', 'mstatusNote', 'access'].indexOf(k) < 0 && String(patch[k] || '') !== String(who[k] || ''); });
+    const NAMES = { name: 'name', title: 'role', ministries: 'ministries', since: 'member since', bio: 'about', verse: 'verse', bday: 'birthday', baptDate: 'baptism date', baptBy: 'baptized by', baptPlace: 'place of baptism', avatar: 'photo', cover: 'cover photo', household: 'family' };
+    if (changed.length) log_(me, 'member', { id: who.id, name: patch.name || who.name }, 'Edited: ' + changed.map(function (k) { return NAMES[k] || k; }).join(', ') +
+      (changed.some(function (k) { return k.indexOf('bapt') === 0; }) ? ' (baptism: ' + [patch.baptDate, patch.baptBy, patch.baptPlace].filter(String).join(' · ') + ')' : ''));
+    if (st) statusLog_(me, { id: who.id, name: patch.name || who.name, mstatus: who.mstatus, mstatusDate: who.mstatusDate, mstatusNote: who.mstatusNote }, st);
     if (dying) remove_('Sessions', function (x) { return x.uid === who.id; });
     return {};
   },
@@ -421,6 +485,7 @@ const ACTIONS = {
   saveSite: function (r, me) {
     if (me.access !== 'admin') throw err_('Only church leaders can edit the site.', 'denied');
     const upd = {};
+    log_(me, 'site', null, r.resetLogo && r.site && !Object.keys((r.site || {}).texts || {}).length ? 'Put the site back to how it was' : 'Changed the site' + (r.logo ? ' and the logo' : ''));
     if (r.site) {
       upd.site = JSON.stringify(cleanSite_(r.site));
       if (upd.site.length > 45000) throw err_('That is too much text to save. Make some of the changed texts shorter, or remove a few.', 'too_big');
@@ -529,6 +594,7 @@ const ACTIONS = {
     const f = readAll_('Files').filter(function (x) { return x.id === r.id; })[0];
     if (!f) return {};
     if (f.authorId !== me.id && me.access !== 'admin') throw err_('You can only delete your own files.', 'denied');
+    if (f.authorId !== me.id) log_(me, 'file', { id: f.authorId, name: nameOf_(f.authorId) }, 'Deleted a file: ' + f.title);
     trash_(f.driveId);
     remove_('Files', function (x) { return x.id === f.id; });
     return {};
@@ -536,6 +602,7 @@ const ACTIONS = {
 
   saveSettings: function (r, me) {
     if (me.access !== 'admin') throw err_('Only church leaders can change settings.', 'denied');
+    log_(me, 'settings', null, 'Changed the church settings');
     const upd = {};
     upd.churchName = clean_(r.churchName, 60) || 'Tubod SDA Church';
     upd.tagline = clean_(r.tagline, 80);
@@ -573,13 +640,15 @@ const ACTIONS = {
 
   setAccess: function (r, me) {
     if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
-    const access = r.access === 'admin' ? 'admin' : 'member';
+    const access = LEVELS.indexOf(r.access) >= 0 ? r.access : 'member';
     const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
     if (!who) throw err_('That member is no longer here.', 'missing');
     if (who.access === 'roll') throw err_('This person has no account on the site.', 'invalid');
     const admins = readAll_('Members').filter(function (m) { return m.access === 'admin'; });
-    if (access === 'member' && admins.length === 1 && admins[0].id === r.uid) throw err_('The church needs at least one admin.', 'denied');
+    if (access !== 'admin' && admins.length === 1 && admins[0].id === r.uid) throw err_('The church needs at least one admin.', 'denied');
     update_('Members', r.uid, { access: access });
+    const LV = { admin: 'Church admin', clerk: 'Clerk / pastor', editor: 'Announcements and program', member: 'Member' };
+    log_(me, 'access', who, who.access === 'pending' ? 'Approved the account' : 'Changed the role to: ' + LV[access]);
     return {};
   },
 
@@ -589,13 +658,14 @@ const ACTIONS = {
     const m = readAll_('Members').filter(function (x) { return x.id === r.uid; })[0];
     if (!m) return {};
     trash_(m.avatar); trash_(m.cover);
+    log_(me, 'member', m, m.access === 'pending' ? 'Declined the new account' : 'Removed from the list' + (m.mstatus ? ' (was ' + ST_LABEL[m.mstatus] + ')' : ''));
     remove_('Sessions', function (s) { return s.uid === m.id; });
     remove_('Members', function (x) { return x.id === m.id; });
     return {};
   },
 
   saveSabbath: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
+    needPost_(me);
     const link = String(r.link || '').trim();
     if (link && !/^https?:\/\/[^\s"'<>]{4,400}$/.test(link)) throw err_('The lesson link must start with https://', 'invalid');
     const date = String(r.date || '');
@@ -606,14 +676,14 @@ const ACTIONS = {
   },
 
   goLive: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can do that.', 'denied');
+    needPost_(me);
     if (r.on && !getSetting_('liveUrl')) throw err_('Add the livestream link in Settings first.', 'invalid');
     setSettings_({ liveUntil: r.on ? String(nowMs_() + 3 * 36e5) : '' });
     return {};
   },
 
   saveEvent: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can add events.', 'denied');
+    if (!canPost_(me)) throw err_('Only church leaders can add events.', 'denied');
     const title = clean_(r.title, 100), date = String(r.date || ''), time = String(r.time || '');
     if (!title) throw err_('Give the event a name.', 'invalid');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(new Date(date + 'T00:00:00Z'))) throw err_('Choose the date of the event.', 'invalid');
@@ -629,14 +699,14 @@ const ACTIONS = {
   },
 
   deleteEvent: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can remove events.', 'denied');
+    if (!canPost_(me)) throw err_('Only church leaders can remove events.', 'denied');
     remove_('Events', function (x) { return x.id === r.id; });
     return {};
   },
 
   /* ---------- member status: active, inactive, backslidden, offshoot, deceased ---------- */
   setMemberStatus: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can change a member status.', 'denied');
+    needMem_(me);
     const v = statusFields_(r);
     const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
     if (!who) throw err_('That member is no longer here.', 'missing');
@@ -646,23 +716,100 @@ const ACTIONS = {
       if (admins.length <= 1) throw err_('The church needs at least one admin.', 'denied');
     }
     update_('Members', who.id, v);
+    statusLog_(me, who, v);
     if (v.mstatus === 'deceased') {
       remove_('Sessions', function (s) { return s.uid === who.id; });
-      if (who.access === 'admin') update_('Members', who.id, { access: 'member' });
+      if (who.access !== 'member' && who.access !== 'roll') update_('Members', who.id, { access: 'member' });
     }
     return {};
   },
 
   /* Adds someone to the church list who has no account (an older member, or someone who passed away). */
   addPerson: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can add people to the list.', 'denied');
+    needMem_(me);
     const name = clean_(r.name, 60);
     if (name.length < 2) throw err_('Please enter the full name.', 'invalid');
     const v = statusFields_(r);
     const m = { id: id_('m'), name: name, username: '', salt: '', hash: '', access: 'roll', createdAt: String(Date.now()),
       title: clean_(r.role, 60), ministries: '', since: /^\d{4}$/.test(String(r.since || '')) ? String(r.since) : '', bio: '', verse: '', avatar: '', cover: '' };
     append_('Members', Object.assign(m, v));
+    log_(me, 'member', m, 'Added to the list (no account)');
+    if (v.mstatus) statusLog_(me, { id: m.id, name: m.name, mstatus: '' }, v);
     return { id: m.id };
+  },
+
+  /* ---------- records, attendance, groups ---------- */
+  getLog: function (r, me) {
+    needMem_(me);
+    const rows = readAll_('Log').map(function (x) { return { id: x.id, time: Number(x.time) || 0, by: x.byName, kind: x.kind, targetId: x.targetId, target: x.targetName, detail: x.detail }; });
+    rows.sort(function (a, b) { return b.time - a.time; });
+    return { log: rows.slice(0, 5000) };
+  },
+
+  getAttendance: function (r, me) {
+    if (!canAttend_(me)) throw err_('Only church leaders can see attendance.', 'denied');
+    const since = phDate_(nowMs_() - 400 * 864e5);
+    return { days: readAll_('Attendance').filter(function (x) { return x.date >= since; }).map(function (x) {
+      return { date: x.date, uids: x.uids ? x.uids.split(',') : [], by: x.by };
+    }).sort(function (a, b) { return a.date < b.date ? 1 : -1; }) };
+  },
+
+  saveAttendance: function (r, me) {
+    if (!canAttend_(me)) throw err_('Only church leaders can take attendance.', 'denied');
+    const date = String(r.date || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(new Date(date + 'T00:00:00Z'))) throw err_('Choose the date.', 'invalid');
+    if (date > phDate_(nowMs_() + 864e5)) throw err_('You cannot take attendance for a day that has not come yet.', 'invalid');
+    const ids = {}; readAll_('Members').forEach(function (m) { ids[m.id] = true; });
+    const uids = (Array.isArray(r.uids) ? r.uids : []).filter(function (u) { return ids[u]; }).filter(function (u, i, a) { return a.indexOf(u) === i; });
+    const row = { id: 'd' + date, date: date, uids: uids.join(','), by: me.name, at: String(nowMs_()) };
+    if (readAll_('Attendance').some(function (x) { return x.id === row.id; })) update_('Attendance', row.id, row); else append_('Attendance', row);
+    log_(me, 'attend', null, 'Attendance for ' + date + ': ' + uids.length + ' present');
+    return { count: uids.length };
+  },
+
+  saveGroup: function (r, me) {
+    needMem_(me);
+    const name = clean_(r.name, 50), desc = clean_(r.desc, 300, true);
+    if (name.length < 2) throw err_('Give the group a name.', 'invalid');
+    if (r.id && readAll_('Groups').some(function (g) { return g.id === r.id; })) { update_('Groups', r.id, { name: name, desc: desc }); return { id: r.id }; }
+    const g = { id: id_('g'), name: name, desc: desc, createdAt: String(nowMs_()), createdBy: me.id };
+    append_('Groups', g);
+    log_(me, 'group', null, 'Made the group ' + name);
+    return { id: g.id };
+  },
+
+  deleteGroup: function (r, me) {
+    needMem_(me);
+    const g = readAll_('Groups').filter(function (x) { return x.id === r.id; })[0];
+    if (!g) return {};
+    remove_('Groups', function (x) { return x.id === g.id; });
+    readAll_('Members').forEach(function (m) {
+      const list = String(m.groups || '').split(',').filter(Boolean);
+      if (list.indexOf(g.id) >= 0) update_('Members', m.id, { groups: list.filter(function (x) { return x !== g.id; }).join(',') });
+    });
+    readAll_('Posts').forEach(function (p) { if (p.grp === g.id) update_('Posts', p.id, { grp: '' }); });
+    log_(me, 'group', null, 'Removed the group ' + g.name);
+    return {};
+  },
+
+  /* the church officers elected for the year, shown to everyone */
+  saveOfficers: function (r, me) {
+    needMem_(me);
+    const year = String(r.year || '').replace(/\D/g, '').slice(0, 4);
+    const list = (Array.isArray(r.list) ? r.list : []).map(function (x) { return { role: clean_(x.role, 60), name: clean_(x.name, 120) }; })
+      .filter(function (x) { return x.role || x.name; }).slice(0, 80);
+    setSetting_('officers', JSON.stringify({ year: year, list: list }));
+    log_(me, 'officers', null, 'Updated the church officers' + (year ? ' for ' + year : ''));
+    return {};
+  },
+
+  joinGroup: function (r, me) { return groupSet_(me, me, r.id, !!r.on); },
+
+  setGroupMember: function (r, me) {
+    needMem_(me);
+    const who = readAll_('Members').filter(function (m) { return m.id === r.uid; })[0];
+    if (!who) throw err_('That member is no longer here.', 'missing');
+    return groupSet_(me, who, r.id, !!r.on);
   },
 
   /* ---------- Bible game ---------- */
@@ -727,7 +874,7 @@ const ACTIONS = {
   },
 
   saveProgram: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can set participants.', 'denied');
+    if (!canPost_(me)) throw err_('Only church leaders can set participants.', 'denied');
     const sv = services_().filter(function (x) { return x.id === r.svcId; })[0];
     if (!sv) throw err_('That worship is not on the schedule.', 'missing');
     if (!validSvcDate_(sv, r.date, nowMs_())) throw err_('Choose a worship date within the next two weeks.', 'invalid');
@@ -743,14 +890,14 @@ const ACTIONS = {
   },
 
   sendSms: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can send texts.', 'denied');
+    if (!canPost_(me)) throw err_('Only church leaders can send texts.', 'denied');
     const p = readAll_('Posts').filter(function (x) { return x.id === r.postId; })[0];
     if (!p || p.cat !== 'announcement') throw err_('Only announcements can be texted.', 'invalid');
     return smsSend_(p, !!r.force);
   },
 
   smsInfo: function (r, me) {
-    if (me.access !== 'admin') throw err_('Only church leaders can see this.', 'denied');
+    if (!canPost_(me)) throw err_('Only church leaders can see this.', 'denied');
     const rows = readAll_('SmsOutbox').filter(function (x) { return x.postId === r.postId; });
     if (!rows.length) throw err_('No text was prepared for this announcement.', 'missing');
     return { mode: /^SENT/.test(rows[0].status) ? 'SEMAPHORE' : 'OUTBOX', recipients: rows.length, text: rows[0].text, numbers: rows.map(function (x) { return x.number; }).join(',') };
@@ -770,7 +917,8 @@ const ACTIONS = {
 
 /* ---------- helpers ---------- */
 /* Everything in the answer to 'sync' that is the same for every admin (or every member). */
-function buildSync_(admin, rev) {
+function buildSync_(lv, rev) {
+  const admin = lv === 'a';
   const settings = {};
   readAll_('Settings').forEach(function (s) { if (s.key !== 'joinCode' || admin) settings[s.key] = s.value; });
   const byTime = function (a, b) { return b.createdAt - a.createdAt; };
@@ -782,14 +930,15 @@ function buildSync_(admin, rev) {
       try { items = JSON.parse(x.items || '[]'); } catch (e) { items = []; }
       return { svcId: x.svcId, date: x.date, items: items };
     }),
-    sms: admin ? { provider: smsProvider_(), count: smsRecipientsFrom_(memberRows).length, prefix: smsPrefix_(), max: SMS_MAX_CHARS } : null,
+    sms: lv !== 'm' ? { provider: smsProvider_(), count: smsRecipientsFrom_(memberRows).length, prefix: smsPrefix_(), max: SMS_MAX_CHARS } : null,
     settings: settings,
     members: memberRows.filter(function (m) { return admin || m.access !== 'pending'; }).map(pub_),
     events: readAll_('Events').filter(function (x) { return x.date >= phDate_(nowMs_() - 30 * 864e5); }).map(function (x) {
       return { id: x.id, title: x.title, date: x.date, time: x.time, place: x.place, desc: x.desc, remind: x.remind === '1' };
     }).sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? -1 : 1; }),
+    groups: readAll_('Groups').map(function (g) { return { id: g.id, name: g.name, desc: g.desc, createdAt: Number(g.createdAt) || 0 }; }),
     posts: readAll_('Posts').map(function (p) {
-      return { id: p.id, authorId: p.authorId, cat: p.cat, text: p.text, pinned: p.pinned === '1', createdAt: Number(p.createdAt) || 0, photos: p.photos ? p.photos.split(',') : [], sms: admin ? p.sms : '', svc: p.svc };
+      return { id: p.id, authorId: p.authorId, cat: p.cat, text: p.text, pinned: p.pinned === '1', createdAt: Number(p.createdAt) || 0, photos: p.photos ? p.photos.split(',') : [], sms: lv !== 'm' ? p.sms : '', svc: p.svc, grp: p.grp || '' };
     }).sort(byTime).slice(0, 300),
     comments: readAll_('Comments').map(function (c) {
       return { id: c.id, postId: c.postId, authorId: c.authorId, text: c.text, createdAt: Number(c.createdAt) || 0 };
@@ -847,7 +996,15 @@ function clean_(v, max, multiline) {
 function pub_(m) {
   return { id: m.id, name: m.name, access: m.access, role: m.title, ministries: m.ministries, since: m.since, bio: m.bio, verse: m.verse, avatar: m.avatar, cover: m.cover, bday: m.bday || '', createdAt: Number(m.createdAt) || 0,
     status: MSTATUS[m.mstatus] ? m.mstatus : 'active', statusDate: m.mstatusDate || '', statusNote: m.mstatusNote || '',
-    baptDate: m.baptDate || '', baptBy: m.baptBy || '', baptPlace: m.baptPlace || '' };
+    baptDate: m.baptDate || '', baptBy: m.baptBy || '', baptPlace: m.baptPlace || '', household: m.household || '', groups: m.groups ? String(m.groups).split(',') : [] };
+}
+function nameOf_(uid) { const m = readAll_('Members').filter(function (x) { return x.id === uid; })[0]; return m ? m.name : ''; }
+function groupSet_(me, who, gid, on) {
+  if (!readAll_('Groups').some(function (g) { return g.id === gid; })) throw err_('That group is gone.', 'missing');
+  const list = String(who.groups || '').split(',').filter(Boolean).filter(function (x) { return x !== gid; });
+  if (on) list.push(gid);
+  update_('Members', who.id, { groups: list.join(',') });
+  return {};
 }
 function profilePatch_(r, who, byAdmin) {
   const has = function (k) { return Object.prototype.hasOwnProperty.call(r, k); };
@@ -869,7 +1026,8 @@ function profilePatch_(r, who, byAdmin) {
     patch.bday = b;
   }
   /* baptism is part of the church record, so only admins change it */
-  if ((byAdmin || who.access === 'admin') && has('baptDate')) {
+  if (has('household')) patch.household = clean_(r.household, 60);
+  if ((byAdmin || canMem_(who)) && has('baptDate')) {
     const d = String(r.baptDate || '').trim();
     if (d && !/^\d{4}(-\d{2}-\d{2})?$/.test(d)) throw err_('Enter the baptism date, or just the year.', 'invalid');
     if (d.length === 10 && isNaN(new Date(d + 'T00:00:00Z'))) throw err_('Enter the baptism date, or just the year.', 'invalid');
@@ -882,7 +1040,7 @@ function profilePatch_(r, who, byAdmin) {
   else if (byAdmin && r.removeCover) { trash_(who.cover); patch.cover = ''; }
   return patch;
 }
-const SITE_TABS = ['home', 'news', 'library', 'members', 'game', 'me'];
+const SITE_TABS = ['home', 'news', 'library', 'members', 'groups', 'game', 'me'];
 const SITE_ICONS = ['home', 'bell', 'folder', 'users', 'user', 'heart', 'chat', 'book', 'music', 'image', 'church', 'file', 'pin'];
 const SITE_COLORS = ['blue', 'navy', 'teal', 'green', 'purple', 'maroon', 'brown'];
 function cleanSite_(v) {
