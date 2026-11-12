@@ -250,6 +250,20 @@ button:focus-visible{outline-color:var(--accent)}
 .lb{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
 .lb li{display:flex;align-items:center;gap:10px;background:#F7FAFB;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
 .lb li.me{border-color:var(--accent);background:#EAF3F7}
+.review-link .ico{font-size:1.4em}
+.rev-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.rev-item{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--line,#d9e2e8);border-radius:14px;background:#fff;padding:12px 14px;cursor:pointer;font:inherit;color:inherit}
+.rev-item:hover{border-color:var(--accent);background:#F4F9FB}
+.rev-main{display:flex;flex-direction:column;gap:2px;min-width:0}.rev-main b{font-size:1.05em}.rev-when{color:#6b7b86;font-size:.85em}
+.rev-score{text-align:right;flex:none}.rev-score b{display:block;font-size:1.05em}.rev-score span{color:#6b7b86;font-size:.8em}
+.rev-q{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.rev-qi{border:1px solid var(--line,#d9e2e8);border-left-width:5px;border-radius:12px;padding:10px 12px}
+.rev-qi.ok{border-left-color:#2e8b57}.rev-qi.no{border-left-color:#c0432f}
+.rev-q-h{display:flex;gap:8px;align-items:flex-start}.rev-mark{font-weight:800;font-size:1.1em;line-height:1.2}.rev-qi.ok .rev-mark{color:#2e8b57}.rev-qi.no .rev-mark{color:#c0432f}
+.rev-q-t{margin:0;font-weight:600;flex:1}
+.rev-a{margin:6px 0 0}.rev-a b{color:#1b2a36}.rev-your{margin:3px 0 0;color:#8a3a2c}
+.rev-a span,.rev-your span{color:#6b7b86;font-size:.9em}
+.rev-ref{margin:4px 0 0;color:#6b7b86;font-size:.9em;font-style:italic}.rev-note{margin:4px 0 0;font-size:.95em}
 .lb-n{width:30px;text-align:center;font-weight:800;color:var(--muted)}
 .lb-name{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:700}
 .lb-name small{color:var(--muted);font-weight:600}
@@ -783,6 +797,10 @@ QUIZ.forEach((q, i) => { const c = CEB_QUIZ[i]; if (c) q.ceb = { q: c[0], a: c[1
 const T = {
   en: {
     heroP: 'Test your knowledge of the Word, from Genesis to Revelation, with a few Adventist favorites along the way.',
+    reviewT: 'My Answers', reviewD: 'Look back at the games you finished.',
+    reviewSub: 'Your finished games are kept here so you can go over the questions and the right answers. Saved on this phone, just for you.',
+    reviewEmpty: 'Finish a game and it will show up here for you to review.', reviewBack: 'Back to my answers', savedN: 'Saved ',
+    answerL: 'Answer:', yourAnsL: 'You answered:', noAnswer: 'No answer',
     verseLine: '“Search the scriptures… they are they which testify of me.” John 5:39',
     best: 'Best', home: 'Home',
     m_quiz_t: 'Bible Quiz', m_quiz_d: 'Timed questions. Pick a category, earn speed and streak bonuses.',
@@ -811,6 +829,10 @@ const T = {
   },
   ceb: {
     heroP: 'Sulayi ang imong nahibaloan sa Pulong sa Dios, gikan sa Genesis hangtod sa Pinadayag, uban ang pipila ka paborito sa mga Adventista.',
+    reviewT: 'Akong mga Tubag', reviewD: 'Baliki ang mga dula nga nahuman nimo.',
+    reviewSub: 'Ang imong nahuman nga mga dula gitipigan dinhi aron imong mabalik-balikan ang mga pangutana ug ang hustong tubag. Natipig niini nga cellphone, alang ra nimo.',
+    reviewEmpty: 'Human og usa ka dula ug makita dinhi aron imong mabalikan.', reviewBack: 'Balik sa akong mga tubag', savedN: 'Natipig ',
+    answerL: 'Tubag:', yourAnsL: 'Imong gitubag:', noAnswer: 'Walay tubag',
     verseLine: 'Pagsusi sa mga Kasulatan — Juan 5:39',
     best: 'Labing taas', home: 'Balay',
     m_quiz_t: 'Pangutana sa Bibliya', m_quiz_d: 'May oras ang matag pangutana. Pili og kategoriya ug makakuha og dugang puntos sa kadali ug sunodsunod nga husto.',
@@ -851,7 +873,7 @@ let S = {};
 function freshState(mode, cat, names) {
   return { mode, cat, names: names || [t('p1'), t('p2')], items: [], i: 0, score: 0, streak: 0, bestStreak: 0, correct: 0,
            lifelines: 2, usedFifty: false, answered: false, timer: null, timeLeft: 20, clue: 0, gone: new Set(),
-           placed: [], checked: false, lastPts: 0, lastPerfect: false,
+           placed: [], checked: false, lastPts: 0, lastPerfect: false, log: [],
            ps: [0, 0], pstreak: [0, 0], pcorrect: [0, 0], turn: 0 };
 }
 const isQ = () => S.mode === 'quiz' || S.mode === 'duel';
@@ -922,6 +944,11 @@ function renderHome() {
       ${card('who', '☺')}
       ${card('books', '≡')}
       ${card('duel', 'VS')}
+      <button class="mode review-link" data-act="review">
+        <div class="ico">↺</div>
+        <div><h3>${t('reviewT')}</h3><p>${t('reviewD')}</p></div>
+        <div class="best">${t('savedN')}<b>${reviewList().length}</b></div>
+      </button>
     </section>
     <p class="foot">${t('foot')}</p>`;
 }
@@ -1158,6 +1185,7 @@ function answer(k) {
       S.answered = true;
       const pts = CLUE_PTS[S.clue];
       S.score += pts; S.correct++;
+      revLog({ q: (it.cl || []).join(' · '), a: it.opts[it.ci], chosen: it.opts[it.ci], ok: true, ref: it.r });
       lockOptions(it.ci, -1);
       document.querySelectorAll('#opts .opt').forEach(b => b.classList.remove('gone'));
       const tl = document.querySelector('.tools'); if (tl) tl.innerHTML = '';
@@ -1168,6 +1196,7 @@ function answer(k) {
       if (S.clue < 3) { S.clue++; renderWho(); }
       else {
         S.answered = true;
+        revLog({ q: (it.cl || []).join(' · '), a: it.opts[it.ci], chosen: it.opts[k], ok: false, ref: it.r });
         lockOptions(it.ci, k);
         const tl = document.querySelector('.tools'); if (tl) tl.innerHTML = '';
         showFb(feedback(false, 0, t('itWas') + it.n + ' · ' + it.r, ''));
@@ -1189,6 +1218,10 @@ function answer(k) {
   lockOptions(it.ci, k);
   const f = document.getElementById('fifty'); if (f) f.disabled = true;
   updateHud();
+  if (!duel) {
+    if (S.mode === 'verse') revLog({ q: it.t.replace('___', '_____'), a: it.a, chosen: k === -1 ? null : it.opts[k], ok: ok, ref: it.r });
+    else revLog({ q: it.q, a: it.opts[it.ci], chosen: k === -1 ? null : it.opts[k], ok: ok, ref: it.r, note: it.n });
+  }
 
   if (isQ()) {
     showFb(feedback(ok, pts, it.r, it.n, k === -1));
@@ -1218,6 +1251,8 @@ function checkBooks() {
   S.lastPts = right * 20 + (S.lastPerfect ? 50 : 0);
   S.score += S.lastPts; if (S.lastPerfect) S.correct++;
   S.checked = true;
+  const bn = BOOKS();
+  revLog({ q: t('booksQ'), a: it.idx.map(b => bn[b]).join('  →  '), chosen: S.placed.map(b => bn[b]).join('  →  '), ok: S.lastPerfect });
   renderBooks();
 }
 
@@ -1226,9 +1261,54 @@ function next() {
   if (S.i >= S.items.length) (S.mode === 'duel' ? renderDuelResults : renderResults)(); else renderStep();
 }
 
+/* ---------- My Answers: each person's own archive of finished games, saved on this phone ---------- */
+function revLog(entry) { if (S && S.log) S.log.push(entry); }
+function reviewKey() { return 'reviews_' + ((GI && GI.me && GI.me.id) || 'me'); }
+function reviewList() { const l = store.get(reviewKey(), []); return Array.isArray(l) ? l : []; }
+function saveReview() {
+  if (!S || !S.log || !S.log.length || S.mode === 'duel') return;
+  const rec = { id: 'r' + Date.now(), mode: S.mode, date: Date.now(), score: S.score, correct: S.correct, total: S.items.length, items: S.log };
+  const list = reviewList(); list.unshift(rec); store.set(reviewKey(), list.slice(0, 40));
+}
+function revWhen(ms) {
+  const d = new Date(ms), loc = LANG === 'ceb' ? 'ceb' : undefined;
+  try { return d.toLocaleDateString(loc, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+  catch (e) { return d.toLocaleString(); }
+}
+const modeLabel = mode => t('m_' + mode + '_t') || mode;
+function renderReview() {
+  stopTimer(); S = {}; setChrome('play');
+  const list = reviewList();
+  app.innerHTML = `<div class="card">
+      <h2>${t('reviewT')}</h2><p class="sub">${t('reviewSub')}</p>
+      ${list.length ? `<div class="rev-list">${list.map(r => `<button class="rev-item" data-act="revopen" data-id="${r.id}">
+          <span class="rev-main"><b>${modeLabel(r.mode)}</b><span class="rev-when">${revWhen(r.date)}</span></span>
+          <span class="rev-score"><b>${r.correct}/${r.total}</b><span>${r.score} ${x('pts')}</span></span></button>`).join('')}</div>`
+        : `<p class="note-s">${t('reviewEmpty')}</p>`}
+      <div class="btnrow" style="margin-top:16px"><button class="secondary" data-act="home">${t('home')}</button></div>
+    </div>`;
+}
+function renderReviewRound(id) {
+  stopTimer(); setChrome('play');
+  const r = reviewList().find(x => x.id === id);
+  if (!r) { renderReview(); return; }
+  app.innerHTML = `<div class="card">
+      <h2>${modeLabel(r.mode)}</h2>
+      <p class="sub">${revWhen(r.date)} · ${r.correct}/${r.total} ${t('correctL')} · ${r.score} ${x('pts')}</p>
+      <ol class="rev-q">${r.items.map(it => `<li class="rev-qi ${it.ok ? 'ok' : 'no'}">
+          <div class="rev-q-h"><span class="rev-mark">${it.ok ? '✓' : '✗'}</span><p class="rev-q-t">${esc(it.q)}</p></div>
+          <p class="rev-a"><span>${t('answerL')}</span> <b>${esc(it.a)}</b></p>
+          ${!it.ok ? `<p class="rev-your"><span>${t('yourAnsL')}</span> ${it.chosen != null && it.chosen !== '' ? esc(it.chosen) : t('noAnswer')}</p>` : ''}
+          ${it.ref ? `<p class="rev-ref">${esc(it.ref)}</p>` : ''}
+          ${it.note ? `<p class="rev-note">${esc(it.note)}</p>` : ''}</li>`).join('')}</ol>
+      <div class="btnrow" style="margin-top:16px"><button class="primary" data-act="review">${t('reviewBack')}</button><button class="secondary" data-act="home">${t('home')}</button></div>
+    </div>`;
+}
+
 /* ---------- Results ---------- */
 function renderResults() {
   stopTimer();
+  saveReview();
   const total = S.items.length, pct = S.correct / total;
   const rank = t('ranks')[pct === 1 ? 0 : pct >= 0.8 ? 1 : pct >= 0.6 ? 2 : pct >= 0.4 ? 3 : 4];
   const best = store.get('best', {});
@@ -1919,6 +1999,8 @@ document.addEventListener('click', e => {
   else if (a === 'check') checkBooks();
   else if (a === 'next') next();
   else if (a === 'again') startGame(S.mode, S.cat, S.names);
+  else if (a === 'review') renderReview();
+  else if (a === 'revopen') renderReviewRound(b.dataset.id);
   else if (a === 'szup') resize(0.1);
   else if (a === 'szdown') resize(-0.1);
   else if (a === 'full') toggleFull();
