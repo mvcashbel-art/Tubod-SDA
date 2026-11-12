@@ -275,6 +275,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sw-list .sw{width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
 .sw-list input{position:absolute;opacity:0;pointer-events:none}.sw-list input:checked+.sw{box-shadow:0 0 0 3px var(--ink)}.sw-list input:focus-visible+.sw{outline:2px solid var(--ink);outline-offset:3px}
 .logo-prev{width:96px;height:96px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center;background:#fff;overflow:hidden}.logo-prev img{max-width:88%;max-height:88%}
+.give .card-h{display:flex;justify-content:space-between;align-items:center}
+.give-qr{text-align:center;margin:8px 0}.give-qr img{max-width:200px;width:70%;border:1px solid var(--line);border-radius:12px;cursor:zoom-in;background:#fff;padding:6px}.give-qr small{display:block;color:var(--muted);font-size:.8rem;margin-top:4px}
+.give-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0 0}.give-dl dt{color:var(--muted)}.give-dl dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.give-num{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.give-note{margin:8px 0 0;white-space:pre-wrap;font-size:.92rem}
+.give-tip{margin:8px 0 0;font-size:.82rem;color:var(--muted)}
+.duty-dl{display:grid;grid-template-columns:minmax(110px,auto) 1fr;gap:5px 10px;margin:8px 0 0}.duty-dl dt{color:var(--muted);margin:0}.duty-dl dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.dir{font-size:.9rem}.dir-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.dir-c{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 9px;break-inside:avoid}
+.dir-i{display:flex;flex-direction:column;min-width:0}.dir-i b{overflow-wrap:anywhere}.dir-i span{font-size:.8rem;color:var(--muted)}.dir-fam{font-style:italic}
+@media print{.dir-grid{grid-template-columns:repeat(3,1fr)}#printArea .dir{font-size:10pt}}
 .off-empty{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.off-empty h3{margin:0 0 2px}
 .officers .card-h{display:flex;justify-content:space-between;align-items:center}.officers .card-h .meta{font-weight:400}
 .off-list{margin:8px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:0}@media (max-width:560px){.off-list{grid-template-columns:1fr}}
@@ -1257,7 +1267,7 @@ function renderSide(){
   const st = S.settings, n = Object.values(S.profiles).filter(p => !isDead(p)).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${thisSabbathCard()}${eventsCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
+  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${thisSabbathCard()}${rosterCard()}${eventsCard()}${birthdaysCard()}${givingCard()}${gameCard()}${sched}${verse}
     <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
     <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
 }
@@ -2357,7 +2367,7 @@ function openSiteModal(part){
 }
 /* ---------- leader tools: records, attendance, member list ---------- */
 function toolButtons(){
-  return [S.canMem ? '<button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="records">Records and history</button><button class="btn" type="button" data-act="exportmem">Download member list</button>' : '',
+  return [S.canMem ? '<button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="records">Records and history</button><button class="btn" type="button" data-act="directory">Print member directory</button><button class="btn" type="button" data-act="exportmem">Download member list</button>' : '',
     S.canPost && !S.isAdmin ? '<button class="btn" type="button" data-act="editsab">This Sabbath</button><button class="btn" type="button" data-act="editprog">Worship program</button><button class="btn" type="button" data-act="addev">Add an event</button>' : '',
     '<button class="btn" type="button" data-act="gogroups">Ministry groups</button>'].join('');
 }
@@ -2377,7 +2387,7 @@ function exportMembers(){
   downloadCSV(`members-${phISO()}.csv`, rows);
   toast('The member list is downloading. Keep it private: do not post it online.');
 }
-const LOG_KINDS = [['status','Status'],['member','Member details'],['access','Roles and approvals'],['officers','Officers'],['group','Groups'],['post','Posts and files'],['file','Posts and files'],['site','Site and settings'],['settings','Site and settings']];
+const LOG_KINDS = [['status','Status'],['member','Member details'],['access','Roles and approvals'],['officers','Officers'],['giving','Giving'],['roster','Duty roster'],['group','Groups'],['post','Posts and files'],['file','Posts and files'],['site','Site and settings'],['settings','Site and settings']];
 const kindName = k => (LOG_KINDS.find(x => x[0] === k) || [k, k])[1];
 const when = ms => { const d = new Date(ms + TZ * 36e5); return `${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}, ${d.getUTCFullYear()} ${time12(d.toISOString().slice(11, 16))}`; };
 async function openRecordsModal(tab){
@@ -2626,6 +2636,90 @@ function notifyNew(){
   const show = () => { try { new Notification(title, opt); } catch (e) {} };
   if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification(title, opt) : show()).catch(show); else show();
 }
+/* ---------- online giving (GCash etc.) ---------- */
+function givingInfo(){ try { const v = JSON.parse(S.settings.giving || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e){ return {}; } }
+function givingCard(){
+  const g = givingInfo(), has = g.name || g.number || g.qrId || g.note;
+  if (!has) return S.isAdmin ? `<div class="card give"><div class="card-h"><h3>Online giving</h3></div><p class="muted">Add your church GCash so members can give their tithe and offering from anywhere.</p><p style="margin-top:8px"><button class="btn sm primary" data-act="editgiving">Set up giving</button></p></div>` : '';
+  return `<div class="card give"><div class="card-h"><h3>Online giving</h3>${S.isAdmin ? '<button class="btn sm quiet" data-act="editgiving">Edit</button>' : ''}</div>
+    <p class="muted">Tithe &amp; offering</p>
+    ${g.qrId ? `<div class="give-qr"><img src="${imgUrl(g.qrId, 600)}" alt="GCash QR code" loading="lazy" data-act="zoomqr" data-id="${esc(g.qrId)}"><small>Tap the code to make it bigger</small></div>` : ''}
+    <dl class="give-dl">${g.name ? `<dt>GCash name</dt><dd data-notr>${esc(g.name)}</dd>` : ''}${g.number ? `<dt>GCash number</dt><dd class="give-num"><span data-notr>${esc(g.number)}</span><button type="button" class="btn sm quiet" data-act="copygive" data-v="${esc(g.number)}">Copy</button></dd>` : ''}</dl>
+    ${g.note ? `<p class="give-note" data-notr>${esc(g.note)}</p>` : ''}
+    <p class="give-tip">Please message the treasurer after sending, so your gift is recorded.</p></div>`;
+}
+function openGivingModal(){
+  const g = givingInfo();
+  const m = openModal('Online giving', `<form id="gvForm" class="m-body" style="padding:0">
+    <p class="muted">Shown to members so they can give their tithe and offering. Enter the church's own GCash, not a personal one.</p>
+    <label class="fld" for="gvName">GCash account name<input id="gvName" maxlength="60" value="${esc(g.name || '')}" placeholder="Tubod SDA Church" autocomplete="off"></label>
+    <label class="fld" for="gvNum">GCash number<input id="gvNum" maxlength="40" value="${esc(g.number || '')}" inputmode="tel" placeholder="0917 123 4567" autocomplete="off"></label>
+    <label class="fld" for="gvNote">Note (optional)<textarea id="gvNote" maxlength="400" placeholder="For example: write your name and 'tithe' or 'offering' in the message.">${esc(g.note || '')}</textarea></label>
+    <label class="fld" for="gvQr">GCash QR code picture (optional)<input id="gvQr" type="file" accept="image/*"><small>Take a screenshot of your GCash QR and upload it here. Members can scan it to pay.</small></label>
+    ${g.qrId ? `<label class="pin-opt"><input type="checkbox" id="gvQrX"> Remove the QR code picture</label>` : ''}
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="gvSave">Save</button></div></form>`, true);
+  $('#gvForm', m).addEventListener('submit', async e => {
+    e.preventDefault(); const btn = $('#gvSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const body = {name:$('#gvName', m).value, number:$('#gvNum', m).value, note:$('#gvNote', m).value, removeQr:!!($('#gvQrX', m) || {}).checked};
+      const qf = $('#gvQr', m).files[0];
+      if (qf){ if (qf.size > 4 * 1048576){ toast('That picture is too big. Choose one under 4 MB.'); btn.disabled = false; btn.textContent = 'Save'; return; } body.qr = await shrink(qf, {w:900, h:900, q:.86, maxChars:700000}); }
+      await api('saveGiving', body); await sync(); closeModal(); toast('Giving details saved.');
+    } catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save'; }
+  });
+}
+/* ---------- duty roster ---------- */
+const DUTIES = ['Deacon on duty','Elder on duty','Welcome / Ushers','Special music','Song leader','Pianist / Keyboard','Announcements','Offering','Scripture reading','Opening prayer','Closing prayer',"Children's story",'Cradle Roll','Audio / Video','Clean-up','Lock-up'];
+function rosterAll(){ try { const v = JSON.parse(S.settings.roster || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e){ return {}; } }
+function rosterDate(){ const sab = sabInfo(); return (sab.date && sab.date >= phISO()) ? sab.date : nextSabbathISO(); }
+function rosterCard(){
+  const date = rosterDate(), list = rosterAll()[date] || [];
+  if (!list.length && !S.canPost) return '';
+  return `<div class="card"><div class="card-h"><h3>Sabbath duties</h3>${S.canPost ? `<button class="btn sm quiet" data-act="editroster">${list.length ? 'Edit' : 'Fill in'}</button>` : ''}</div>
+    <p class="meta">${esc(fmtDate(date))}</p>
+    ${list.length ? `<dl class="duty-dl">${list.map(x => `<dt data-notr>${esc(x.duty)}</dt><dd data-notr>${esc(x.name) || '<span class="muted">—</span>'}</dd>`).join('')}</dl>` : '<p class="muted">List who is assigned to each duty this Sabbath: deacon on duty, special music, welcome and more.</p>'}</div>`;
+}
+function openRosterModal(forDate){
+  const all = rosterAll(), date = forDate || rosterDate();
+  const list = all[date] && all[date].length ? all[date] : [{duty:'Deacon on duty', name:''}, {duty:'Welcome / Ushers', name:''}, {duty:'Special music', name:''}, {duty:'Announcements', name:''}];
+  const rowHTML = x => `<div class="off-edit"><input class="dt-duty" list="dutyList" maxlength="50" value="${esc(x.duty || '')}" placeholder="Duty" aria-label="Duty"><input class="dt-name" maxlength="80" value="${esc(x.name || '')}" placeholder="Name" aria-label="Name"><span class="mv"><button type="button" class="icon-btn danger" data-act="dtdel" aria-label="Remove">${icon('x')}</button></span></div>`;
+  const m = openModal('Sabbath duties', `<form id="dtForm" class="m-body" style="padding:0">
+    <label class="fld" for="dtDate" style="max-width:200px">Sabbath date<input id="dtDate" type="date" value="${esc(date)}"></label>
+    <datalist id="dutyList">${DUTIES.map(d => `<option value="${esc(d)}">`).join('')}</datalist>
+    <div id="dtRows">${list.map(rowHTML).join('')}</div>
+    <div><button type="button" class="btn sm" data-act="dtadd">Add a duty</button></div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="dtSave">Save</button></div></form>`, true);
+  $('#dtDate', m).addEventListener('change', e => { if (e.target.value && e.target.value !== date) openRosterModal(e.target.value); });
+  m.addEventListener('click', e => {
+    const b = e.target.closest('[data-act^="dt"]'); if (!b) return;
+    if (b.dataset.act === 'dtadd'){ $('#dtRows', m).insertAdjacentHTML('beforeend', rowHTML({duty:'', name:''})); const last = $('#dtRows', m).lastElementChild; $('.dt-duty', last).focus(); }
+    else if (b.dataset.act === 'dtdel') b.closest('.off-edit').remove();
+  });
+  $('#dtForm', m).addEventListener('submit', async e => {
+    e.preventDefault(); const btn = $('#dtSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    const list2 = [...m.querySelectorAll('.off-edit')].map(r => ({duty:$('.dt-duty', r).value, name:$('.dt-name', r).value})).filter(x => x.duty.trim() || x.name.trim());
+    try { await api('saveRoster', {date:$('#dtDate', m).value, list:list2}); await sync(); closeModal(); toast('Duty roster saved.'); }
+    catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save'; }
+  });
+}
+/* ---------- printable member directory (leaders) ---------- */
+function openDirectory(){
+  const people = Object.values(S.profiles).filter(p => !isDead(p)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  const cardH = p => `<div class="dir-c">${av(p.id, 'sm')}<div class="dir-i"><b>${esc(p.name)}</b>${p.role ? `<span>${esc(p.role)}</span>` : ''}${p.household ? `<span class="dir-fam">${esc(p.household)}</span>` : ''}${p.baptDate ? `<span class="dir-b">Baptized ${esc(baptText(p.baptDate))}</span>` : ''}</div></div>`;
+  const html = `<div class="dir"><header class="bul-h">${LOGO}<div><h2>${esc(S.settings.churchName || 'Tubod SDA Church')}</h2><p>Member directory · ${new Date().toLocaleDateString()}</p></div></header>
+    <div class="dir-grid">${people.map(cardH).join('')}</div>
+    <p class="bul-foot">${people.length} member${people.length === 1 ? '' : 's'} · Keep this directory private to the church.</p></div>`;
+  const m = openModal('Member directory', `<div class="m-body" style="padding:0"><p class="muted">A printable list of members with photo, role and family. It has names, so keep it private to the church.</p>
+    <div class="bul-wrap">${html}</div>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button><button class="btn primary" type="button" id="dirPrint">Print or save as PDF</button></div></div>`, true);
+  $('#dirPrint', m).addEventListener('click', () => {
+    let pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
+    pa.innerHTML = html; document.body.classList.add('printing');
+    const done = () => { document.body.classList.remove('printing'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done); setTimeout(() => window.print(), 50); setTimeout(done, 60000);
+  });
+}
+
 /* ---------- church officers for the year ---------- */
 const OFFICER_ROLES = ['Pastor','District Pastor','First Elder','Elder','Head Deacon','Deacon','Head Deaconess','Deaconess','Church Clerk','Assistant Clerk','Treasurer','Assistant Treasurer','Sabbath School Superintendent','Assistant Superintendent','Personal Ministries Leader','Adventist Youth Leader','Pathfinder Director','Adventurer Director',"Children's Ministries Leader",'Music Director','Choir Director','Health Ministries Leader','Communication Secretary',"Women's Ministries Leader",'Family Ministries Leader','Stewardship Leader','Interest Coordinator','Deacon on duty'];
 function officersInfo(){ try { const v = JSON.parse(S.settings.officers || '{}'); return {year:String(v.year || ''), list:Array.isArray(v.list) ? v.list : []}; } catch (e){ return {year:'', list:[]}; } }
@@ -2741,6 +2835,11 @@ document.addEventListener('click', e => {
     case 'exportmem': if (S.canMem) exportMembers(); break;
     case 'gogroups': closeModal(); go('groups'); break;
     case 'editofficers': if (S.canMem) openOfficersModal(); break;
+    case 'editgiving': if (S.isAdmin) openGivingModal(); break;
+    case 'copygive': copyText(el.dataset.v); break;
+    case 'zoomqr': openPhoto(imgUrl(el.dataset.id, 1200), {id:el.dataset.id, meta:'GCash QR code'}); break;
+    case 'editroster': if (S.canPost) openRosterModal(); break;
+    case 'directory': if (S.canMem) openDirectory(); break;
     case 'opengroup': closeModal(); go('group', el.dataset.id); break;
     case 'newgroup': openGroupModal(''); break;
     case 'editgroup': openGroupModal(el.dataset.id); break;
@@ -2941,6 +3040,16 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   // members
   'Everyone who has joined the church family page.':'Tanang miapil sa panid sa pamilya sa simbahan.', 'Search by name or ministry':'Pangitaa pinaagi sa ngalan o ministeryo',
   'Search members':'Pangitaa ang mga miyembro',
+  'Online giving':'Online nga paghatag', 'Tithe & offering':'Ikapulo ug halad', 'Tithe &amp; offering':'Ikapulo ug halad', 'GCash name':'Ngalan sa GCash', 'GCash number':'Numero sa GCash',
+  'GCash account name':'Ngalan sa GCash account', 'GCash QR code picture (optional)':'Litrato sa GCash QR code (kon gusto)', 'Set up giving':'I-set up ang paghatag', 'Giving details saved.':'Na-save ang detalye sa paghatag.',
+  'Tap the code to make it bigger':'I-tap ang code para modako', 'Copy':'Kopyaha', 'Remove the QR code picture':'Tangtanga ang litrato sa QR code',
+  'Please message the treasurer after sending, so your gift is recorded.':'Palihug i-message ang tresurero human magpadala, aron marekord ang imong halad.',
+  'Add your church GCash so members can give their tithe and offering from anywhere.':'Idugang ang GCash sa simbahan aron makahatag ang mga miyembro sa ilang ikapulo ug halad bisan asa.',
+  'Sabbath duties':'Mga buluhaton sa Igpapahulay', 'Duty roster':'Listahan sa mga buluhaton', 'Fill in':'Sulati', 'Add a duty':'Idugang og buluhaton', 'Duty':'Buluhaton', 'Duty roster saved.':'Na-save ang listahan sa buluhaton.',
+  "List who is assigned to each duty this Sabbath: deacon on duty, special music, welcome and more.":'Ilista kinsa ang gitahasan sa matag buluhaton karong Igpapahulay: deacon on duty, special music, welcome ug uban pa.',
+  'Deacon on duty':'Deacon on duty', 'Welcome / Ushers':'Welcome / Ushers', 'Special music':'Special music', 'Announcements':'Mga pahibalo',
+  'Print member directory':'I-print ang direktoryo sa miyembro', 'Member directory':'Direktoryo sa miyembro',
+  'A printable list of members with photo, role and family. It has names, so keep it private to the church.':'Mailimbag nga lista sa mga miyembro uban ang litrato, papel ug pamilya. Naay mga ngalan, busa itago sa simbahan lang.',
   'Church officers':'Mga opisyal sa simbahan', 'Add officers':'Idugang ang mga opisyal', 'Add a position':'Idugang og posisyon', 'Position':'Posisyon', 'Church officers saved.':'Na-save ang mga opisyal sa simbahan.',
   "List this year's elected officers so the church family knows who serves where.":'Ilista ang mga napiling opisyal karong tuiga aron mahibaw-an sa pamilya sa simbahan kon kinsa ang nag-alagad.', 'Officers':'Mga opisyal', 'Year':'Tuig',
   'Leader tools':'Mga gamit sa lider', 'Records and history':'Mga rekord ug kasaysayan', 'Download member list':'I-download ang lista sa miyembro', 'Attendance':'Pagtambong',
