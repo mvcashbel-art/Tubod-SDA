@@ -334,6 +334,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 .lb-bar a{color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:5px 12px;text-decoration:none;font-weight:600}
 .lb-bar a:hover{background:rgba(255,255,255,.18)}
 .lb-meta{opacity:.9;overflow-wrap:anywhere;text-align:center}
+.vid-lb{cursor:zoom-out}
+.vlb-stage{position:relative;width:min(1180px,100%);aspect-ratio:16/9;max-height:calc(100% - 56px);background:#000;border-radius:12px;overflow:hidden;cursor:default;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.vlb-el{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain;display:block}
+.vlb-x{color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:5px 14px;font-weight:600;cursor:pointer;font:inherit}
+.vlb-x:hover{background:rgba(255,255,255,.28)}
 .shots.gn{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 .shots.gn img{aspect-ratio:1;min-height:0}
 #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:70;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
@@ -800,14 +805,38 @@ function videoCard(text){
   return `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="${v.k}" data-id="${esc(v.id || '')}" data-url="${esc(v.url)}" aria-label="Play video from ${label}">${thumb}<span class="vid-btn" aria-hidden="true"></span><span class="vid-src">${label}</span></button></div>`;
 }
 function playVideo(btn){
-  const k = btn.dataset.k, id = btn.dataset.id, url = btn.dataset.url; let src = '';
-  if (k === 'yt') src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;
-  else if (k === 'gd') src = `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
-  else if (k === 'fb') src = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`;
-  if (!src) return;
-  const f = document.createElement('iframe');
-  f.src = src; f.title = 'Video'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin';
-  const box = btn.parentNode; box.innerHTML = ''; box.appendChild(f);
+  openVideoLightbox({ k: btn.dataset.k, id: btn.dataset.id, url: btn.dataset.url, size: Number(btn.dataset.size) || 0, title: btn.getAttribute('aria-label') || '' });
+}
+/* Big in-site video player. Plays on the site; only very large Drive files fall back to Drive's own player. */
+function openVideoLightbox(opts){
+  const { k, id, url, size } = opts, title = (opts.title || '').replace(/^Play\s+/i, '');
+  const l = document.createElement('div'); l.className = 'lightbox vid-lb';
+  const stage = document.createElement('div'); stage.className = 'vlb-stage';
+  l.appendChild(stage);
+  const bar = document.createElement('div'); bar.className = 'lb-bar';
+  bar.innerHTML = `<button type="button" class="vlb-x" aria-label="Close">Close</button>${title ? `<span class="lb-meta">${esc(title)}</span>` : ''}`;
+  l.appendChild(bar);
+  const close = () => { l.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  l.addEventListener('click', e => { if (e.target.closest('.vlb-stage') || (e.target.closest('.lb-bar') && !e.target.closest('.vlb-x'))) return; close(); });
+  document.body.appendChild(l);
+  const frame = src => { const f = document.createElement('iframe'); f.className = 'vlb-el'; f.src = src; f.title = 'Video'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.referrerPolicy = 'strict-origin-when-cross-origin'; stage.innerHTML = ''; stage.appendChild(f); };
+  if (k === 'yt'){ frame(`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1`); return; }
+  if (k === 'fb'){ frame(`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`); return; }
+  if (!idOk(id)){ close(); return; }
+  /* Google Drive video: play it with the site's own player; files too big to stream fall back to Drive's player */
+  if (size && size > 95 * 1024 * 1024){ frame(`https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`); return; }
+  const v = document.createElement('video'); v.className = 'vlb-el';
+  v.src = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
+  v.controls = true; v.autoplay = true; v.preload = 'metadata'; v.setAttribute('playsinline', ''); v.setAttribute('controlslist', 'nodownload');
+  let settled = false;
+  const fallback = () => { if (settled) return; settled = true; clearTimeout(tm); frame(`https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`); };
+  v.addEventListener('loadeddata', () => { settled = true; clearTimeout(tm); });
+  v.addEventListener('error', fallback);
+  const tm = setTimeout(() => { if (!settled && v.readyState < 2) fallback(); }, 7000);
+  stage.appendChild(v);
+  const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
 }
 const photoImg = id => { const u = imgUrl(id, 1600); return u ? `<img src="${u}" alt="" loading="lazy">` : ''; };
 
@@ -1108,6 +1137,9 @@ function renderChrome(){
 /* ---------- this Sabbath, events, birthdays, livestream ---------- */
 const phNow = () => new Date(Date.now() + TZ * 36e5);
 const phISO = (ms = Date.now()) => new Date(ms + TZ * 36e5).toISOString().slice(0, 10);
+/* automatic worship/event reminders ("... today at 7:00 PM") are tagged with the day they are for; hide them once that day has passed */
+function expiredReminder(p){ if (!p || p.authorId !== 'system') return false; const m = /(\d{4}-\d{2}-\d{2})\s*$/.exec(p.svc || ''); return !!m && m[1] < phISO(); }
+const livePosts = () => S.posts.filter(p => !expiredReminder(p));
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const fmtDate = iso => { const [y, m, d] = iso.split('-').map(Number); const dt = new Date(Date.UTC(y, m - 1, d)); return `${DAYS[dt.getUTCDay()]}, ${MONTHS[m - 1]} ${d}`; };
 function nextSabbathISO(){ const n = phNow(); const add = (6 - n.getUTCDay() + 7) % 7; return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + add)).toISOString().slice(0, 10); }
@@ -1353,7 +1385,7 @@ function scheduleCard(){
 /* top of every page: the nearest worship, then the newest announcement */
 function renderStrip(){
   const el = $('#annStrip'); if (!el) return;
-  const list = S.posts.filter(p => p.cat === 'announcement').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const list = livePosts().filter(p => p.cat === 'announcement').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const nw = nextWorships(), w = nw[0];
   let rows = '';
   const live = liveNow();
@@ -1406,7 +1438,7 @@ function mount(){
 function refresh(){
   renderChrome(); renderStrip(); renderSide(); renderBanner();
   if (!S.uid) return;
-  if (S.route === 'home'){ renderFilters(); const homeP = S.posts.filter(p => !p.grp); renderFeed(S.filter === 'all' ? homeP : homeP.filter(p => p.cat === S.filter), 'No posts here yet. Be the first to share something.'); refreshComposer(); }
+  if (S.route === 'home'){ renderFilters(); const homeP = livePosts().filter(p => !p.grp); renderFeed(S.filter === 'all' ? homeP : homeP.filter(p => p.cat === S.filter), 'No posts here yet. Be the first to share something.'); refreshComposer(); }
   else if (S.route === 'groups') renderGroups();
   else if (S.route === 'group') renderGroup();
   else if (S.route === 'news') renderChat();
@@ -1454,7 +1486,7 @@ function msgHTML(p){
 function renderChat(){
   const el = $('#msgs'); if (!el) return;
   const atBottom = !S.chatInit || el.scrollHeight - el.scrollTop - el.clientHeight < 60, st = el.scrollTop;
-  const list = S.posts.filter(p => p.cat === 'announcement').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const list = livePosts().filter(p => p.cat === 'announcement').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   keepInputs(el, () => {
     if (!S.loaded.posts) el.innerHTML = '<div class="day">Loading…</div>';
     else if (!list.length) el.innerHTML = `<div class="day">No announcements yet</div>`;
@@ -1711,7 +1743,7 @@ function fileIcon(mime){ return /^audio/.test(mime) ? 'music' : /^image/.test(mi
 function fileVideo(f){
   const id = f.driveId; if (!idOk(id)) return '';
   const t = imgUrl(id, 640);
-  return `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="gd" data-id="${esc(id)}" data-url="" aria-label="Play ${esc(f.title || 'video')}">${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span class="vid-btn" aria-hidden="true"></span><span class="vid-src">Google Drive</span></button></div><p class="vid-note">New or very big videos can take a while to get ready. If it says it is still processing, try again later.</p>`;
+  return `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="gd" data-id="${esc(id)}" data-url="" data-size="${(f && f.size) || 0}" aria-label="Play ${esc(f.title || 'video')}">${t ? `<img src="${t}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span class="vid-btn" aria-hidden="true"></span><span class="vid-src">Video</span></button></div><p class="vid-note">New or very big videos can take a while to get ready. If it says it is still processing, try again later.</p>`;
 }
 function fileHTML(f){
   const url = driveUrl(f.driveId), mime = String(f.mime || '');
@@ -1761,7 +1793,7 @@ function albItem(f){
   const del = mine(f.authorId) ? `<button type="button" class="x" data-act="delalbfile" data-id="${esc(f.id)}" aria-label="Delete ${t}">Delete</button>` : '';
   let body;
   if (/^image\//.test(mime) && imgUrl(id, 500)) body = `<img src="${imgUrl(id, 500)}" alt="${t}" loading="lazy" data-act="zoom">`;
-  else if (/^video\//.test(mime) && idOk(id)) body = `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="gd" data-id="${esc(id)}" data-url="" aria-label="Play ${t}">${imgUrl(id, 400) ? `<img src="${imgUrl(id, 400)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:0;cursor:pointer" onerror="this.remove()">` : ''}<span class="vid-btn" aria-hidden="true"></span></button></div>`;
+  else if (/^video\//.test(mime) && idOk(id)) body = `<div class="vid"><button type="button" class="vid-play" data-act="playvid" data-k="gd" data-id="${esc(id)}" data-url="" data-size="${(f && f.size) || 0}" aria-label="Play ${t}">${imgUrl(id, 400) ? `<img src="${imgUrl(id, 400)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:0;cursor:pointer" onerror="this.remove()">` : ''}<span class="vid-btn" aria-hidden="true"></span></button></div>`;
   else body = `<a class="alb-doc" href="${driveUrl(id)}" target="_blank" rel="noopener">${icon('file')}<br>${t}<br>Open</a>`;
   return `<figure class="alb-it">${body}<figcaption><span>${t}<br><small>${esc(kindOf(f))} · ${fmtSize(f.size)}</small></span>${del}</figcaption></figure>`;
 }
@@ -2514,7 +2546,7 @@ function bulletinData(){
   const svcs = services().filter(sv => Number(sv.day) === 6).sort((a, b) => String(a.time).localeCompare(String(b.time))).map(sv => ({sv, items:named(progItems(sv.id, date))}));
   const until = new Date(Date.parse(date + 'T00:00:00Z') + 14 * 864e5).toISOString().slice(0, 10);
   const events = (S.events || []).filter(e => e.date >= phISO() && e.date <= until).slice(0, 8);
-  const anns = S.posts.filter(p => p.cat === 'announcement' && !p.grp && Date.now() - (p.createdAt || 0) < 8 * 864e5).sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+  const anns = livePosts().filter(p => p.cat === 'announcement' && !p.grp && Date.now() - (p.createdAt || 0) < 8 * 864e5).sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
   const n = Date.parse(date + 'T00:00:00Z'), bdays = [];
   for (let i = -6; i <= 6; i++){ const md = new Date(n + i * 864e5).toISOString().slice(5, 10); Object.values(S.profiles).filter(p => p.bday === md && !isDead(p)).forEach(p => bdays.push(p.name)); }
   return {date, sab, svcs, events, anns, bdays, verse:S.settings.verse || '', name:S.settings.churchName || 'Tubod SDA Church', tag:S.settings.tagline || ''};
@@ -2586,7 +2618,7 @@ async function toggleNotif(){
 function notifyNew(){
   if (pushConfigured() || !notifOn()) return;
   const seen = Number(lsGet(ANN_SEEN)) || Date.now();
-  const fresh = S.posts.filter(p => p.cat === 'announcement' && (p.createdAt || 0) > seen && p.authorId !== S.uid).sort((a, b) => b.createdAt - a.createdAt);
+  const fresh = S.posts.filter(p => p.cat === 'announcement' && (p.createdAt || 0) > seen && p.authorId !== S.uid && !expiredReminder(p)).sort((a, b) => b.createdAt - a.createdAt);
   lsSet(ANN_SEEN, String(Math.max(seen, ...S.posts.map(p => p.createdAt || 0))));
   if (!fresh.length) return;
   const title = (S.settings.churchName || 'Tubod SDA Church') + (fresh.length > 1 ? ` · ${fresh.length} new announcements` : '');
