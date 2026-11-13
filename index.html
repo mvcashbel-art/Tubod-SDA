@@ -129,8 +129,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .prev img{width:84px;height:84px;object-fit:cover;border-radius:10px;display:block}
 .prev button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--ink);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
 .prev button .ic{width:14px;height:14px}
-.c-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.cats{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.c-cats{display:flex;gap:6px;flex-wrap:wrap}
+.c-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.c-acts #cPost{margin-left:auto}
 .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:500;cursor:pointer;color:var(--muted)}
 .chip:hover{background:#F4F8FA}
 .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -1907,13 +1908,13 @@ function buildComposer(){
   slot.innerHTML = `<section class="card composer" aria-label="Write a post">
     <div class="c-row"><span id="cAv">${av(S.uid)}</span><textarea id="cText" rows="2" maxlength="3000" placeholder="What is on your heart, ${esc(first)}? You can paste a video link." aria-label="Write a post">${esc(S.draft.text)}</textarea></div>
     <div class="prev" id="cPrev"></div>
-    <div class="c-bar">
-      <div class="cats" id="cCats" role="group" aria-label="Post type"></div>
-      <label class="pin-opt" id="cPinWrap" hidden><input type="checkbox" id="cPin"> Pin to top</label>
+    <div class="c-cats" id="cCats" role="group" aria-label="Post type"></div>
+    <div class="c-acts">
       <button class="btn" type="button" data-act="attach">${icon('image')}Photo</button>
       <input type="file" id="cFile" accept="image/*" multiple hidden>
       <button class="btn" type="button" data-act="attachvid">${icon('file')}Video</button>
       <input type="file" id="cVid" accept="video/*" hidden>
+      <label class="pin-opt" id="cPinWrap" hidden><input type="checkbox" id="cPin"> Pin to top</label>
       <button class="btn primary" type="button" id="cPost" data-act="post">Post</button>
     </div></section>`;
   const ta = $('#cText');
