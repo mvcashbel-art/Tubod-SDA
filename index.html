@@ -570,6 +570,36 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
 @keyframes spGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 @keyframes spDot{0%,100%{opacity:.25}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.sp-in,.sp-in img,.sp-dots i{animation:none}.sp-dots i{opacity:.6}}
+/* consent tick */
+.consent{display:flex;gap:9px;align-items:flex-start;font-size:.85rem;color:var(--muted);line-height:1.35;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:2px 0 4px}
+.consent input{margin-top:2px;flex:0 0 auto}
+.linkish{background:none;border:0;color:var(--brand,#2b6cb0);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
+/* Sabbath School lesson card */
+.card.lesson .lesson-t{font-weight:600;margin:4px 0}
+.card.lesson .lesson-m{margin:8px 0 0;font-size:.9rem;line-height:1.4}
+/* treasurer log + transfers add row */
+.off-add{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.off-add input,.off-add select{flex:1 1 120px;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:var(--bg,#fff);color:inherit}
+.off-add button{flex:0 0 auto}
+.off-tot{background:var(--soft,#f4f6f8);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:.92rem}
+.tr-tag{font-size:.72rem;font-weight:600;padding:1px 7px;border-radius:999px;vertical-align:middle}
+.tr-tag.in{background:#e3f4e8;color:#1f7a3d}.tr-tag.out{background:#fdebe3;color:#a5461f}
+/* month calendar */
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:1.05rem}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{margin-bottom:4px}
+.cal-dowc{text-align:center;font-size:.72rem;color:var(--muted);font-weight:600}
+.cal-c{min-height:62px;border:1px solid var(--line);border-radius:8px;padding:3px 4px;font-size:.72rem;overflow:hidden;display:flex;flex-direction:column;gap:2px}
+.cal-c.empty{border:0;background:transparent}
+.cal-c .cal-d{font-weight:600;font-size:.8rem}
+.cal-c.today{outline:2px solid var(--brand,#2b6cb0);outline-offset:-2px}
+.cal-c.sab{background:var(--soft,#f4f6f8)}
+.cal-c.has{border-color:var(--brand,#2b6cb0)}
+.cal-ev{background:var(--brand,#2b6cb0);color:#fff;border-radius:5px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cal-w{color:var(--muted);font-size:.68rem}
+.cal-more{color:var(--muted);font-size:.68rem}
+.cal-note{font-size:.8rem;margin-top:10px}
+@media (max-width:520px){.cal-c{min-height:52px;font-size:.66rem}.cal-c .cal-ev{font-size:.62rem}}
 </style>
 </head>
 <body>
@@ -871,7 +901,7 @@ async function api(action, data = {}){
 }
 function applySync(j){
   S.program = j.program || [];
-  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin'; S.lv = j.me.access; S.canPost = S.isAdmin || S.lv === 'editor'; S.canMem = S.isAdmin || S.lv === 'clerk'; S.canAttend = S.canPost || S.canMem; S.groups = j.groups || []; S.newVisitors = j.newVisitors || 0;
+  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin'; S.lv = j.me.access; S.canPost = S.isAdmin || S.lv === 'editor'; S.canMem = S.isAdmin || S.lv === 'clerk'; S.canAttend = S.canPost || S.canMem; S.groups = j.groups || []; S.newVisitors = j.newVisitors || 0; S.newPrayers = j.newPrayers || 0;
   S.settings = j.settings || {}; if (applySite()) setTimeout(() => { renderChrome(); mount(); }, 0); S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.events = j.events || [];
   S.waiting = j.members.filter(m => m.access === 'pending');
@@ -1071,15 +1101,16 @@ function showAuth(mode, msg){
         <label class="fld" for="lgPass">Password<input id="lgPass" type="password" autocomplete="current-password" required></label>
         <div class="err" id="authErr" role="alert">${esc(msg || '')}</div>
         <button class="btn primary" type="submit">Sign in</button></form>
-        <p class="auth-new">First time here? <button type="button" class="linkish" data-act="visitorintro">Introduce yourself to the church</button></p>`
+        <p class="auth-new">First time here? <button type="button" class="linkish" data-act="visitorintro">Introduce yourself</button> · <button type="button" class="linkish" data-act="prayerintro">Request prayer</button></p>`
       : `<form id="authJoin">
         <label class="fld" for="jnName">Your full name<input id="jnName" autocomplete="name" maxlength="60" required></label>
         <label class="fld" for="jnUser">Choose a username<input id="jnUser" autocomplete="username" autocapitalize="none" maxlength="40" required><small>Letters and numbers only, no spaces. You will use it to sign in.</small></label>
         <label class="fld" for="jnPass">Choose a password<input id="jnPass" type="password" autocomplete="new-password" minlength="6" required><small>At least 6 characters.</small></label>
         <label class="fld" for="jnCode">Church join code<input id="jnCode" autocapitalize="characters" autocomplete="off" required><small>Ask the church admin or pastor for the code.</small></label>
+        ${consentField('jnConsent')}
         <div class="err" id="authErr" role="alert">${esc(msg || '')}</div>
         <button class="btn primary" type="submit">Join</button></form>
-        <p class="auth-new">Just visiting, no account yet? <button type="button" class="linkish" data-act="visitorintro">Introduce yourself to the church</button></p>`}`;
+        <p class="auth-new">Just visiting, no account yet? <button type="button" class="linkish" data-act="visitorintro">Introduce yourself</button> · <button type="button" class="linkish" data-act="prayerintro">Request prayer</button></p>`}`;
   }
   a.innerHTML = `<div class="card auth-card"><div style="display:flex;justify-content:flex-end;margin:-8px -6px -8px 0"><button class="lang-btn" type="button" data-act="lang" data-notr>${LANG === 'ceb' ? 'English' : 'Bisaya'}</button></div>${head}${body}</div>`;
   const f = $('input', a); if (f && mode !== 'offline') f.focus();
@@ -1093,6 +1124,7 @@ function openVisitorModal(){
     <label class="fld" for="viContact">How can we reach you?<input id="viContact" maxlength="80" required placeholder="Mobile number, Messenger or email"></label>
     <label class="fld" for="viHeard">How did you hear about us? (optional)<input id="viHeard" maxlength="80" placeholder="A friend, Facebook, walked by…"></label>
     <label class="fld" for="viMsg">Anything you'd like to say? (optional)<textarea id="viMsg" maxlength="500" placeholder="A prayer request, a question, or just hello"></textarea></label>
+    ${consentField('viConsent')}
     <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="viSave">Send</button></div></form>`, true);
   $('#viForm', m).addEventListener('submit', async e => {
     e.preventDefault(); const btn = $('#viSave', m); btn.disabled = true; btn.textContent = 'Sending…';
@@ -1119,6 +1151,55 @@ async function visitorAction(a, el){
   try {
     if (a === 'vdone'){ await api('handleVisitor', {id:el.dataset.id, handled:!!el.dataset.on}); await sync(); openVisitorsModal(); }
     else if (a === 'vdel'){ if (!await confirmBox('Remove this visitor message?', 'It will be deleted for everyone.', 'Remove')){ openVisitorsModal(); return; } await api('handleVisitor', {id:el.dataset.id, remove:true}); await sync(); openVisitorsModal(); }
+  } catch (err){ toast(errMsg(err)); }
+}
+/* ---------- data privacy: a short notice and a consent tick, shown where we collect someone's details ---------- */
+function consentField(id){
+  return `<label class="consent"><input type="checkbox" id="${id}" required> I agree that the church may keep these details to contact me. <button type="button" class="linkish" data-act="privacy">Read the privacy notice</button></label>`;
+}
+function openPrivacyModal(){
+  const church = esc(S.settings.churchName || 'Tubod SDA Church');
+  openModal('Privacy notice', `<div class="m-body"><p>${church} respects your privacy. We follow the Philippine Data Privacy Act of 2012 (RA 10173).</p>
+    <p><b>What we collect.</b> Your name, how to reach you, and anything you choose to share such as a prayer request or your church details.</p>
+    <p><b>Why.</b> So church leaders can welcome you, pray with you, and keep the church's records.</p>
+    <p><b>Who sees it.</b> Only church leaders. Member details are never shown to the public, and the church will never sell or post your information.</p>
+    <p><b>Your choice.</b> You may ask the church to see, correct, or delete your details at any time.</p>
+    <div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Close</button></div></div>`);
+}
+/* ---------- prayer requests: anyone can send one; leaders see a private list ---------- */
+function openPrayerModal(){
+  const m = openModal('Request prayer 🙏', `<form id="prForm" class="m-body" style="padding:0">
+    <p class="muted">Share a request and the church will pray for you. You do not need an account.</p>
+    <label class="fld" for="prName">Your name (optional)<input id="prName" maxlength="60" autocomplete="name" placeholder="You may leave this blank"></label>
+    <label class="fld" for="prContact">How can we reach you? (optional)<input id="prContact" maxlength="80" placeholder="Mobile, Messenger or email"></label>
+    <label class="fld" for="prMsg">Your prayer request<textarea id="prMsg" maxlength="1000" required placeholder="What would you like the church to pray for?"></textarea></label>
+    <label class="consent" style="border:0;padding-top:0"><input type="checkbox" id="prPriv"> Keep this private between me and the pastor</label>
+    ${consentField('prConsent')}
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="prSend">Send</button></div></form>`, true);
+  $('#prForm', m).addEventListener('submit', async e => {
+    e.preventDefault(); const btn = $('#prSend', m); btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await api('prayerRequest', {name:$('#prName', m).value, contact:$('#prContact', m).value, request:$('#prMsg', m).value, private:$('#prPriv', m).checked});
+      closeModal();
+      openModal('Thank you 🙏', `<div class="m-body"><p>Your request has been received. The church will be praying for you. “The prayer of a righteous person is powerful and effective.” (James 5:16)</p><div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Close</button></div></div>`);
+    } catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first.' : errMsg(err)); btn.disabled = false; btn.textContent = 'Send'; }
+  });
+}
+function openPrayersModal(){
+  openModal('Prayer requests', '<p class="muted" style="padding:0 20px 20px">Loading…</p>', true);
+  api('listPrayers').then(r => {
+    const m = $('#modal'); if (!m) return;
+    const list = r.prayers || [];
+    const row = p => `<div class="mrow vrow ${p.handled ? 'done' : ''}"><div class="mi"><b data-notr>${esc(p.name) || '<span class="muted">Someone</span>'}</b>${p.contact ? `<span class="meta" data-notr>${esc(p.contact)}</span>` : ''}${p.private ? '<span class="meta">🔒 Private to the pastor</span>' : ''}<span class="meta" data-notr style="white-space:pre-wrap">${esc(p.request)}</span><span class="meta">${ago(p.createdAt)}${p.handled ? ' · prayed for by ' + esc(p.handledBy) : ''}</span></div>
+      <div class="se-acts"><button class="btn sm ${p.handled ? 'quiet' : 'primary'}" data-act="prdone" data-id="${esc(p.id)}" data-on="${p.handled ? '' : '1'}">${p.handled ? 'Mark new' : 'Prayed for'}</button><button class="btn sm danger" data-act="prdel" data-id="${esc(p.id)}">Remove</button></div></div>`;
+    const sheet = $('.sheet', m); sheet.querySelectorAll(':scope > :not(header)').forEach(x => x.remove());
+    sheet.insertAdjacentHTML('beforeend', `<div class="m-body">${list.length ? `<div class="mlist">${list.map(row).join('')}</div>` : '<p class="muted">No prayer requests yet. When someone taps “Request prayer”, it shows up here for the leaders to pray over.</p>'}<div class="m-actions"><button class="btn primary" type="button" data-act="closemodal">Done</button></div></div>`);
+  }).catch(err => { const m = $('#modal'); if (m) toast(errMsg(err)); });
+}
+async function prayerAction(a, el){
+  try {
+    if (a === 'prdone'){ await api('handlePrayer', {id:el.dataset.id, handled:!!el.dataset.on}); await sync(); openPrayersModal(); }
+    else if (a === 'prdel'){ if (!await confirmBox('Remove this prayer request?', 'It will be deleted for everyone.', 'Remove')){ openPrayersModal(); return; } await api('handlePrayer', {id:el.dataset.id, remove:true}); await sync(); openPrayersModal(); }
   } catch (err){ toast(errMsg(err)); }
 }
 async function authSubmit(kind, form){
@@ -1234,12 +1315,44 @@ function eventsCard(){
   const up = upcomingEvents();
   if (!up.length && !S.canPost) return '';
   return `<div class="card"><div class="card-h"><h3>Upcoming events</h3>${S.canPost ? '<button class="btn sm quiet" data-act="addev">Add</button>' : ''}</div>
-    ${up.length ? `<ul class="evlist">${up.slice(0, 3).map(e => evItem(e, false)).join('')}</ul><p style="margin-top:10px"><button class="btn sm" data-act="allev">See all events${up.length > 3 ? ` (${up.length})` : ''}</button></p>` : '<p class="muted">No events yet. Add camps, baptisms, Pathfinders, visitations and more.</p>'}</div>`;
+    ${up.length ? `<ul class="evlist">${up.slice(0, 3).map(e => evItem(e, false)).join('')}</ul><p style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="allev">See all events${up.length > 3 ? ` (${up.length})` : ''}</button><button class="btn sm" data-act="calendar">Calendar</button></p>` : `<p class="muted">No events yet. Add camps, baptisms, Pathfinders, visitations and more.</p><p style="margin-top:8px"><button class="btn sm" data-act="calendar">Open calendar</button></p>`}</div>`;
 }
 function openEventsModal(){
   const up = upcomingEvents();
   const m = openModal('Church events', `${up.length ? `<ul class="evlist">${up.map(e => evItem(e, true)).join('')}</ul>` : '<p class="muted">No upcoming events.</p>'}
-    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button>${S.canPost ? '<button class="btn primary" type="button" data-act="addev">Add an event</button>' : ''}</div>`, true);
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Close</button><button class="btn" type="button" data-act="calendar">Month calendar</button>${S.canPost ? '<button class="btn primary" type="button" data-act="addev">Add an event</button>' : ''}</div>`, true);
+}
+function openCalendarModal(startMonth){
+  let cur = startMonth || phISO().slice(0, 7);
+  const m = openModal('Church calendar', '<div class="m-body cal-body" id="calBody"></div>', true);
+  const evByDate = {}; (S.events || []).forEach(e => { (evByDate[e.date] = evByDate[e.date] || []).push(e); });
+  const worshipDays = new Set(services().map(s => Number(s.day)));
+  function draw(){
+    const body = $('#calBody', m); if (!body) return;
+    const [y, mo] = cur.split('-').map(Number);
+    const startDow = new Date(Date.UTC(y, mo - 1, 1)).getUTCDay();
+    const days = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+    const today = phISO();
+    let cells = '';
+    for (let i = 0; i < startDow; i++) cells += '<div class="cal-c empty"></div>';
+    for (let d = 1; d <= days; d++){
+      const iso = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dow = new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
+      const evs = evByDate[iso] || [];
+      const cls = ['cal-c']; if (iso === today) cls.push('today'); if (dow === 6) cls.push('sab'); if (evs.length) cls.push('has');
+      const dots = evs.slice(0, 3).map(e => `<span class="cal-ev" data-notr>${esc(e.title)}</span>`).join('') + (evs.length > 3 ? `<span class="cal-more">+${evs.length - 3} more</span>` : '');
+      cells += `<div class="${cls.join(' ')}"><span class="cal-d">${d}</span>${worshipDays.has(dow) && !evs.length ? '<span class="cal-w">Worship</span>' : ''}${dots}</div>`;
+    }
+    const prev = mo === 1 ? `${y - 1}-12` : `${y}-${String(mo - 1).padStart(2, '0')}`;
+    const next = mo === 12 ? `${y + 1}-01` : `${y}-${String(mo + 1).padStart(2, '0')}`;
+    body.innerHTML = `<div class="cal-head"><button class="btn sm quiet" type="button" data-cal="${prev}" aria-label="Previous month">‹</button><b data-notr>${MONTHS[mo - 1]} ${y}</b><button class="btn sm quiet" type="button" data-cal="${next}" aria-label="Next month">›</button></div>
+      <div class="cal-grid cal-dow">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="cal-dowc">${d}</div>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+      <p class="muted cal-note">Saturdays are Sabbath. Events come from the church's event list.</p>
+      <div class="m-actions">${S.canPost ? '<button class="btn" type="button" data-act="addev">Add an event</button>' : ''}<button class="btn primary" type="button" data-act="closemodal">Close</button></div>`;
+  }
+  m.addEventListener('click', e => { const b = e.target.closest('[data-cal]'); if (b){ cur = b.dataset.cal; draw(); } });
+  draw();
 }
 function openEventForm(id){
   const e = (S.events || []).find(x => x.id === id) || {remind:true};
@@ -1311,7 +1424,7 @@ function renderSide(){
   const st = S.settings, n = Object.values(S.profiles).filter(p => !isDead(p)).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${givingCard()}${thisSabbathCard()}${rosterCard()}${eventsCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
+  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${givingCard()}${thisSabbathCard()}${lessonCard()}${rosterCard()}${eventsCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
     <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
     <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
 }
@@ -1319,9 +1432,10 @@ function renderBanner(){
   const b = $('#banner'); if (!b) return;
   const wait = S.isAdmin && S.waiting && S.waiting.length ? `<div class="note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between"><span><b>${S.waiting.length}</b> new ${S.waiting.length === 1 ? 'person is' : 'people are'} waiting for your approval.</span><button class="btn sm primary" data-act="members">Review</button></div>` : '';
   const vis = S.canMem && S.newVisitors ? `<div class="note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between"><span><b>${S.newVisitors}</b> new visitor${S.newVisitors === 1 ? '' : 's'} introduced ${S.newVisitors === 1 ? 'themselves' : 'themselves'}.</span><button class="btn sm primary" data-act="visitors">See</button></div>` : '';
+  const pray = S.canMem && S.newPrayers ? `<div class="note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between"><span><b>${S.newPrayers}</b> new prayer request${S.newPrayers === 1 ? '' : 's'} to pray over.</span><button class="btn sm primary" data-act="prayers">See</button></div>` : '';
   const off = navigator.onLine === false ? `<div class="note warn">You are offline. You are seeing the posts saved on this phone. New posts load when the signal comes back.</div>`
     : S.offline ? `<div class="note warn">Cannot reach the church server right now. You are seeing the last posts that loaded.</div>` : '';
-  b.innerHTML = off + wait + vis;
+  b.innerHTML = off + wait + vis + pray;
 }
 /* worship times (weekly, Philippine time) */
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -2417,8 +2531,9 @@ function openSiteModal(part){
 }
 /* ---------- leader tools: records, attendance, member list ---------- */
 function toolButtons(){
-  return [S.canMem ? `<button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="visitors">New visitors${S.newVisitors ? ' (' + S.newVisitors + ')' : ''}</button><button class="btn" type="button" data-act="records">Records and history</button><button class="btn" type="button" data-act="directory">Print member directory</button><button class="btn" type="button" data-act="exportmem">Download member list</button>` : '',
-    S.canPost && !S.isAdmin ? '<button class="btn" type="button" data-act="editsab">This Sabbath</button><button class="btn" type="button" data-act="editprog">Worship program</button><button class="btn" type="button" data-act="addev">Add an event</button>' : '',
+  return [S.canMem ? `<button class="btn" type="button" data-act="members">Manage members</button><button class="btn" type="button" data-act="visitors">New visitors${S.newVisitors ? ' (' + S.newVisitors + ')' : ''}</button><button class="btn" type="button" data-act="prayers">Prayer requests${S.newPrayers ? ' (' + S.newPrayers + ')' : ''}</button><button class="btn" type="button" data-act="transfers">Membership transfers</button><button class="btn" type="button" data-act="records">Records and history</button><button class="btn" type="button" data-act="directory">Print member directory</button><button class="btn" type="button" data-act="exportmem">Download member list</button>` : '',
+    S.isAdmin ? `<button class="btn" type="button" data-act="offerings">Treasurer's giving log</button>` : '',
+    S.canPost && !S.isAdmin ? '<button class="btn" type="button" data-act="editsab">This Sabbath</button><button class="btn" type="button" data-act="editprog">Worship program</button><button class="btn" type="button" data-act="editlesson">Sabbath School lesson</button><button class="btn" type="button" data-act="addev">Add an event</button>' : '',
     '<button class="btn" type="button" data-act="gogroups">Ministry groups</button>'].join('');
 }
 function openToolsModal(){
@@ -2688,6 +2803,31 @@ function notifyNew(){
 }
 /* ---------- online giving (GCash etc.) ---------- */
 function givingInfo(){ try { const v = JSON.parse(S.settings.giving || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e){ return {}; } }
+function ssLessonInfo(){ try { const v = JSON.parse(S.settings.ssLesson || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e){ return {}; } }
+function lessonCard(){
+  const l = ssLessonInfo(), has = l.lesson || l.memory || l.link;
+  if (!has) return S.canPost ? `<div class="card"><div class="card-h"><h3>Sabbath School lesson</h3></div><p class="muted">Share this week's lesson so members can study along.</p><p style="margin-top:8px"><button class="btn sm primary" data-act="editlesson">Add the lesson</button></p></div>` : '';
+  return `<div class="card lesson"><div class="card-h"><h3>Sabbath School lesson</h3>${S.canPost ? '<button class="btn sm quiet" data-act="editlesson">Edit</button>' : ''}</div>
+    ${l.quarter ? `<p class="meta" data-notr>${esc(l.quarter)}</p>` : ''}
+    ${l.lesson ? `<p class="lesson-t" data-notr>${esc(l.lesson)}</p>` : ''}
+    ${l.memory ? `<p class="lesson-m"><span class="muted">Memory verse</span><br><span data-notr>${esc(l.memory)}</span></p>` : ''}
+    ${l.link ? `<p style="margin-top:8px"><a class="btn sm primary" href="${esc(l.link)}" target="_blank" rel="noopener">Study the lesson</a></p>` : ''}</div>`;
+}
+function openLessonModal(){
+  const l = ssLessonInfo();
+  const m = openModal('Sabbath School lesson', `<form id="lsForm" class="m-body" style="padding:0">
+    <p class="muted">Shown to everyone on the home page so members can study this week's lesson.</p>
+    <label class="fld" for="lsQ" style="max-width:220px">Quarter (optional)<input id="lsQ" maxlength="60" value="${esc(l.quarter || '')}" placeholder="e.g. 4th Quarter 2026"></label>
+    <label class="fld" for="lsT">Lesson title<input id="lsT" maxlength="120" value="${esc(l.lesson || '')}" placeholder="e.g. Lesson 7: The Sanctuary"></label>
+    <label class="fld" for="lsM">Memory verse (optional)<textarea id="lsM" maxlength="400" placeholder="Write the verse and its reference">${esc(l.memory || '')}</textarea></label>
+    <label class="fld" for="lsL">Link to the lesson (optional)<input id="lsL" maxlength="400" value="${esc(l.link || '')}" inputmode="url" placeholder="https://sabbath-school.adventech.io/"><small>You can use the free Sabbath School app or website link.</small></label>
+    <div class="m-actions"><button class="btn" type="button" data-act="closemodal">Cancel</button><button class="btn primary" type="submit" id="lsSave">Save</button></div></form>`, true);
+  $('#lsForm', m).addEventListener('submit', async e => {
+    e.preventDefault(); const btn = $('#lsSave', m); btn.disabled = true; btn.textContent = 'Saving…';
+    try { await api('saveLesson', {quarter:$('#lsQ', m).value, lesson:$('#lsT', m).value, memory:$('#lsM', m).value, link:$('#lsL', m).value.trim()}); await sync(); closeModal(); toast('Sabbath School lesson saved.'); }
+    catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first.' : errMsg(err)); btn.disabled = false; btn.textContent = 'Save'; }
+  });
+}
 function givingCard(){
   const g = givingInfo(), has = g.name || g.number || g.qrId || g.note;
   if (!has) return S.isAdmin ? `<div class="card give"><div class="card-h"><h3>Online giving</h3></div><p class="muted">Add your church GCash so members can give their tithe and offering from anywhere.</p><p style="margin-top:8px"><button class="btn sm primary" data-act="editgiving">Set up giving</button></p></div>` : '';
@@ -2806,6 +2946,73 @@ function openOfficersModal(){
     catch (err){ toast(errMsg(err)); btn.disabled = false; btn.textContent = 'Save'; }
   });
 }
+/* ---------- treasurer's private giving log (admins only) ---------- */
+const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+const OFFERING_KINDS = ['Tithe','Offering','Combined (tithe & offering)','Thanksgiving','Church budget','Building fund','Mission / World budget','Other'];
+function openOfferingsModal(){
+  openModal("Treasurer's giving log", '<p class="muted" style="padding:0 20px 20px">Loading…</p>', true);
+  api('listOfferings').then(r => {
+    const m = $('#modal'); if (!m) return;
+    const list = r.offerings || [];
+    const total = list.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+    const byKind = {}; list.forEach(o => { byKind[o.kind] = (byKind[o.kind] || 0) + (Number(o.amount) || 0); });
+    const row = o => `<div class="mrow"><div class="mi"><b data-notr>${peso(o.amount)} · ${esc(o.kind)}</b><span class="meta" data-notr>${esc(fmtDate(o.date))}${o.note ? ' · ' + esc(o.note) : ''}</span><span class="meta" data-notr>recorded by ${esc(o.recordedBy)}</span></div><div class="se-acts"><button class="btn sm danger" data-act="offdel" data-id="${esc(o.id)}">Delete</button></div></div>`;
+    const sheet = $('.sheet', m); sheet.querySelectorAll(':scope > :not(header)').forEach(x => x.remove());
+    sheet.insertAdjacentHTML('beforeend', `<div class="m-body">
+      <p class="muted">A private record of tithes and offerings the church received. It is never shown to members or the public.</p>
+      <form id="ofAddF" class="off-add">
+        <input id="ofDate" type="date" value="${esc(phISO())}" aria-label="Date">
+        <input id="ofKind" list="ofKinds" maxlength="40" placeholder="Tithe / Offering" aria-label="Kind">
+        <input id="ofAmt" inputmode="decimal" placeholder="Amount ₱" aria-label="Amount">
+        <input id="ofNote" maxlength="200" placeholder="Note (optional)" aria-label="Note">
+        <button class="btn primary sm" type="submit">Add</button></form>
+      <datalist id="ofKinds">${OFFERING_KINDS.map(k => `<option value="${esc(k)}">`).join('')}</datalist>
+      <div class="off-tot">Total recorded: <b data-notr>${peso(total)}</b>${Object.keys(byKind).length ? '<br><span class="muted">' + Object.keys(byKind).map(k => esc(k) + ': ' + peso(byKind[k])).join(' · ') + '</span>' : ''}</div>
+      ${list.length ? `<div class="mlist">${list.map(row).join('')}</div>` : '<p class="muted">No entries yet. Add what the church receives so you keep a running record and totals.</p>'}
+      <div class="m-actions"><button class="btn" type="button" id="ofCsv">Download as CSV</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div></div>`);
+    $('#ofAddF', m).addEventListener('submit', async e => {
+      e.preventDefault();
+      try { await api('addOffering', {date:$('#ofDate', m).value, kind:$('#ofKind', m).value, amount:$('#ofAmt', m).value, note:$('#ofNote', m).value}); openOfferingsModal(); }
+      catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first.' : errMsg(err)); }
+    });
+    $('#ofCsv', m).addEventListener('click', () => { const rows = [['Date','Kind','Amount','Note','Recorded by']]; list.forEach(o => rows.push([o.date, o.kind, o.amount, o.note, o.recordedBy])); downloadCSV(`giving-log-${phISO()}.csv`, rows); toast('Downloading. Keep it private to the church.'); });
+  }).catch(err => { const m = $('#modal'); if (m) toast(errMsg(err)); });
+}
+async function offeringAction(el){
+  try { if (!await confirmBox('Delete this entry?', 'It will be removed from the giving log.', 'Delete')){ openOfferingsModal(); return; } await api('deleteOffering', {id:el.dataset.id}); openOfferingsModal(); }
+  catch (err){ toast(errMsg(err)); }
+}
+/* ---------- membership transfers in and out (clerk and admins) ---------- */
+function openTransfersModal(){
+  openModal('Membership transfers', '<p class="muted" style="padding:0 20px 20px">Loading…</p>', true);
+  api('listTransfers').then(r => {
+    const m = $('#modal'); if (!m) return;
+    const list = r.transfers || [];
+    const row = t => `<div class="mrow"><div class="mi"><b data-notr>${esc(t.name)} <span class="tr-tag ${t.direction === 'in' ? 'in' : 'out'}">${t.direction === 'in' ? 'Received' : 'Transferred out'}</span></b><span class="meta" data-notr>${t.church ? esc(t.church) + ' · ' : ''}${esc(fmtDate(t.date))}${t.note ? ' · ' + esc(t.note) : ''}</span><span class="meta" data-notr>recorded by ${esc(t.recordedBy)}</span></div><div class="se-acts"><button class="btn sm danger" data-act="trdel" data-id="${esc(t.id)}">Delete</button></div></div>`;
+    const sheet = $('.sheet', m); sheet.querySelectorAll(':scope > :not(header)').forEach(x => x.remove());
+    sheet.insertAdjacentHTML('beforeend', `<div class="m-body">
+      <p class="muted">A record of members received from, or transferred to, other churches. Keep it private to the church.</p>
+      <form id="trAddF" class="off-add">
+        <input id="trName" maxlength="80" placeholder="Member name" aria-label="Member name">
+        <select id="trDir" aria-label="Direction"><option value="in">Received (in)</option><option value="out">Transferred out</option></select>
+        <input id="trChurch" maxlength="120" placeholder="Other church" aria-label="Other church">
+        <input id="trDate" type="date" value="${esc(phISO())}" aria-label="Date">
+        <input id="trNote" maxlength="200" placeholder="Note (optional)" aria-label="Note">
+        <button class="btn primary sm" type="submit">Add</button></form>
+      ${list.length ? `<div class="mlist">${list.map(row).join('')}</div>` : '<p class="muted">No transfer records yet. Add members received by letter, or transferred to another church.</p>'}
+      <div class="m-actions"><button class="btn" type="button" id="trCsv">Download as CSV</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div></div>`);
+    $('#trAddF', m).addEventListener('submit', async e => {
+      e.preventDefault();
+      try { await api('addTransfer', {name:$('#trName', m).value, direction:$('#trDir', m).value, church:$('#trChurch', m).value, date:$('#trDate', m).value, note:$('#trNote', m).value}); openTransfersModal(); }
+      catch (err){ toast(err.code === 'bad_action' ? 'The church server needs its update first.' : errMsg(err)); }
+    });
+    $('#trCsv', m).addEventListener('click', () => { const rows = [['Name','Direction','Other church','Date','Note','Recorded by']]; list.forEach(t => rows.push([t.name, t.direction === 'in' ? 'Received' : 'Transferred out', t.church, t.date, t.note, t.recordedBy])); downloadCSV(`transfers-${phISO()}.csv`, rows); toast('Downloading. Keep it private to the church.'); });
+  }).catch(err => { const m = $('#modal'); if (m) toast(errMsg(err)); });
+}
+async function transferAction(el){
+  try { if (!await confirmBox('Delete this record?', 'It will be removed from the transfer records.', 'Delete')){ openTransfersModal(); return; } await api('deleteTransfer', {id:el.dataset.id}); openTransfersModal(); }
+  catch (err){ toast(errMsg(err)); }
+}
 async function memberAction(a, uid, to){
   const p = S.profiles[uid] || (S.waiting || []).find(x => x.id === uid); if (!p) return;
   try {
@@ -2893,6 +3100,16 @@ document.addEventListener('click', e => {
     case 'visitorintro': openVisitorModal(); break;
     case 'visitors': if (S.canMem) openVisitorsModal(); break;
     case 'vdone': case 'vdel': visitorAction(a, el); break;
+    case 'prayerintro': openPrayerModal(); break;
+    case 'prayers': if (S.canMem) openPrayersModal(); break;
+    case 'prdone': case 'prdel': prayerAction(a, el); break;
+    case 'privacy': openPrivacyModal(); break;
+    case 'editlesson': if (S.canPost) openLessonModal(); break;
+    case 'calendar': openCalendarModal(); break;
+    case 'offerings': if (S.isAdmin) openOfferingsModal(); break;
+    case 'offdel': if (S.isAdmin) offeringAction(el); break;
+    case 'transfers': if (S.canMem) openTransfersModal(); break;
+    case 'trdel': if (S.canMem) transferAction(el); break;
     case 'opengroup': closeModal(); go('group', el.dataset.id); break;
     case 'newgroup': openGroupModal(''); break;
     case 'editgroup': openGroupModal(el.dataset.id); break;

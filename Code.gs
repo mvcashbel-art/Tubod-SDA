@@ -8,7 +8,7 @@
  */
 
 const SCHEMA = {
-  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote', 'baptDate', 'baptBy', 'baptPlace', 'household', 'groups'],
+  Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote', 'baptDate', 'baptBy', 'baptPlace', 'household', 'groups', 'anniv', 'consent'],
   Posts:     ['id', 'authorId', 'cat', 'text', 'photos', 'pinned', 'createdAt', 'sms', 'svc', 'grp'],
   Comments:  ['id', 'postId', 'authorId', 'text', 'createdAt'],
   Reactions: ['id', 'postId', 'uid', 'createdAt'],
@@ -21,7 +21,11 @@ const SCHEMA = {
   Scores:    ['id', 'uid', 'mode', 'score', 'correct', 'total', 'week', 'day', 'createdAt'],
   Log:       ['id', 'time', 'by', 'byName', 'kind', 'targetId', 'targetName', 'detail'],
   Attendance: ['id', 'date', 'uids', 'by', 'at'],
-  Groups:    ['id', 'name', 'desc', 'createdAt', 'createdBy']
+  Groups:    ['id', 'name', 'desc', 'createdAt', 'createdBy'],
+  Visitors:  ['id', 'name', 'contact', 'heard', 'message', 'createdAt', 'handled', 'handledBy', 'consent'],
+  Prayers:   ['id', 'name', 'contact', 'request', 'private', 'createdAt', 'handled', 'handledBy', 'consent'],
+  Offerings: ['id', 'date', 'kind', 'amount', 'note', 'recordedBy', 'createdAt'],
+  Transfers: ['id', 'name', 'direction', 'church', 'date', 'note', 'recordedBy', 'createdAt']
 };
 /* who may do what: admin = everything; clerk = members, records and attendance; editor = announcements, This Sabbath, events, program and attendance */
 const LEVELS = ['admin', 'clerk', 'editor', 'member'];
@@ -206,7 +210,7 @@ function eventReminders_(now) {
     const when = ev.date === today ? 'today' : 'tomorrow';
     const text = ev.title + ' ' + when + (ev.time ? ' at ' + time12_(ev.time) : '') + (ev.place ? ', ' + ev.place : '') + '.' + (ev.desc ? ' ' + ev.desc : '');
     withLock_(function () {
-      append_('Posts', { id: id_('wrem'), authorId: 'system', cat: 'announcement', pinned: '', photos: '', createdAt: String(now), sms: '', svc: '', text: text });
+      append_('Posts', { id: id_('wrem'), authorId: 'system', cat: 'announcement', pinned: '', photos: '', createdAt: String(now), sms: '', svc: 'ev|' + ev.date, text: text });
       done.push(key);
       props.setProperty('EV_REMINDED', done.slice(-40).join(','));
       bump_();
@@ -263,7 +267,7 @@ function resetPasswordFromEditor() {
 
 /* ---------- web app entry points ---------- */
 function doGet() {
-  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, v: 10 });
+  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, giving: true, roster: true, anniversaries: true, visitors: true, prayers: true, lesson: true, offerings: true, transfers: true, consent: true, v: 13 });
 }
 
 function doPost(e) {
@@ -296,11 +300,11 @@ function doPost(e) {
   return json_(out);
 }
 
-const OPEN = { ping: true, publicInfo: true, register: true, login: true };
+const OPEN = { ping: true, publicInfo: true, register: true, login: true, visitorCard: true, prayerRequest: true };
 /* what a new member may do while waiting for approval */
 const PENDING_OK = { sync: true, logout: true, ping: true };
 /* these change no shared data, so they must not make everyone reload (and must not throw away the saved copy) */
-const NOBUMP = { login: true, logout: true, backupNow: true, saveScore: true };
+const NOBUMP = { login: true, logout: true, backupNow: true, saveScore: true, addOffering: true, deleteOffering: true, addTransfer: true, deleteTransfer: true };
 const WRITE = {
   register: true, login: true, logout: true, post: true, deletePost: true, pinPost: true, comment: true,
   deleteComment: true, react: true, saveProfile: true, changePassword: true, uploadFile: true, finishUpload: true, deleteFile: true,
@@ -308,7 +312,8 @@ const WRITE = {
   saveEvent: true, deleteEvent: true, saveSabbath: true, goLive: true, saveScore: true,
   setMemberStatus: true, addPerson: true, adminSaveMember: true, saveSite: true,
   saveAttendance: true, saveGroup: true, deleteGroup: true, joinGroup: true, setGroupMember: true,
-  saveOfficers: true
+  saveOfficers: true, saveGiving: true, saveRoster: true, handleVisitor: true,
+  prayerRequest: true, handlePrayer: true, saveLesson: true, addOffering: true, deleteOffering: true, addTransfer: true, deleteTransfer: true
 };
 
 const ACTIONS = {
@@ -316,6 +321,61 @@ const ACTIONS = {
 
   publicInfo: function () {
     return { rev: rev_(), church: { churchName: getSetting_('churchName') || 'Tubod SDA Church', tagline: getSetting_('tagline') || '', bgId: getSetting_('bgId') || '' } };
+  },
+
+  /* a first-time visitor introduces themselves without needing an account */
+  visitorCard: function (r) {
+    const tryAgain = throttle_('vis');
+    const name = clean_(r.name, 60), contact = clean_(r.contact, 80), heard = clean_(r.heard, 80), message = clean_(r.message, 500, true);
+    if (name.length < 2) { tryAgain(); throw err_('Please enter your name.', 'invalid'); }
+    if (!contact) { tryAgain(); throw err_('Please leave a way for the church to reach you.', 'invalid'); }
+    append_('Visitors', { id: id_('v'), name: name, contact: contact, heard: heard, message: message, createdAt: String(nowMs_()), handled: '', handledBy: '', consent: phDate_(nowMs_()) });
+    bump_();
+    return {};
+  },
+
+  /* a prayer request — anyone may send one, with or without an account */
+  prayerRequest: function (r) {
+    const tryAgain = throttle_('pray');
+    const name = clean_(r.name, 60), contact = clean_(r.contact, 80), request = clean_(r.request, 1000, true);
+    if (request.length < 3) { tryAgain(); throw err_('Please write your prayer request.', 'invalid'); }
+    append_('Prayers', { id: id_('pr'), name: name, contact: contact, request: request, private: r.private ? '1' : '', createdAt: String(nowMs_()), handled: '', handledBy: '', consent: phDate_(nowMs_()) });
+    bump_();
+    return {};
+  },
+
+  listPrayers: function (r, me) {
+    needMem_(me);
+    return { prayers: readAll_('Prayers').map(function (p) {
+      return { id: p.id, name: p.name, contact: p.contact, request: p.request, private: p.private === '1', createdAt: Number(p.createdAt) || 0, handled: p.handled === '1', handledBy: p.handledBy };
+    }).sort(function (a, b) { return b.createdAt - a.createdAt; }) };
+  },
+
+  handlePrayer: function (r, me) {
+    needMem_(me);
+    const p = readAll_('Prayers').filter(function (x) { return x.id === r.id; })[0];
+    if (!p) return {};
+    if (r.remove) { remove_('Prayers', function (x) { return x.id === r.id; }); log_(me, 'prayer', null, 'Removed a prayer request'); return {}; }
+    update_('Prayers', p.id, { handled: r.handled ? '1' : '', handledBy: r.handled ? me.name : '' });
+    log_(me, 'prayer', null, r.handled ? 'Marked a prayer request as prayed for' : 'Marked a prayer request as new again');
+    return {};
+  },
+
+  listVisitors: function (r, me) {
+    needMem_(me);
+    return { visitors: readAll_('Visitors').map(function (v) {
+      return { id: v.id, name: v.name, contact: v.contact, heard: v.heard, message: v.message, createdAt: Number(v.createdAt) || 0, handled: v.handled === '1', handledBy: v.handledBy };
+    }).sort(function (a, b) { return b.createdAt - a.createdAt; }) };
+  },
+
+  handleVisitor: function (r, me) {
+    needMem_(me);
+    const v = readAll_('Visitors').filter(function (x) { return x.id === r.id; })[0];
+    if (!v) return {};
+    if (r.remove) { remove_('Visitors', function (x) { return x.id === r.id; }); log_(me, 'visitor', null, 'Removed a visitor card: ' + v.name); return {}; }
+    update_('Visitors', v.id, { handled: r.handled ? '1' : '', handledBy: r.handled ? me.name : '' });
+    log_(me, 'visitor', null, (r.handled ? 'Marked visitor as followed up: ' : 'Marked visitor as new again: ') + v.name);
+    return {};
   },
 
   register: function (r) {
@@ -334,7 +394,7 @@ const ACTIONS = {
     const m = {
       id: id_('m'), name: name, username: username, salt: salt, hash: hash_(pw, salt),
       access: members.length === 0 ? 'admin' : (getSetting_('requireApproval') === '0' ? 'member' : 'pending'), createdAt: String(Date.now()),
-      title: '', ministries: '', since: '', bio: '', verse: '', avatar: '', cover: ''
+      title: '', ministries: '', since: '', bio: '', verse: '', avatar: '', cover: '', consent: phDate_(nowMs_())
     };
     append_('Members', m);
     return { token: newSession_(m.id) };
@@ -368,7 +428,7 @@ const ACTIONS = {
         settings: { churchName: getSetting_('churchName') || 'Tubod SDA Church', tagline: getSetting_('tagline') || '', bgId: getSetting_('bgId') || '' },
         members: [], posts: [], comments: [], reactions: [], files: [], program: [], events: [] };
     }
-    const lv = me.access === 'admin' ? 'a' : canPost_(me) ? 'e' : 'm';
+    const lv = me.access === 'admin' ? 'a' : me.access === 'clerk' ? 'c' : canPost_(me) ? 'e' : 'm';
     const rev = rev_();
     /* Reading every tab of the sheet is the slow part, so the answer is kept for each revision.
        Any change to the site changes the revision, which throws the old copy away. */
@@ -803,6 +863,97 @@ const ACTIONS = {
     return {};
   },
 
+  /* GCash and other giving details the church shows to members */
+  saveGiving: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only church leaders can edit the giving details.', 'denied');
+    let cur = {}; try { cur = JSON.parse(getSetting_('giving') || '{}'); } catch (e) { cur = {}; }
+    const g = { name: clean_(r.name, 60), number: clean_(r.number, 40), note: clean_(r.note, 400, true), qrId: cur.qrId || '' };
+    if (r.qr) { trash_(g.qrId); g.qrId = saveImage_(r.qr, 'gcash-qr'); }
+    else if (r.removeQr) { trash_(g.qrId); g.qrId = ''; }
+    setSetting_('giving', JSON.stringify(g));
+    log_(me, 'giving', null, 'Updated the giving details');
+    return {};
+  },
+
+  /* who is assigned to each duty on a given Sabbath */
+  saveRoster: function (r, me) {
+    needPost_(me);
+    const date = String(r.date || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(new Date(date + 'T00:00:00Z'))) throw err_('Choose the date.', 'invalid');
+    let all = {}; try { all = JSON.parse(getSetting_('roster') || '{}'); } catch (e) { all = {}; }
+    const list = (Array.isArray(r.list) ? r.list : []).map(function (x) { return { duty: clean_(x.duty, 50), name: clean_(x.name, 80) }; })
+      .filter(function (x) { return x.duty || x.name; }).slice(0, 40);
+    if (list.length) all[date] = list; else delete all[date];
+    Object.keys(all).sort().slice(0, -16).forEach(function (k) { delete all[k]; });
+    setSetting_('roster', JSON.stringify(all));
+    log_(me, 'roster', null, 'Updated the duty roster for ' + date);
+    return {};
+  },
+
+  /* this week's Sabbath School lesson (shown to everyone in a card) */
+  saveLesson: function (r, me) {
+    if (!canPost_(me)) throw err_('Only church leaders can do that.', 'denied');
+    const link = String(r.link || '').trim();
+    if (link && !/^https?:\/\/[^\s"'<>]{4,400}$/.test(link)) throw err_('The lesson link must start with https://', 'invalid');
+    const v = { quarter: clean_(r.quarter, 60), lesson: clean_(r.lesson, 120), link: link, memory: clean_(r.memory, 400, true), date: /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : '' };
+    setSetting_('ssLesson', JSON.stringify(v));
+    log_(me, 'site', null, 'Updated the Sabbath School lesson');
+    return {};
+  },
+
+  /* treasurer's private record of tithes and offerings received (admins only, never shown publicly) */
+  addOffering: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only the treasurer or an admin can do that.', 'denied');
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : phDate_(nowMs_());
+    const kind = clean_(r.kind, 40) || 'Offering';
+    const amount = Math.max(0, Math.round((Number(r.amount) || 0) * 100) / 100);
+    if (!amount) throw err_('Enter the amount received.', 'invalid');
+    const row = { id: id_('of'), date: date, kind: kind, amount: String(amount), note: clean_(r.note, 200), recordedBy: me.name, createdAt: String(nowMs_()) };
+    append_('Offerings', row);
+    log_(me, 'giving', null, 'Recorded a giving entry');
+    return { id: row.id };
+  },
+
+  listOfferings: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only the treasurer or an admin can do that.', 'denied');
+    return { offerings: readAll_('Offerings').map(function (o) {
+      return { id: o.id, date: o.date, kind: o.kind, amount: Number(o.amount) || 0, note: o.note, recordedBy: o.recordedBy, createdAt: Number(o.createdAt) || 0 };
+    }).sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt; }) };
+  },
+
+  deleteOffering: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only the treasurer or an admin can do that.', 'denied');
+    remove_('Offerings', function (x) { return x.id === r.id; });
+    log_(me, 'giving', null, 'Removed a giving record');
+    return {};
+  },
+
+  /* membership transfers received from, or sent to, other churches (clerk and admins) */
+  addTransfer: function (r, me) {
+    needMem_(me);
+    const name = clean_(r.name, 80);
+    if (name.length < 2) throw err_('Enter the member name.', 'invalid');
+    const direction = r.direction === 'out' ? 'out' : 'in';
+    const row = { id: id_('tr'), name: name, direction: direction, church: clean_(r.church, 120), date: /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : phDate_(nowMs_()), note: clean_(r.note, 200), recordedBy: me.name, createdAt: String(nowMs_()) };
+    append_('Transfers', row);
+    log_(me, 'member', null, (direction === 'in' ? 'Recorded a member received: ' : 'Recorded a member transferred out: ') + name);
+    return { id: row.id };
+  },
+
+  listTransfers: function (r, me) {
+    needMem_(me);
+    return { transfers: readAll_('Transfers').map(function (t) {
+      return { id: t.id, name: t.name, direction: t.direction, church: t.church, date: t.date, note: t.note, recordedBy: t.recordedBy, createdAt: Number(t.createdAt) || 0 };
+    }).sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt; }) };
+  },
+
+  deleteTransfer: function (r, me) {
+    needMem_(me);
+    remove_('Transfers', function (x) { return x.id === r.id; });
+    log_(me, 'member', null, 'Removed a transfer record');
+    return {};
+  },
+
   joinGroup: function (r, me) { return groupSet_(me, me, r.id, !!r.on); },
 
   setGroupMember: function (r, me) {
@@ -919,6 +1070,8 @@ const ACTIONS = {
 /* Everything in the answer to 'sync' that is the same for every admin (or every member). */
 function buildSync_(lv, rev) {
   const admin = lv === 'a';
+  const post = lv === 'a' || lv === 'e';
+  const mem = lv === 'a' || lv === 'c';
   const settings = {};
   readAll_('Settings').forEach(function (s) { if (s.key !== 'joinCode' || admin) settings[s.key] = s.value; });
   const byTime = function (a, b) { return b.createdAt - a.createdAt; };
@@ -930,15 +1083,21 @@ function buildSync_(lv, rev) {
       try { items = JSON.parse(x.items || '[]'); } catch (e) { items = []; }
       return { svcId: x.svcId, date: x.date, items: items };
     }),
-    sms: lv !== 'm' ? { provider: smsProvider_(), count: smsRecipientsFrom_(memberRows).length, prefix: smsPrefix_(), max: SMS_MAX_CHARS } : null,
+    sms: post ? { provider: smsProvider_(), count: smsRecipientsFrom_(memberRows).length, prefix: smsPrefix_(), max: SMS_MAX_CHARS } : null,
     settings: settings,
     members: memberRows.filter(function (m) { return admin || m.access !== 'pending'; }).map(pub_),
     events: readAll_('Events').filter(function (x) { return x.date >= phDate_(nowMs_() - 30 * 864e5); }).map(function (x) {
       return { id: x.id, title: x.title, date: x.date, time: x.time, place: x.place, desc: x.desc, remind: x.remind === '1' };
     }).sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? -1 : 1; }),
     groups: readAll_('Groups').map(function (g) { return { id: g.id, name: g.name, desc: g.desc, createdAt: Number(g.createdAt) || 0 }; }),
-    posts: readAll_('Posts').map(function (p) {
-      return { id: p.id, authorId: p.authorId, cat: p.cat, text: p.text, pinned: p.pinned === '1', createdAt: Number(p.createdAt) || 0, photos: p.photos ? p.photos.split(',') : [], sms: lv !== 'm' ? p.sms : '', svc: p.svc, grp: p.grp || '' };
+    newVisitors: mem ? readAll_('Visitors').filter(function (v) { return v.handled !== '1'; }).length : 0,
+    newPrayers: mem ? readAll_('Prayers').filter(function (p) { return p.handled !== '1'; }).length : 0,
+    posts: readAll_('Posts').filter(function (p) {
+      if (p.authorId !== 'system') return true;
+      const m = /(\d{4}-\d{2}-\d{2})\s*$/.exec(p.svc || '');
+      return !m || m[1] >= phDate_(nowMs_());
+    }).map(function (p) {
+      return { id: p.id, authorId: p.authorId, cat: p.cat, text: p.text, pinned: p.pinned === '1', createdAt: Number(p.createdAt) || 0, photos: p.photos ? p.photos.split(',') : [], sms: post ? p.sms : '', svc: p.svc, grp: p.grp || '' };
     }).sort(byTime).slice(0, 300),
     comments: readAll_('Comments').map(function (c) {
       return { id: c.id, postId: c.postId, authorId: c.authorId, text: c.text, createdAt: Number(c.createdAt) || 0 };
@@ -996,7 +1155,7 @@ function clean_(v, max, multiline) {
 function pub_(m) {
   return { id: m.id, name: m.name, access: m.access, role: m.title, ministries: m.ministries, since: m.since, bio: m.bio, verse: m.verse, avatar: m.avatar, cover: m.cover, bday: m.bday || '', createdAt: Number(m.createdAt) || 0,
     status: MSTATUS[m.mstatus] ? m.mstatus : 'active', statusDate: m.mstatusDate || '', statusNote: m.mstatusNote || '',
-    baptDate: m.baptDate || '', baptBy: m.baptBy || '', baptPlace: m.baptPlace || '', household: m.household || '', groups: m.groups ? String(m.groups).split(',') : [] };
+    baptDate: m.baptDate || '', baptBy: m.baptBy || '', baptPlace: m.baptPlace || '', household: m.household || '', groups: m.groups ? String(m.groups).split(',') : [], anniv: m.anniv || '' };
 }
 function nameOf_(uid) { const m = readAll_('Members').filter(function (x) { return x.id === uid; })[0]; return m ? m.name : ''; }
 function groupSet_(me, who, gid, on) {
@@ -1024,6 +1183,11 @@ function profilePatch_(r, who, byAdmin) {
     const b = String(r.bday || '').trim();
     if (b && !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(b)) throw err_('Choose the birthday month and day.', 'invalid');
     patch.bday = b;
+  }
+  if (has('anniv')) {
+    const a = String(r.anniv || '').trim();
+    if (a && !/^(\d{4}-)?(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(a)) throw err_('Choose the wedding anniversary date.', 'invalid');
+    patch.anniv = a;
   }
   /* baptism is part of the church record, so only admins change it */
   if (has('household')) patch.household = clean_(r.household, 60);
