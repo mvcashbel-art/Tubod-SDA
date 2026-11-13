@@ -349,6 +349,13 @@ body.hosting .wrap{max-width:1200px}
 .hteams{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .hteams button{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 16px;font-weight:800;font-size:clamp(15px,1.8vw,22px)}
 .hteams button.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.host .hnote{font-size:clamp(14px,1.7vw,20px);color:var(--ink);background:var(--ok-bg);border-radius:12px;padding:10px 14px;margin:8px 0 4px}
+.rev-row{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#fff}
+.rev-q{font-weight:800;margin:0 0 6px}
+.rev-a{margin:0 0 4px}
+.rev-ref{color:var(--accent-d);font-weight:700}
+.rev-n{margin:0;color:var(--muted);font-size:.95em}
+.rev-got{margin:6px 0 0;color:var(--ok);font-weight:700;font-size:.9em}
 @media (prefers-reduced-motion:reduce){.shake,.pz-caret{animation:none}}
 </style>
 </head>
@@ -792,6 +799,428 @@ const REF_RX = new RegExp(Object.keys(REF_CEB).sort((a, b) => b.length - a.lengt
 const refCeb = r => r.replace(REF_RX, m => REF_CEB[m]);
 
 QUIZ.forEach((q, i) => { const c = CEB_QUIZ[i]; if (c) q.ceb = { q: c[0], a: c[1], w: c[2], n: c[3] }; });
+
+/* ===== Extra team games (host mode): Who Said It?, Guess the Book, Who Did It?, True or False ===== */
+const S_ = (q, a, w, r, n) => ({ c: 'said', q: 'Who said it? “' + q + '”', a, w, r, n });
+const SAID = [
+  S_('Let there be light.', 'God', ['Moses', 'Adam', 'An angel'], 'Genesis 1:3', 'The very first recorded words of God at Creation.'),
+  S_('Am I my brother’s keeper?', 'Cain', ['Esau', 'Abel', 'Lamech'], 'Genesis 4:9', 'Cain said this after killing his brother Abel.'),
+  S_('Here am I; send me.', 'Isaiah', ['Jeremiah', 'Samuel', 'Ezekiel'], 'Isaiah 6:8', 'Isaiah answered God’s call to be a prophet.'),
+  S_('Speak; for thy servant heareth.', 'Samuel', ['David', 'Daniel', 'Elijah'], '1 Samuel 3:10', 'The boy Samuel answered God’s voice in the night.'),
+  S_('Thou art the man.', 'Nathan', ['Samuel', 'Gad', 'Elijah'], '2 Samuel 12:7', 'The prophet Nathan rebuked King David over his sin.'),
+  S_('The LORD gave, and the LORD hath taken away; blessed be the name of the LORD.', 'Job', ['David', 'Jacob', 'Abraham'], 'Job 1:21', 'Job worshipped God even after losing everything.'),
+  S_('Whither thou goest, I will go.', 'Ruth', ['Esther', 'Naomi', 'Hannah'], 'Ruth 1:16', 'Ruth’s pledge of loyalty to her mother-in-law Naomi.'),
+  S_('I know that my redeemer liveth.', 'Job', ['David', 'Isaiah', 'Paul'], 'Job 19:25', 'Job’s declaration of hope in the midst of suffering.'),
+  S_('As for me and my house, we will serve the LORD.', 'Joshua', ['Moses', 'Caleb', 'Samuel'], 'Joshua 24:15', 'Joshua called Israel to choose whom they would serve.'),
+  S_('Choose you this day whom ye will serve.', 'Joshua', ['Moses', 'Elijah', 'Samuel'], 'Joshua 24:15', 'Joshua’s challenge to Israel near the end of his life.'),
+  S_('Behold the Lamb of God, which taketh away the sin of the world.', 'John the Baptist', ['Peter', 'Andrew', 'Philip'], 'John 1:29', 'John pointed his disciples to Jesus.'),
+  S_('My Lord and my God.', 'Thomas', ['Peter', 'John', 'Nathanael'], 'John 20:28', 'Thomas said this when he saw the risen Jesus.'),
+  S_('Thou art the Christ, the Son of the living God.', 'Peter', ['John', 'James', 'Andrew'], 'Matthew 16:16', 'Peter’s great confession of who Jesus is.'),
+  S_('Not my will, but thine, be done.', 'Jesus', ['Paul', 'Stephen', 'Peter'], 'Luke 22:42', 'Jesus praying in the Garden of Gethsemane.'),
+  S_('Father, forgive them; for they know not what they do.', 'Jesus', ['Stephen', 'Paul', 'Peter'], 'Luke 23:34', 'Jesus prayed this from the cross.'),
+  S_('Silver and gold have I none; but such as I have give I thee.', 'Peter', ['Paul', 'John', 'Barnabas'], 'Acts 3:6', 'Peter spoke this before healing the lame man at the temple.'),
+  S_('What must I do to be saved?', 'The Philippian jailer', ['Nicodemus', 'The rich young ruler', 'Cornelius'], 'Acts 16:30', 'The jailer asked Paul and Silas after the earthquake.'),
+  S_('I have fought a good fight, I have finished my course, I have kept the faith.', 'Paul', ['Peter', 'John', 'Timothy'], '2 Timothy 4:7', 'Paul near the end of his life.'),
+  S_('For to me to live is Christ, and to die is gain.', 'Paul', ['Peter', 'Stephen', 'Silas'], 'Philippians 1:21', 'Paul wrote this from prison.'),
+  S_('Be it unto me according to thy word.', 'Mary', ['Elisabeth', 'Martha', 'Hannah'], 'Luke 1:38', 'Mary’s answer to the angel Gabriel.'),
+  S_('Lord, remember me when thou comest into thy kingdom.', 'The thief on the cross', ['Nicodemus', 'Peter', 'Barabbas'], 'Luke 23:42', 'The dying thief beside Jesus.'),
+  S_('We ought to obey God rather than men.', 'Peter', ['Paul', 'Stephen', 'John'], 'Acts 5:29', 'Peter and the apostles answered the council.'),
+  S_('Almost thou persuadest me to be a Christian.', 'King Agrippa', ['Pilate', 'Felix', 'Herod'], 'Acts 26:28', 'Agrippa responded to Paul’s testimony.'),
+  S_('Create in me a clean heart, O God.', 'David', ['Solomon', 'Asaph', 'Moses'], 'Psalm 51:10', 'David’s prayer of repentance.'),
+  S_('Let my people go.', 'Moses', ['Aaron', 'Joshua', 'Joseph'], 'Exodus 5:1', 'Moses and Aaron brought God’s message to Pharaoh.'),
+  S_('I am the bread of life.', 'Jesus', ['Paul', 'Peter', 'John'], 'John 6:35', 'One of the great “I am” sayings of Jesus.'),
+  S_('I am the light of the world.', 'Jesus', ['John the Baptist', 'Paul', 'Isaiah'], 'John 8:12', '“He that followeth me shall not walk in darkness.”'),
+  S_('I am the good shepherd.', 'Jesus', ['David', 'Peter', 'Moses'], 'John 10:11', '“The good shepherd giveth his life for the sheep.”'),
+  S_('I am the way, the truth, and the life.', 'Jesus', ['Paul', 'Thomas', 'Philip'], 'John 14:6', '“No man cometh unto the Father, but by me.”'),
+  S_('I am the resurrection, and the life.', 'Jesus', ['Martha', 'Lazarus', 'Peter'], 'John 11:25', 'Jesus said this before raising Lazarus.'),
+  S_('Come unto me, all ye that labour and are heavy laden.', 'Jesus', ['Paul', 'David', 'Peter'], 'Matthew 11:28', '“…and I will give you rest.”'),
+  S_('Let not your heart be troubled.', 'Jesus', ['Paul', 'John', 'Peter'], 'John 14:1', '“In my Father’s house are many mansions.”'),
+  S_('Ye must be born again.', 'Jesus', ['Paul', 'Nicodemus', 'John the Baptist'], 'John 3:7', 'Jesus spoke this to Nicodemus at night.'),
+  S_('It is finished.', 'Jesus', ['Paul', 'Stephen', 'Peter'], 'John 19:30', 'Jesus’ words just before He died on the cross.'),
+  S_('Suffer the little children to come unto me.', 'Jesus', ['Peter', 'Paul', 'John'], 'Mark 10:14', '“…for of such is the kingdom of God.”'),
+  S_('Love your enemies, bless them that curse you.', 'Jesus', ['Paul', 'Moses', 'David'], 'Matthew 5:44', 'From the Sermon on the Mount.'),
+  S_('Judge not, that ye be not judged.', 'Jesus', ['Paul', 'Solomon', 'James'], 'Matthew 7:1', 'From the Sermon on the Mount.'),
+  S_('Ask, and it shall be given you; seek, and ye shall find.', 'Jesus', ['Solomon', 'Paul', 'David'], 'Matthew 7:7', '“…knock, and it shall be opened unto you.”'),
+  S_('He that is without sin among you, let him first cast a stone.', 'Jesus', ['Moses', 'Paul', 'Peter'], 'John 8:7', 'Jesus said this to the accusers of a sinful woman.'),
+  S_('Render unto Caesar the things which are Caesar’s.', 'Jesus', ['Pilate', 'Paul', 'Peter'], 'Matthew 22:21', '“…and unto God the things that are God’s.”'),
+  S_('Peace I leave with you, my peace I give unto you.', 'Jesus', ['Paul', 'John', 'Aaron'], 'John 14:27', '“Let not your heart be troubled, neither let it be afraid.”'),
+  S_('I am the vine, ye are the branches.', 'Jesus', ['Paul', 'Isaiah', 'David'], 'John 15:5', '“Without me ye can do nothing.”'),
+  S_('Go ye therefore, and teach all nations, baptizing them.', 'Jesus', ['Peter', 'Paul', 'John the Baptist'], 'Matthew 28:19', 'The Great Commission.'),
+  S_('Man shall not live by bread alone.', 'Jesus', ['Moses', 'Paul', 'Satan'], 'Matthew 4:4', 'Jesus answered the tempter with Scripture.'),
+  S_('Follow me, and I will make you fishers of men.', 'Jesus', ['John the Baptist', 'Andrew', 'Paul'], 'Matthew 4:19', 'Jesus called the fishermen by the sea.'),
+  S_('Father, into thy hands I commend my spirit.', 'Jesus', ['Stephen', 'David', 'Paul'], 'Luke 23:46', 'Jesus’ last words on the cross in Luke.'),
+  S_('Today shalt thou be with me in paradise.', 'Jesus', ['Paul', 'Peter', 'John'], 'Luke 23:43', 'Jesus spoke this to the repentant thief.'),
+  S_('Blessed are the poor in spirit: for theirs is the kingdom of heaven.', 'Jesus', ['David', 'Paul', 'Solomon'], 'Matthew 5:3', 'The first of the Beatitudes.'),
+  S_('Ye are the salt of the earth.', 'Jesus', ['Paul', 'Peter', 'Moses'], 'Matthew 5:13', 'From the Sermon on the Mount.'),
+  S_('Why are ye so fearful? how is it that ye have no faith?', 'Jesus', ['Peter', 'Paul', 'John'], 'Mark 4:40', 'Jesus calmed the storm, then asked the disciples this.'),
+  S_('He must increase, but I must decrease.', 'John the Baptist', ['Peter', 'Andrew', 'Paul'], 'John 3:30', 'John spoke humbly about Jesus.'),
+  S_('Repent ye: for the kingdom of heaven is at hand.', 'John the Baptist', ['Jesus', 'Peter', 'Isaiah'], 'Matthew 3:2', 'John prepared the way for the Lord.'),
+  S_('Lord, to whom shall we go? thou hast the words of eternal life.', 'Peter', ['John', 'Andrew', 'Thomas'], 'John 6:68', 'Peter spoke when many disciples turned away.'),
+  S_('Though I should die with thee, yet will I not deny thee.', 'Peter', ['John', 'James', 'Thomas'], 'Matthew 26:35', 'Peter later denied Jesus three times.'),
+  S_('Repent, and be baptized every one of you.', 'Peter', ['Paul', 'John the Baptist', 'Philip'], 'Acts 2:38', 'Peter preached this at Pentecost.'),
+  S_('For I am not ashamed of the gospel of Christ.', 'Paul', ['Peter', 'Timothy', 'Luke'], 'Romans 1:16', '“…it is the power of God unto salvation.”'),
+  S_('All have sinned, and come short of the glory of God.', 'Paul', ['David', 'Isaiah', 'John'], 'Romans 3:23', 'Paul’s teaching in his letter to the Romans.'),
+  S_('I am crucified with Christ: nevertheless I live.', 'Paul', ['Peter', 'Stephen', 'John'], 'Galatians 2:20', '“…yet not I, but Christ liveth in me.”'),
+  S_('Rejoice in the Lord alway: and again I say, Rejoice.', 'Paul', ['David', 'Peter', 'Solomon'], 'Philippians 4:4', 'Paul wrote joyfully from prison.'),
+  S_('I have learned, in whatsoever state I am, therewith to be content.', 'Paul', ['Job', 'Solomon', 'David'], 'Philippians 4:11', 'Contentment learned through Christ.'),
+  S_('O death, where is thy sting? O grave, where is thy victory?', 'Paul', ['David', 'Isaiah', 'John'], '1 Corinthians 15:55', 'Paul’s great chapter on the resurrection.'),
+  S_('The love of money is the root of all evil.', 'Paul', ['Solomon', 'Jesus', 'James'], '1 Timothy 6:10', 'Paul’s counsel to Timothy.'),
+  S_('For to be absent from the body is to be present with the Lord... yet we are confident.', 'Paul', ['Peter', 'John', 'Stephen'], '2 Corinthians 5:8', 'Paul’s hope in Christ.'),
+  S_('The heavens declare the glory of God.', 'David', ['Solomon', 'Isaiah', 'Asaph'], 'Psalm 19:1', 'Creation speaks of its Maker.'),
+  S_('Thy word is a lamp unto my feet, and a light unto my path.', 'David', ['Solomon', 'Moses', 'Isaiah'], 'Psalm 119:105', 'From the longest chapter in the Bible.'),
+  S_('The fool hath said in his heart, There is no God.', 'David', ['Solomon', 'Paul', 'Job'], 'Psalm 14:1', 'A Psalm of David.'),
+  S_('I will lift up mine eyes unto the hills, from whence cometh my help.', 'David', ['Solomon', 'Moses', 'Elijah'], 'Psalm 121:1', 'A song of trust in the LORD.'),
+  S_('Trust in the LORD with all thine heart; and lean not unto thine own understanding.', 'Solomon', ['David', 'Isaiah', 'Paul'], 'Proverbs 3:5', 'A proverb of wisdom.'),
+  S_('A soft answer turneth away wrath.', 'Solomon', ['David', 'James', 'Paul'], 'Proverbs 15:1', 'From the book of Proverbs.'),
+  S_('Train up a child in the way he should go.', 'Solomon', ['David', 'Moses', 'Paul'], 'Proverbs 22:6', '“…and when he is old, he will not depart from it.”'),
+  S_('Vanity of vanities; all is vanity.', 'Solomon', ['David', 'Job', 'Jeremiah'], 'Ecclesiastes 1:2', 'The theme of Ecclesiastes.'),
+  S_('Remember now thy Creator in the days of thy youth.', 'Solomon', ['David', 'Paul', 'Moses'], 'Ecclesiastes 12:1', 'Wise counsel to the young.'),
+  S_('To every thing there is a season, and a time to every purpose.', 'Solomon', ['David', 'Job', 'Isaiah'], 'Ecclesiastes 3:1', 'A well-known passage on times and seasons.'),
+  S_('Who am I, that I should go unto Pharaoh?', 'Moses', ['Aaron', 'Joshua', 'Gideon'], 'Exodus 3:11', 'Moses felt unable for the task God gave him.'),
+  S_('My son, God will provide himself a lamb.', 'Abraham', ['Isaac', 'Jacob', 'Noah'], 'Genesis 22:8', 'Abraham answered Isaac on the way to the mountain.'),
+  S_('I will not let thee go, except thou bless me.', 'Jacob', ['Esau', 'Isaac', 'Laban'], 'Genesis 32:26', 'Jacob wrestled with the angel until daybreak.'),
+  S_('Ye thought evil against me; but God meant it unto good.', 'Joseph', ['Jacob', 'Judah', 'Benjamin'], 'Genesis 50:20', 'Joseph forgave his brothers.'),
+  S_('Let us go up at once, and possess it; for we are well able.', 'Caleb', ['Joshua', 'Moses', 'Aaron'], 'Numbers 13:30', 'Caleb believed God against the ten fearful spies.'),
+  S_('For this child I prayed; and the LORD hath given me my petition.', 'Hannah', ['Sarah', 'Ruth', 'Elisabeth'], '1 Samuel 1:27', 'Hannah dedicated Samuel to the LORD.'),
+  S_('How long halt ye between two opinions?', 'Elijah', ['Elisha', 'Samuel', 'Isaiah'], '1 Kings 18:21', 'Elijah challenged Israel on Mount Carmel.'),
+  S_('Fear not: for they that be with us are more than they that be with them.', 'Elisha', ['Elijah', 'Gehazi', 'Joshua'], '2 Kings 6:16', 'Elisha saw the mountain full of horses and chariots of fire.'),
+  S_('Though he slay me, yet will I trust in him.', 'Job', ['David', 'Daniel', 'Habakkuk'], 'Job 13:15', 'Job’s faith in deep suffering.'),
+  S_('O king, live for ever. My God hath sent his angel, and hath shut the lions’ mouths.', 'Daniel', ['Shadrach', 'Mordecai', 'Nehemiah'], 'Daniel 6:21–22', 'Daniel spoke from the den of lions.'),
+  S_('Our God whom we serve is able to deliver us... but if not, we will not serve thy gods.', 'Shadrach, Meshach and Abednego', ['Daniel', 'Ezra', 'Nehemiah'], 'Daniel 3:17–18', 'Their faith before the fiery furnace.'),
+  S_('I am doing a great work, so that I cannot come down.', 'Nehemiah', ['Ezra', 'Zerubbabel', 'Daniel'], 'Nehemiah 6:3', 'Nehemiah refused to stop rebuilding Jerusalem’s wall.'),
+  S_('I knew that thou art a gracious God, and merciful, slow to anger.', 'Jonah', ['Nahum', 'Amos', 'Hosea'], 'Jonah 4:2', 'Jonah knew God would spare repentant Nineveh.'),
+  S_('Whatsoever he saith unto you, do it.', 'Mary (the mother of Jesus)', ['Martha', 'Mary Magdalene', 'Elisabeth'], 'John 2:5', 'Mary spoke to the servants at the wedding in Cana.'),
+  S_('Lord, if thou hadst been here, my brother had not died.', 'Martha', ['Mary', 'Elisabeth', 'Joanna'], 'John 11:21', 'Martha met Jesus before He raised Lazarus.'),
+  S_('Except I shall see in his hands the print of the nails, I will not believe.', 'Thomas', ['Peter', 'Philip', 'Nathanael'], 'John 20:25', 'Thomas doubted until he saw the risen Jesus.'),
+  S_('Can there any good thing come out of Nazareth?', 'Nathanael', ['Philip', 'Andrew', 'Thomas'], 'John 1:46', 'Philip answered him, “Come and see.”'),
+  S_('How can a man be born when he is old?', 'Nicodemus', ['Thomas', 'Peter', 'Philip'], 'John 3:4', 'Nicodemus came to Jesus by night.'),
+  S_('What is truth?', 'Pilate', ['Herod', 'Caiaphas', 'Felix'], 'John 18:38', 'Pilate questioned Jesus before the crucifixion.'),
+  S_('Lord, lay not this sin to their charge.', 'Stephen', ['Paul', 'Peter', 'James'], 'Acts 7:60', 'Stephen prayed for his killers as he died.'),
+  S_('Fear not, Mary: for thou hast found favour with God.', 'The angel Gabriel', ['An angel at the tomb', 'Zacharias', 'Simeon'], 'Luke 1:30', 'Gabriel announced the birth of Jesus.'),
+  S_('He is not here: for he is risen, as he said.', 'The angel at the tomb', ['Mary Magdalene', 'Peter', 'John'], 'Matthew 28:6', 'The angel spoke to the women on resurrection morning.'),
+  S_('We have found the Messias.', 'Andrew', ['Philip', 'Peter', 'John'], 'John 1:41', 'Andrew first brought his brother Simon Peter to Jesus.'),
+  S_('Father, I have sinned against heaven, and before thee.', 'The prodigal son', ['The publican', 'Zacchaeus', 'Peter'], 'Luke 15:21', 'The lost son returned home to his father.'),
+  S_('God be merciful to me a sinner.', 'The publican', ['The prodigal son', 'Peter', 'Zacchaeus'], 'Luke 18:13', 'The humble tax collector in Jesus’ parable.'),
+  S_('Truly this was the Son of God.', 'The centurion at the cross', ['Pilate', 'Joseph of Arimathaea', 'Nicodemus'], 'Matthew 27:54', 'The soldier spoke when Jesus died.'),
+  S_('Even so, come, Lord Jesus.', 'John (the Revelator)', ['Paul', 'Peter', 'James'], 'Revelation 22:20', 'The closing prayer of the Bible.')
+];
+
+const D_ = (q, a, w, r, n) => ({ c: 'did', q, a, w, r, n });
+const DIDQ = [
+  D_('Who built an ark to survive the great flood?', 'Noah', ['Enoch', 'Methuselah', 'Lamech'], 'Genesis 6:14–22', 'Noah obeyed God and built the ark.'),
+  D_('Who led the Israelites out of slavery in Egypt?', 'Moses', ['Joshua', 'Aaron', 'Joseph'], 'Exodus 12–14', 'God used Moses to free His people.'),
+  D_('Who defeated the giant Goliath with a sling and a stone?', 'David', ['Saul', 'Jonathan', 'Samson'], '1 Samuel 17', 'David came in the name of the LORD.'),
+  D_('Who interpreted Pharaoh’s dreams and became ruler in Egypt?', 'Joseph', ['Daniel', 'Moses', 'Jacob'], 'Genesis 41', 'Joseph rose from prison to the palace.'),
+  D_('Who led Israel across the Jordan River into the Promised Land?', 'Joshua', ['Moses', 'Caleb', 'Gideon'], 'Joshua 3', 'The waters stood up in a heap as the priests stepped in.'),
+  D_('Who defeated the Midianites with only three hundred men?', 'Gideon', ['Samson', 'Barak', 'Jephthah'], 'Judges 7', 'God shrank the army so the victory would be His.'),
+  D_('Who was a prophetess and judge who led Israel with Barak?', 'Deborah', ['Miriam', 'Huldah', 'Hannah'], 'Judges 4', 'Deborah judged Israel under a palm tree.'),
+  D_('Who killed a thousand men with the jawbone of a donkey?', 'Samson', ['Gideon', 'Ehud', 'Jonathan'], 'Judges 15:15', 'God’s Spirit came mightily upon Samson.'),
+  D_('Who became queen and saved the Jews from Haman’s plot?', 'Esther', ['Ruth', 'Deborah', 'Miriam'], 'Esther 7', 'Esther risked her life “for such a time as this.”'),
+  D_('Who anointed both Saul and David as kings of Israel?', 'Samuel', ['Nathan', 'Elijah', 'Eli'], '1 Samuel 10; 16', 'Samuel was the prophet who anointed Israel’s first two kings.'),
+  D_('Who was taken up to heaven in a whirlwind with a chariot of fire?', 'Elijah', ['Enoch', 'Elisha', 'Moses'], '2 Kings 2:11', 'Elijah did not see death.'),
+  D_('Who was thrown into the den of lions for praying to God?', 'Daniel', ['Shadrach', 'Jeremiah', 'Mordecai'], 'Daniel 6', 'God shut the lions’ mouths.'),
+  D_('Who denied knowing Jesus three times before the rooster crowed?', 'Peter', ['Judas', 'Thomas', 'John'], 'Luke 22:54–62', 'Peter wept bitterly and was later restored.'),
+  D_('Who betrayed Jesus for thirty pieces of silver?', 'Judas Iscariot', ['Peter', 'Caiaphas', 'Barabbas'], 'Matthew 26:14–16', 'Judas led the soldiers to Jesus.'),
+  D_('Who baptized Jesus in the Jordan River?', 'John the Baptist', ['Peter', 'Andrew', 'Philip'], 'Matthew 3:13–17', 'A voice from heaven called Jesus His beloved Son.'),
+  D_('Who climbed a sycamore tree to see Jesus pass by?', 'Zacchaeus', ['Bartimaeus', 'Nicodemus', 'Lazarus'], 'Luke 19:1–10', 'Jesus went home with the tax collector that day.'),
+  D_('Who walked on the water toward Jesus before beginning to sink?', 'Peter', ['John', 'James', 'Andrew'], 'Matthew 14:29–30', 'Peter looked at the waves and began to sink.'),
+  D_('Who preached at Pentecost when about three thousand were baptized?', 'Peter', ['Paul', 'Stephen', 'James'], 'Acts 2', 'The Holy Spirit was poured out on the believers.'),
+  D_('Who was stoned as the first Christian martyr?', 'Stephen', ['James', 'Philip', 'Barnabas'], 'Acts 7:54–60', 'Stephen prayed for those who stoned him.'),
+  D_('Who was blinded by a light on the road to Damascus?', 'Saul (Paul)', ['Barnabas', 'Silas', 'Timothy'], 'Acts 9:1–9', 'Saul the persecutor became Paul the apostle.'),
+  D_('Who hid baby Moses in a basket among the reeds of the river?', 'Moses’ mother (Jochebed)', ['Miriam', 'Pharaoh’s daughter', 'Zipporah'], 'Exodus 2:1–4', 'His mother hid him to save his life.'),
+  D_('Who asked God for wisdom and built the temple in Jerusalem?', 'Solomon', ['David', 'Hezekiah', 'Josiah'], '1 Kings 3; 6', 'God gave Solomon a wise and understanding heart.'),
+  D_('Who spent three days and nights inside a great fish?', 'Jonah', ['Elijah', 'Amos', 'Hosea'], 'Jonah 1:17', 'A sign of Jesus’ three days in the grave.'),
+  D_('Whom did Jesus raise to life after four days in the tomb?', 'Lazarus', ['Jairus’ daughter', 'The widow’s son', 'Dorcas'], 'John 11', 'Jesus said, “I am the resurrection, and the life.”'),
+  D_('Who parted the Jordan with Elijah’s mantle after Elijah was taken up?', 'Elisha', ['Gehazi', 'Obadiah', 'Micaiah'], '2 Kings 2:13–14', 'Elisha received a double portion of Elijah’s spirit.'),
+  D_('Who was the first man God created?', 'Adam', ['Enoch', 'Seth', 'Cain'], 'Genesis 2:7', 'God formed him from the dust of the ground.'),
+  D_('Who was the first woman, the mother of all living?', 'Eve', ['Sarah', 'Miriam', 'Dinah'], 'Genesis 3:20', 'She was made from Adam’s rib.'),
+  D_('Who killed his brother Abel in the first murder?', 'Cain', ['Lamech', 'Esau', 'Seth'], 'Genesis 4:8', 'Cain’s offering was not accepted by faith.'),
+  D_('Who was born to Adam and Eve after Abel died?', 'Seth', ['Enoch', 'Cain', 'Noah'], 'Genesis 4:25', 'Through Seth’s line came Noah.'),
+  D_('Who walked with God and was taken to heaven without dying?', 'Enoch', ['Elijah', 'Moses', 'Noah'], 'Genesis 5:24', '“Enoch walked with God: and he was not; for God took him.”'),
+  D_('Who lived longer than anyone else, 969 years?', 'Methuselah', ['Adam', 'Noah', 'Jared'], 'Genesis 5:27', 'The oldest person recorded in the Bible.'),
+  D_('Who was called a friend of God and the father of many nations?', 'Abraham', ['Isaac', 'Jacob', 'Noah'], 'Genesis 17:5; James 2:23', 'God promised him countless descendants.'),
+  D_('Who laughed when told she would bear a son in old age?', 'Sarah', ['Rebekah', 'Rachel', 'Hannah'], 'Genesis 18:12', 'She gave birth to Isaac as God promised.'),
+  D_('Who was Abraham’s son of promise, almost offered on the altar?', 'Isaac', ['Ishmael', 'Jacob', 'Esau'], 'Genesis 22', 'God provided a ram instead.'),
+  D_('Who wrestled with God and was renamed Israel?', 'Jacob', ['Esau', 'Isaac', 'Laban'], 'Genesis 32:28', 'He saw God “face to face” at Peniel.'),
+  D_('Who sold his birthright for a bowl of stew?', 'Esau', ['Jacob', 'Reuben', 'Judah'], 'Genesis 25:29–34', 'He despised his birthright.'),
+  D_('Who was Abraham’s nephew who lived in Sodom?', 'Lot', ['Laban', 'Terah', 'Haran'], 'Genesis 13; 19', 'Angels led him out before Sodom was destroyed.'),
+  D_('Who became a pillar of salt for looking back at Sodom?', 'Lot’s wife', ['Hagar', 'Sarah', 'Dinah'], 'Genesis 19:26', '“Remember Lot’s wife,” Jesus later said.'),
+  D_('Who blessed Abram and was priest of the most high God?', 'Melchizedek', ['Aaron', 'Eli', 'Jethro'], 'Genesis 14:18', 'A king of Salem, a type of Christ.'),
+  D_('Who was Sarah’s servant and the mother of Ishmael?', 'Hagar', ['Keturah', 'Rebekah', 'Bilhah'], 'Genesis 16', 'God met her in the wilderness.'),
+  D_('Who hid the two spies in Jericho with a scarlet cord?', 'Rahab', ['Deborah', 'Jael', 'Abigail'], 'Joshua 2', 'She became an ancestor of Jesus.'),
+  D_('Whose donkey spoke to rebuke his madness?', 'Balaam', ['Balak', 'Korah', 'Achan'], 'Numbers 22:28', 'God opened the mouth of the donkey.'),
+  D_('Who made a golden calf while Moses was on the mountain?', 'Aaron', ['Joshua', 'Korah', 'Hur'], 'Exodus 32', 'The people worshipped it and sinned greatly.'),
+  D_('Who led the women in song after crossing the Red Sea?', 'Miriam', ['Deborah', 'Hannah', 'Rahab'], 'Exodus 15:20–21', 'Miriam, the sister of Moses and Aaron.'),
+  D_('Who, with Joshua, gave a good report of the Promised Land?', 'Caleb', ['Aaron', 'Hur', 'Nun'], 'Numbers 13:30', 'Only Caleb and Joshua trusted God to give the victory.'),
+  D_('Who was the left-handed judge who delivered Israel from King Eglon?', 'Ehud', ['Gideon', 'Barak', 'Othniel'], 'Judges 3:15–21', 'Ehud freed Israel from Moab.'),
+  D_('Who commanded the sun to stand still until the battle was won?', 'Joshua', ['Moses', 'Gideon', 'Caleb'], 'Joshua 10:12–13', '“The sun stood still… about a whole day.”'),
+  D_('Who made a rash vow and judged Israel against the Ammonites?', 'Jephthah', ['Gideon', 'Samson', 'Ehud'], 'Judges 11', 'A mighty man of valour.'),
+  D_('Who was Ruth’s kinsman-redeemer and husband?', 'Boaz', ['Elimelech', 'Obed', 'Jesse'], 'Ruth 4', 'Their son Obed was the grandfather of David.'),
+  D_('Who was the priest who raised the boy Samuel in the tabernacle?', 'Eli', ['Zadok', 'Abiathar', 'Phinehas'], '1 Samuel 1–3', 'Eli taught Samuel to answer God’s call.'),
+  D_('Who was the first king of Israel?', 'Saul', ['David', 'Samuel', 'Solomon'], '1 Samuel 10:1', 'Samuel anointed him at God’s direction.'),
+  D_('Who was David’s loyal friend, the son of King Saul?', 'Jonathan', ['Abner', 'Joab', 'Absalom'], '1 Samuel 18:1–4', 'Their friendship is famous for its loyalty.'),
+  D_('Who wisely judged the two mothers claiming one baby?', 'Solomon', ['David', 'Samuel', 'Nathan'], '1 Kings 3:16–28', 'He offered to divide the child to reveal the true mother.'),
+  D_('Who travelled far to test Solomon with hard questions?', 'The Queen of Sheba', ['Jezebel', 'Bathsheba', 'Vashti'], '1 Kings 10:1', 'She marvelled at his wisdom.'),
+  D_('Whose foolish answer caused the kingdom of Israel to divide?', 'Rehoboam', ['Jeroboam', 'Absalom', 'Ahab'], '1 Kings 12', 'Solomon’s son rejected wise counsel.'),
+  D_('Who was the wicked queen who opposed the prophet Elijah?', 'Jezebel', ['Athaliah', 'Vashti', 'Delilah'], '1 Kings 19:1–2', 'She promoted the worship of Baal.'),
+  D_('Who was fed by ravens at the brook Cherith?', 'Elijah', ['Elisha', 'John the Baptist', 'Obadiah'], '1 Kings 17:4–6', 'God provided for the prophet in the drought.'),
+  D_('Who made an iron axe head float to the surface of the water?', 'Elisha', ['Elijah', 'Gehazi', 'Isaiah'], '2 Kings 6:5–7', 'A miracle that recovered a borrowed tool.'),
+  D_('Who was the Syrian commander healed of leprosy in the Jordan?', 'Naaman', ['Ben-hadad', 'Hazael', 'Gehazi'], '2 Kings 5', 'He washed seven times as the prophet said.'),
+  D_('Who took Naaman’s gift by lying and was struck with leprosy?', 'Gehazi', ['Jehu', 'Hazael', 'Obadiah'], '2 Kings 5:20–27', 'The servant of Elisha was greedy.'),
+  D_('Who was the boy king who repaired the temple and found the book of the law?', 'Josiah', ['Hezekiah', 'Joash', 'Uzziah'], '2 Kings 22', 'He led Israel back to God’s word.'),
+  D_('Which king saw three Hebrews unharmed in his fiery furnace?', 'Nebuchadnezzar', ['Belshazzar', 'Darius', 'Cyrus'], 'Daniel 3:24–25', 'He saw a fourth “like the Son of God.”'),
+  D_('At whose feast did a hand write on the wall?', 'Belshazzar', ['Nebuchadnezzar', 'Darius', 'Ahasuerus'], 'Daniel 5', 'Babylon fell that very night.'),
+  D_('Which king signed the decree that sent Daniel to the lions?', 'Darius', ['Belshazzar', 'Cyrus', 'Nebuchadnezzar'], 'Daniel 6:9', 'He rejoiced when Daniel was spared.'),
+  D_('Who plotted to destroy the Jews and was hanged on his own gallows?', 'Haman', ['Mordecai', 'Nebuchadnezzar', 'Sanballat'], 'Esther 7:10', 'His plot turned back on himself.'),
+  D_('Who was Esther’s cousin who raised her and uncovered Haman’s plot?', 'Mordecai', ['Nehemiah', 'Ezra', 'Daniel'], 'Esther 2:7; 4', 'He sat at the king’s gate.'),
+  D_('Who led the people in reading and explaining the law after the exile?', 'Ezra', ['Nehemiah', 'Zerubbabel', 'Haggai'], 'Nehemiah 8', 'A scribe skilled in the law of Moses.'),
+  D_('Who rebuilt the wall of Jerusalem in fifty-two days?', 'Nehemiah', ['Ezra', 'Zerubbabel', 'Nehushta'], 'Nehemiah 6:15', 'He prayed and set a watch against the enemy.'),
+  D_('Who is called the weeping prophet, who warned Judah before exile?', 'Jeremiah', ['Isaiah', 'Ezekiel', 'Daniel'], 'Jeremiah 9:1', 'He also wrote Lamentations.'),
+  D_('Who saw a valley of dry bones come to life?', 'Ezekiel', ['Daniel', 'Isaiah', 'Zechariah'], 'Ezekiel 37', 'A vision of God restoring His people.'),
+  D_('Who foretold that the Messiah would be born in Bethlehem?', 'Micah', ['Isaiah', 'Malachi', 'Hosea'], 'Micah 5:2', 'Spoken centuries before Jesus’ birth.'),
+  D_('Who was the priest father of John the Baptist, struck silent?', 'Zacharias', ['Simeon', 'Caiaphas', 'Annas'], 'Luke 1:20', 'He could not speak until John was named.'),
+  D_('Who was the aged man who held the baby Jesus in the temple?', 'Simeon', ['Zacharias', 'Nicodemus', 'Joseph'], 'Luke 2:25–28', 'He had waited to see the Lord’s Christ.'),
+  D_('Who was the elderly prophetess who saw the baby Jesus in the temple?', 'Anna', ['Elisabeth', 'Mary', 'Dorcas'], 'Luke 2:36–38', 'She served God with fasting and prayers.'),
+  D_('Which king tried to kill the baby Jesus?', 'King Herod', ['Pilate', 'Caesar Augustus', 'Caiaphas'], 'Matthew 2:16', 'The wise men did not return to him.'),
+  D_('Who first heard the news of Jesus’ birth from the angels?', 'The shepherds', ['The wise men', 'The priests', 'King Herod'], 'Luke 2:8–11', 'They were watching their flocks by night.'),
+  D_('Who was the tax collector Jesus called, who wrote a Gospel?', 'Matthew', ['Zacchaeus', 'Luke', 'Mark'], 'Matthew 9:9', '“And he arose, and followed him.”'),
+  D_('Who was the beloved disciple who leaned on Jesus at the last supper?', 'John', ['Peter', 'James', 'Andrew'], 'John 13:23', 'He also wrote a Gospel and Revelation.'),
+  D_('Who brought to Jesus the boy with five loaves and two fishes?', 'Andrew', ['Peter', 'Philip', 'John'], 'John 6:8–9', 'Andrew often brought people to Jesus.'),
+  D_('Who was the Pharisee who came to Jesus by night?', 'Nicodemus', ['Joseph of Arimathaea', 'Gamaliel', 'Simon'], 'John 3:1–2', '“Ye must be born again.”'),
+  D_('Who gave two mites, which Jesus said was more than all the rest?', 'The poor widow', ['Mary of Bethany', 'Dorcas', 'Lydia'], 'Mark 12:41–44', 'She gave all she had.'),
+  D_('Who anointed Jesus’ feet with costly ointment and wiped them with her hair?', 'Mary of Bethany', ['Mary Magdalene', 'Martha', 'Joanna'], 'John 12:3', 'The house was filled with the fragrance.'),
+  D_('Who was forced to carry Jesus’ cross to Golgotha?', 'Simon of Cyrene', ['Joseph of Arimathaea', 'Nicodemus', 'Barabbas'], 'Mark 15:21', 'He was coming in from the country.'),
+  D_('Who asked Pilate for Jesus’ body and laid it in a new tomb?', 'Joseph of Arimathaea', ['Nicodemus', 'Simon of Cyrene', 'John'], 'John 19:38', 'A rich man and secret disciple.'),
+  D_('Who was the first to see the risen Jesus at the tomb?', 'Mary Magdalene', ['Mary of Bethany', 'Martha', 'Salome'], 'John 20:11–16', 'She thought He was the gardener.'),
+  D_('Who was chosen by lot to replace Judas as the twelfth apostle?', 'Matthias', ['Barnabas', 'Stephen', 'Philip'], 'Acts 1:26', 'He was numbered with the eleven apostles.'),
+  D_('Who preached to and baptized the Ethiopian treasurer?', 'Philip', ['Peter', 'Paul', 'Barnabas'], 'Acts 8:26–39', 'He explained Isaiah 53 to the eunuch.'),
+  D_('Who was the first Gentile convert, a Roman centurion?', 'Cornelius', ['The Philippian jailer', 'Lydia', 'Sergius Paulus'], 'Acts 10', 'Peter saw a vision before going to him.'),
+  D_('Which couple lied about their offering and fell dead?', 'Ananias and Sapphira', ['Aquila and Priscilla', 'Lot and his wife', 'Nabal and Abigail'], 'Acts 5:1–10', 'They lied to the Holy Ghost.'),
+  D_('Who was the kind woman raised to life by Peter in Joppa?', 'Dorcas (Tabitha)', ['Lydia', 'Priscilla', 'Mary'], 'Acts 9:36–41', 'She was “full of good works and almsdeeds.”'),
+  D_('Who was the seller of purple, the first convert in Europe?', 'Lydia', ['Dorcas', 'Priscilla', 'Phebe'], 'Acts 16:14–15', 'The Lord opened her heart to Paul’s message.'),
+  D_('Who travelled with Paul on the first missionary journey from Antioch?', 'Barnabas', ['Silas', 'Timothy', 'Luke'], 'Acts 13:2–3', 'His name means “son of consolation.”'),
+  D_('Who fell from a third-floor window and was raised by Paul?', 'Eutychus', ['Trophimus', 'Onesimus', 'Tychicus'], 'Acts 20:9–12', 'He fell asleep during a long sermon.'),
+  D_('Who was Paul’s young helper, to whom he wrote two letters?', 'Timothy', ['Titus', 'Philemon', 'Silas'], '1 Timothy 1:2', 'Paul called him his “own son in the faith.”'),
+  D_('Who wrote both a Gospel and the book of Acts, and was a physician?', 'Luke', ['Mark', 'Matthew', 'John'], 'Colossians 4:14', 'Paul called him “the beloved physician.”'),
+  D_('Who cut off the ear of the high priest’s servant in the garden?', 'Peter', ['John', 'James', 'Judas'], 'John 18:10', 'Jesus healed the servant’s ear.'),
+  D_('Who washed the disciples’ feet at the last supper?', 'Jesus', ['Peter', 'John', 'A servant'], 'John 13:4–5', 'He gave an example of humble service.'),
+  D_('Who calmed a storm on the Sea of Galilee with a word?', 'Jesus', ['Peter', 'Paul', 'Elijah'], 'Mark 4:39', '“Peace, be still,” and the wind ceased.'),
+  D_('Who drew the baby Moses out of the river and raised him?', 'Pharaoh’s daughter', ['Miriam', 'Jochebed', 'Zipporah'], 'Exodus 2:5–10', 'She named him Moses, “drawn out.”')
+];
+
+const B_ = (q, a, w, r, n) => ({ c: 'book', q: 'In which book of the Bible do we find ' + q + '?', a, w, r, n });
+const BOOKQ = [
+  B_('the Creation and the Flood', 'Genesis', ['Exodus', 'Psalms', 'Job'], 'Genesis 1; 6–9', 'Genesis is the first book of the Bible.'),
+  B_('the Ten Commandments given at Mount Sinai', 'Exodus', ['Genesis', 'Leviticus', 'Numbers'], 'Exodus 20', 'God wrote the law on two tables of stone.'),
+  B_('the fall of the walls of Jericho', 'Joshua', ['Judges', 'Numbers', 'Deuteronomy'], 'Joshua 6', 'Israel marched around the city for seven days.'),
+  B_('the story of Ruth and Boaz', 'Ruth', ['Esther', 'Judges', '1 Samuel'], 'Ruth 2–4', 'Ruth became an ancestor of King David.'),
+  B_('David’s battle with Goliath', '1 Samuel', ['2 Samuel', '1 Kings', 'Judges'], '1 Samuel 17', 'A young shepherd defeated a giant.'),
+  B_('the words “The LORD is my shepherd; I shall not want”', 'Psalms', ['Proverbs', 'Isaiah', 'John'], 'Psalm 23:1', 'The best-loved of all the Psalms.'),
+  B_('the words “Trust in the LORD with all thine heart”', 'Proverbs', ['Psalms', 'Ecclesiastes', 'Job'], 'Proverbs 3:5', 'A book of wise sayings, mostly by Solomon.'),
+  B_('the three Hebrews in the fiery furnace', 'Daniel', ['Ezekiel', 'Jeremiah', 'Esther'], 'Daniel 3', 'Shadrach, Meshach and Abednego were not burned.'),
+  B_('Jonah and the great fish', 'Jonah', ['Nahum', 'Amos', 'Hosea'], 'Jonah 1', 'Jonah was sent to preach to Nineveh.'),
+  B_('the birth of Jesus and the visit of the wise men', 'Matthew', ['Mark', 'Luke', 'John'], 'Matthew 2', 'The wise men followed a star to find Him.'),
+  B_('the parable of the prodigal son', 'Luke', ['Matthew', 'Mark', 'John'], 'Luke 15', 'The father ran to meet his returning son.'),
+  B_('the words “For God so loved the world”', 'John', ['Matthew', 'Romans', 'Luke'], 'John 3:16', 'Jesus spoke this to Nicodemus.'),
+  B_('the Day of Pentecost and the coming of the Holy Spirit', 'Acts', ['John', 'Romans', 'Hebrews'], 'Acts 2', 'The early church was born with power.'),
+  B_('the words “For the wages of sin is death”', 'Romans', ['Galatians', 'Ephesians', 'Hebrews'], 'Romans 6:23', '“…but the gift of God is eternal life.”'),
+  B_('the words “I can do all things through Christ which strengtheneth me”', 'Philippians', ['Colossians', 'Romans', '2 Timothy'], 'Philippians 4:13', 'Paul wrote this from prison.'),
+  B_('the words “For by grace are ye saved through faith”', 'Ephesians', ['Romans', 'Galatians', 'Titus'], 'Ephesians 2:8', 'Salvation is the gift of God, not of works.'),
+  B_('the promise “the dead in Christ shall rise first”', '1 Thessalonians', ['1 Corinthians', 'Revelation', 'Philippians'], '1 Thessalonians 4:16', 'A description of the Second Coming.'),
+  B_('the vision of the New Jerusalem coming down from heaven', 'Revelation', ['Daniel', 'Ezekiel', 'Isaiah'], 'Revelation 21', 'God will dwell with His people forever.'),
+  B_('Esther becoming queen of Persia', 'Esther', ['Ruth', 'Nehemiah', 'Daniel'], 'Esther 2', 'God’s name is never mentioned, yet His hand is seen throughout.'),
+  B_('Job losing everything yet trusting God', 'Job', ['Psalms', 'Lamentations', 'Ecclesiastes'], 'Job 1', 'One of the oldest stories in the Bible.'),
+  B_('Elijah and the prophets of Baal on Mount Carmel', '1 Kings', ['2 Kings', '1 Samuel', 'Judges'], '1 Kings 18', 'Fire fell from heaven on Elijah’s altar.'),
+  B_('the Sermon on the Mount, including the Beatitudes', 'Matthew', ['Luke', 'Mark', 'John'], 'Matthew 5–7', 'Jesus’ longest recorded sermon.'),
+  B_('the vision of the 2,300 days until the sanctuary is cleansed', 'Daniel', ['Revelation', 'Ezekiel', 'Zechariah'], 'Daniel 8:14', 'A key prophecy for Adventists, reaching to 1844.'),
+  B_('the “love chapter” that begins “Though I speak with the tongues of men and of angels”', '1 Corinthians', ['Romans', 'Ephesians', '1 John'], '1 Corinthians 13', '“And now abideth faith, hope, charity, these three.”'),
+  B_('Abraham being asked to offer his son Isaac', 'Genesis', ['Exodus', 'Hebrews', 'Numbers'], 'Genesis 22', 'God provided a ram in Isaac’s place.'),
+  B_('the tower of Babel and the scattering of languages', 'Genesis', ['Exodus', 'Daniel', 'Numbers'], 'Genesis 11', 'The people tried to build a tower to heaven.'),
+  B_('Joseph being sold by his brothers', 'Genesis', ['Exodus', 'Ruth', 'Judges'], 'Genesis 37', 'They sold him to traders going to Egypt.'),
+  B_('Jacob’s dream of a ladder reaching to heaven', 'Genesis', ['Exodus', 'Daniel', 'Ezekiel'], 'Genesis 28', 'Angels ascended and descended on it.'),
+  B_('Moses and the burning bush', 'Exodus', ['Genesis', 'Numbers', 'Leviticus'], 'Exodus 3', 'The bush burned but was not consumed.'),
+  B_('the Passover and the exodus from Egypt', 'Exodus', ['Leviticus', 'Numbers', 'Genesis'], 'Exodus 12', 'The blood on the doorposts spared the firstborn.'),
+  B_('manna falling from heaven to feed Israel', 'Exodus', ['Numbers', 'Deuteronomy', 'Joshua'], 'Exodus 16', 'Bread from heaven each morning.'),
+  B_('the laws of the offerings and the Day of Atonement', 'Leviticus', ['Numbers', 'Exodus', 'Deuteronomy'], 'Leviticus 16', 'The sanctuary services pointed to Christ.'),
+  B_('the bronze serpent lifted up in the wilderness', 'Numbers', ['Exodus', 'Leviticus', 'Joshua'], 'Numbers 21:8–9', 'A symbol of Christ lifted on the cross.'),
+  B_('Balaam’s donkey speaking to its master', 'Numbers', ['Judges', 'Exodus', 'Genesis'], 'Numbers 22', 'God opened the mouth of the donkey.'),
+  B_('the command “Hear, O Israel: The LORD our God is one LORD”', 'Deuteronomy', ['Leviticus', 'Numbers', 'Psalms'], 'Deuteronomy 6:4', 'Moses repeated the law to the new generation.'),
+  B_('Moses viewing the Promised Land from Mount Nebo', 'Deuteronomy', ['Numbers', 'Joshua', 'Exodus'], 'Deuteronomy 34', 'Moses died there, and the LORD buried him.'),
+  B_('the sun standing still during a battle', 'Joshua', ['Judges', 'Numbers', '1 Samuel'], 'Joshua 10:12–13', 'God fought for Israel that day.'),
+  B_('Samson and Delilah', 'Judges', ['Ruth', '1 Samuel', '2 Samuel'], 'Judges 16', 'His strength was tied to his uncut hair.'),
+  B_('Gideon and his three hundred men', 'Judges', ['Joshua', '1 Samuel', 'Numbers'], 'Judges 7', 'God used a small army to show His power.'),
+  B_('Ruth gleaning in the fields of Boaz', 'Ruth', ['Esther', 'Judges', '1 Samuel'], 'Ruth 2', 'She found favour as a kinsman-redeemer’s field.'),
+  B_('the boy Samuel hearing God call him in the night', '1 Samuel', ['2 Samuel', '1 Kings', 'Judges'], '1 Samuel 3', '“Speak; for thy servant heareth.”'),
+  B_('Nathan’s parable that rebuked King David', '2 Samuel', ['1 Samuel', '1 Kings', 'Psalms'], '2 Samuel 12', '“Thou art the man.”'),
+  B_('David dancing before the ark as it came to Jerusalem', '2 Samuel', ['1 Samuel', '1 Kings', '1 Chronicles'], '2 Samuel 6', 'David rejoiced with all his might.'),
+  B_('Solomon building the temple in Jerusalem', '1 Kings', ['2 Kings', '2 Samuel', '1 Chronicles'], '1 Kings 6', 'It took seven years to build.'),
+  B_('Elijah taken up to heaven in a whirlwind', '2 Kings', ['1 Kings', 'Malachi', 'Isaiah'], '2 Kings 2', 'Elisha received a double portion of his spirit.'),
+  B_('Naaman healed of leprosy in the Jordan River', '2 Kings', ['1 Kings', 'Leviticus', '2 Chronicles'], '2 Kings 5', 'He washed seven times as the prophet said.'),
+  B_('the fiery horses and chariots surrounding Elisha', '2 Kings', ['1 Kings', 'Daniel', 'Ezekiel'], '2 Kings 6:17', '“They that be with us are more than they that be with them.”'),
+  B_('the decree of Cyrus to return and rebuild the temple', 'Ezra', ['Nehemiah', 'Esther', 'Daniel'], 'Ezra 1', 'The Jews returned from Babylon.'),
+  B_('the words “The joy of the LORD is your strength”', 'Nehemiah', ['Ezra', 'Psalms', 'Proverbs'], 'Nehemiah 8:10', 'Spoken as the law was read to the people.'),
+  B_('the words “I know that my redeemer liveth”', 'Job', ['Psalms', 'Isaiah', 'Lamentations'], 'Job 19:25', 'Spoken in the midst of great suffering.'),
+  B_('the words “Create in me a clean heart, O God”', 'Psalms', ['Proverbs', 'Isaiah', 'Lamentations'], 'Psalm 51:10', 'David’s prayer of repentance.'),
+  B_('the longest chapter, which says “Thy word is a lamp unto my feet”', 'Psalms', ['Proverbs', 'Isaiah', 'John'], 'Psalm 119:105', 'Psalm 119 is the longest chapter in the Bible.'),
+  B_('the words “Train up a child in the way he should go”', 'Proverbs', ['Psalms', 'Ecclesiastes', 'Deuteronomy'], 'Proverbs 22:6', 'Wisdom for raising children.'),
+  B_('the words “To every thing there is a season”', 'Ecclesiastes', ['Proverbs', 'Psalms', 'Job'], 'Ecclesiastes 3:1', 'A reflection on the times of life.'),
+  B_('the words “I am the rose of Sharon, and the lily of the valleys”', 'Song of Solomon', ['Psalms', 'Proverbs', 'Isaiah'], 'Song of Solomon 2:1', 'A song of love, often seen as a picture of Christ and His church.'),
+  B_('the prophecy “For unto us a child is born, unto us a son is given”', 'Isaiah', ['Jeremiah', 'Micah', 'Malachi'], 'Isaiah 9:6', 'A prophecy of the Messiah.'),
+  B_('the suffering servant, “he was wounded for our transgressions”', 'Isaiah', ['Psalms', 'Jeremiah', 'Zechariah'], 'Isaiah 53:5', 'A clear prophecy of the cross.'),
+  B_('the words “I know the thoughts that I think toward you… thoughts of peace”', 'Jeremiah', ['Isaiah', 'Ezekiel', 'Psalms'], 'Jeremiah 29:11', 'God’s promise to His exiled people.'),
+  B_('the words “his compassions fail not… they are new every morning”', 'Lamentations', ['Jeremiah', 'Psalms', 'Job'], 'Lamentations 3:22–23', 'Hope in the midst of mourning over Jerusalem.'),
+  B_('the vision of a valley of dry bones coming to life', 'Ezekiel', ['Daniel', 'Isaiah', 'Zechariah'], 'Ezekiel 37', 'A picture of God restoring His people.'),
+  B_('the handwriting on the wall at a king’s feast', 'Daniel', ['Esther', 'Ezekiel', 'Jeremiah'], 'Daniel 5', '“Mene, Mene, Tekel, Upharsin.”'),
+  B_('the prophet told to marry Gomer as a sign to Israel', 'Hosea', ['Amos', 'Joel', 'Micah'], 'Hosea 1', 'A living picture of God’s love for an unfaithful people.'),
+  B_('the promise “I will pour out my spirit upon all flesh”', 'Joel', ['Amos', 'Hosea', 'Zechariah'], 'Joel 2:28', 'Peter quoted this at Pentecost.'),
+  B_('the words “let judgment run down as waters, and righteousness as a mighty stream”', 'Amos', ['Joel', 'Micah', 'Hosea'], 'Amos 5:24', 'A call for true justice.'),
+  B_('the city of Nineveh repenting at the preaching of a prophet', 'Jonah', ['Nahum', 'Micah', 'Obadiah'], 'Jonah 3', 'God spared the city when they turned from evil.'),
+  B_('the words “what doth the LORD require of thee, but to do justly, and to love mercy”', 'Micah', ['Amos', 'Hosea', 'Malachi'], 'Micah 6:8', 'A summary of true religion.'),
+  B_('the words “the just shall live by his faith”', 'Habakkuk', ['Haggai', 'Zephaniah', 'Malachi'], 'Habakkuk 2:4', 'Quoted three times in the New Testament.'),
+  B_('the call “Bring ye all the tithes into the storehouse”', 'Malachi', ['Nehemiah', 'Haggai', 'Leviticus'], 'Malachi 3:10', 'The last book of the Old Testament.'),
+  B_('the angel announcing to Mary that she would bear Jesus', 'Luke', ['Matthew', 'Mark', 'John'], 'Luke 1:26–31', 'Gabriel came to Mary in Nazareth.'),
+  B_('the parable of the good Samaritan', 'Luke', ['Matthew', 'Mark', 'John'], 'Luke 10:30–37', 'Jesus taught who our neighbour is.'),
+  B_('the thief on the cross asking to be remembered', 'Luke', ['Matthew', 'Mark', 'John'], 'Luke 23:42–43', '“Today shalt thou be with me in paradise.”'),
+  B_('the Great Commission, “Go ye therefore, and teach all nations”', 'Matthew', ['Mark', 'Luke', 'Acts'], 'Matthew 28:19', 'Jesus’ final command before ascending.'),
+  B_('Jesus turning water into wine at a wedding in Cana', 'John', ['Matthew', 'Mark', 'Luke'], 'John 2:1–11', 'His first recorded miracle.'),
+  B_('Jesus washing the disciples’ feet', 'John', ['Matthew', 'Luke', 'Mark'], 'John 13', 'An example of humble service.'),
+  B_('Jesus raising Lazarus after four days in the tomb', 'John', ['Luke', 'Matthew', 'Mark'], 'John 11', '“I am the resurrection, and the life.”'),
+  B_('blind Bartimaeus calling out and being healed', 'Mark', ['Matthew', 'Luke', 'John'], 'Mark 10:46–52', '“Thy faith hath made thee whole.”'),
+  B_('Saul’s conversion on the road to Damascus', 'Acts', ['Romans', 'Galatians', 'John'], 'Acts 9', 'A blinding light stopped the persecutor.'),
+  B_('Paul and Silas singing in prison before an earthquake', 'Acts', ['Philippians', '2 Corinthians', 'Romans'], 'Acts 16:25–26', 'The jailer and his house were baptized.'),
+  B_('Peter freed from prison by an angel', 'Acts', ['Luke', 'Matthew', 'Revelation'], 'Acts 12:7', 'The church had been praying for him.'),
+  B_('Stephen, the first Christian martyr, being stoned', 'Acts', ['John', 'Hebrews', 'Revelation'], 'Acts 7:54–60', 'He prayed for those who stoned him.'),
+  B_('the words “There is therefore now no condemnation to them which are in Christ Jesus”', 'Romans', ['Galatians', 'Ephesians', 'Hebrews'], 'Romans 8:1', 'Freedom in Christ.'),
+  B_('teaching on the Lord’s Supper, “this do in remembrance of me”', '1 Corinthians', ['Luke', 'Hebrews', 'Romans'], '1 Corinthians 11:24', 'Paul passed on what he received from the Lord.'),
+  B_('the words “My grace is sufficient for thee”', '2 Corinthians', ['Romans', 'Philippians', '1 Corinthians'], '2 Corinthians 12:9', '“…for my strength is made perfect in weakness.”'),
+  B_('the list of the fruit of the Spirit: love, joy, peace', 'Galatians', ['Ephesians', 'Colossians', 'Romans'], 'Galatians 5:22–23', 'Nine graces grown by the Spirit.'),
+  B_('the command “Put on the whole armour of God”', 'Ephesians', ['Colossians', 'Philippians', '2 Timothy'], 'Ephesians 6:11', 'Armour for the Christian’s spiritual battle.'),
+  B_('the words “Rejoice in the Lord alway: and again I say, Rejoice”', 'Philippians', ['Colossians', '1 Thessalonians', 'Ephesians'], 'Philippians 4:4', 'Written by Paul from prison.'),
+  B_('the command “Set your affection on things above, not on things on the earth”', 'Colossians', ['Ephesians', 'Philippians', 'Romans'], 'Colossians 3:2', 'A call to heavenly-minded living.'),
+  B_('the promise “caught up together… in the clouds, to meet the Lord in the air”', '1 Thessalonians', ['2 Thessalonians', '1 Corinthians', 'Revelation'], '1 Thessalonians 4:17', 'A description of the Second Coming.'),
+  B_('the warning about “the man of sin” before the Lord returns', '2 Thessalonians', ['1 Thessalonians', 'Revelation', 'Daniel'], '2 Thessalonians 2:3', 'A falling away comes first.'),
+  B_('the words “the love of money is the root of all evil”', '1 Timothy', ['2 Timothy', 'Titus', 'James'], '1 Timothy 6:10', 'Counsel to a young pastor.'),
+  B_('the words “I have fought a good fight, I have finished my course”', '2 Timothy', ['1 Timothy', 'Philippians', 'Acts'], '2 Timothy 4:7', 'Paul near the end of his life.'),
+  B_('Paul’s letter pleading for the runaway servant Onesimus', 'Philemon', ['Titus', '2 Timothy', 'Colossians'], 'Philemon 10', 'A short, personal letter about forgiveness.'),
+  B_('the definition “faith is the substance of things hoped for”', 'Hebrews', ['Romans', 'James', '1 Peter'], 'Hebrews 11:1', 'The chapter lists the heroes of faith.'),
+  B_('the words “Jesus Christ the same yesterday, and to day, and for ever”', 'Hebrews', ['Revelation', 'Romans', 'John'], 'Hebrews 13:8', 'Our unchanging Saviour.'),
+  B_('the teaching “faith without works is dead”', 'James', ['1 Peter', 'Hebrews', 'Romans'], 'James 2:26', 'Living faith shows itself in deeds.'),
+  B_('the comfort “casting all your care upon him; for he careth for you”', '1 Peter', ['2 Peter', '1 John', 'Philippians'], '1 Peter 5:7', 'Encouragement for suffering Christians.'),
+  B_('the warning of scoffers “in the last days” who deny the Lord’s coming', '2 Peter', ['1 Peter', 'Jude', '2 Thessalonians'], '2 Peter 3:3–4', '“The day of the Lord will come as a thief.”'),
+  B_('the words “God is love”', '1 John', ['John', '1 Peter', 'Romans'], '1 John 4:8', '“He that loveth not knoweth not God.”'),
+  B_('the appeal to “earnestly contend for the faith once delivered unto the saints”', 'Jude', ['2 Peter', '1 John', 'Titus'], 'Jude 3', 'A short letter near the end of the Bible.'),
+  B_('the three angels’ messages', 'Revelation', ['Daniel', 'Matthew', 'Ezekiel'], 'Revelation 14:6–12', 'A special message for the last days.')
+];
+
+const TF_ = (q, a, r, n) => ({ c: 'tf', q, a, r, n });
+const TF = [
+  TF_('Methuselah lived longer than anyone else recorded in the Bible.', true, 'Genesis 5:27', 'Methuselah lived 969 years.'),
+  TF_('The first miracle of Jesus was feeding the five thousand.', false, 'John 2:1–11', 'His first miracle was turning water into wine at Cana.'),
+  TF_('God rested and blessed the seventh day at the end of Creation week.', true, 'Genesis 2:2–3', 'The Sabbath was made before sin entered the world.'),
+  TF_('Goliath was defeated by King Saul.', false, '1 Samuel 17', 'The young shepherd David defeated Goliath.'),
+  TF_('There are sixty-six books in the Bible.', true, 'Bible overview', '39 Old Testament books and 27 New Testament books.'),
+  TF_('Moses led Israel across the Red Sea on dry ground.', true, 'Exodus 14:21–22', 'The waters were a wall on their right and left.'),
+  TF_('Jesus was born in Nazareth.', false, 'Luke 2:4–7', 'He was born in Bethlehem and grew up in Nazareth.'),
+  TF_('Paul was once called Saul and persecuted Christians.', true, 'Acts 9:1–5', 'He met Jesus on the road to Damascus.'),
+  TF_('The Ten Commandments were written on tablets of gold.', false, 'Exodus 31:18', 'They were written on two tables of stone, by the finger of God.'),
+  TF_('Elijah was taken to heaven in a whirlwind with a chariot of fire.', true, '2 Kings 2:11', 'Elijah is one of two people who did not see death.'),
+  TF_('Judas betrayed Jesus for forty pieces of silver.', false, 'Matthew 26:15', 'It was thirty pieces of silver.'),
+  TF_('The wise men visited Jesus in the stable on the night He was born.', false, 'Matthew 2:11', 'They came later and found the child in a house.'),
+  TF_('King David wrote every one of the 150 Psalms.', false, 'Psalms', 'The Psalms have several authors, including Asaph, the sons of Korah, and Moses.'),
+  TF_('The Sabbath of the fourth commandment is the seventh day of the week.', true, 'Exodus 20:8–11', '“The seventh day is the sabbath of the LORD thy God.”'),
+  TF_('Lazarus was raised to life after being dead four days.', true, 'John 11:39–44', 'Jesus wept, then called him out of the tomb.'),
+  TF_('Jesus chose twelve apostles.', true, 'Luke 6:13', 'He later sent out seventy others as well.'),
+  TF_('Daniel was thrown into a fiery furnace.', false, 'Daniel 6', 'Daniel was thrown into the lions’ den; his three friends were in the furnace.'),
+  TF_('Esther became queen of Egypt.', false, 'Esther 2:17', 'She became queen of Persia.'),
+  TF_('The last book of the Bible is Revelation.', true, 'Revelation 1:1', 'It is “the Revelation of Jesus Christ.”'),
+  TF_('Solomon asked God for riches and long life.', false, '1 Kings 3:9–13', 'He asked for wisdom, and God added riches and honour.'),
+  TF_('John the Baptist baptized Jesus in the Jordan River.', true, 'Matthew 3:13–17', '“This is my beloved Son, in whom I am well pleased.”'),
+  TF_('Abraham’s son of promise was Ishmael.', false, 'Genesis 21:12', 'The son of promise was Isaac.'),
+  TF_('The first four books of the New Testament are called the Gospels.', true, 'Bible overview', 'Matthew, Mark, Luke and John tell the life of Jesus.'),
+  TF_('Jonah was sent by God to preach to the city of Nineveh.', true, 'Jonah 1:1–2', 'He first fled, then obeyed after the great fish.'),
+  TF_('Peter walked on the water toward Jesus.', true, 'Matthew 14:29', 'He began to sink when he looked at the waves.'),
+  TF_('Adam and Eve had a son named Seth.', true, 'Genesis 4:25', 'Seth was born after Abel was killed.'),
+  TF_('Enoch was taken to heaven without seeing death.', true, 'Genesis 5:24', '“Enoch walked with God: and he was not; for God took him.”'),
+  TF_('Noah had four sons: Shem, Ham, Japheth, and Canaan.', false, 'Genesis 6:10', 'Noah had three sons: Shem, Ham, and Japheth.'),
+  TF_('God destroyed Sodom and Gomorrah with a great flood.', false, 'Genesis 19:24', 'He destroyed them with fire and brimstone.'),
+  TF_('Abraham’s wife was named Rebekah.', false, 'Genesis 17:15', 'His wife was Sarah; Rebekah was Isaac’s wife.'),
+  TF_('Jacob had ten sons, who became the tribes of Israel.', false, 'Genesis 35:22–26', 'Jacob had twelve sons, not ten.'),
+  TF_('Joseph was sold into Egypt by his own brothers.', true, 'Genesis 37:28', 'Yet God used it to save many lives.'),
+  TF_('The first plague on Egypt turned the Nile into blood.', true, 'Exodus 7:20', 'There were ten plagues in all.'),
+  TF_('Moses received the Ten Commandments on Mount Carmel.', false, 'Exodus 19–20', 'He received them on Mount Sinai.'),
+  TF_('Aaron was the brother of Moses and the first high priest.', true, 'Exodus 28:1', 'He also made the golden calf.'),
+  TF_('The Israelites wandered seventy years in the wilderness.', false, 'Numbers 14:33–34', 'They wandered forty years, one for each day the spies searched the land.'),
+  TF_('The walls of Jericho fell down after the people shouted.', true, 'Joshua 6:20', 'They marched around the city for seven days.'),
+  TF_('Samson’s great strength was in his sandals.', false, 'Judges 16:17', 'His strength was tied to his uncut hair.'),
+  TF_('Ruth came from the land of Egypt.', false, 'Ruth 1:4', 'Ruth was a Moabite, an ancestor of King David.'),
+  TF_('David played the trumpet to soothe King Saul.', false, '1 Samuel 16:23', 'He played the harp, and the evil spirit left Saul.'),
+  TF_('Elijah called down fire from heaven on Mount Carmel.', true, '1 Kings 18:38', 'The fire consumed the sacrifice, wood, stones, and water.'),
+  TF_('The prophet Elisha received a double portion of Elijah’s spirit.', true, '2 Kings 2:9–15', 'He succeeded Elijah as prophet.'),
+  TF_('Jonah was sent to preach to the city of Babylon.', false, 'Jonah 1:2', 'He was sent to Nineveh.'),
+  TF_('The handwriting on the wall appeared at Belshazzar’s feast.', true, 'Daniel 5:5', 'Babylon fell that very night.'),
+  TF_('Queen Esther was Jewish.', true, 'Esther 2:7', 'She saved her people from destruction.'),
+  TF_('Job lost everything yet remained faithful to God.', true, 'Job 1:21–22', '“The LORD gave, and the LORD hath taken away.”'),
+  TF_('The book of Psalms is found in the New Testament.', false, 'Psalms', 'Psalms is in the Old Testament.'),
+  TF_('The angel Michael announced the birth of Jesus to Mary.', false, 'Luke 1:26–31', 'It was the angel Gabriel.'),
+  TF_('The wise men brought gold, frankincense, and myrrh.', true, 'Matthew 2:11', 'The Bible does not say how many wise men there were.'),
+  TF_('The Bible says there were exactly three wise men.', false, 'Matthew 2:1–11', 'It names three gifts, but never the number of men.'),
+  TF_('John the Baptist ate bread and fish in the wilderness.', false, 'Matthew 3:4', 'He ate locusts and wild honey.'),
+  TF_('Jesus was baptized in the Dead Sea.', false, 'Matthew 3:13', 'He was baptized in the Jordan River.'),
+  TF_('Jesus turned water into wine at a funeral.', false, 'John 2:1–11', 'It was at a wedding in Cana of Galilee.'),
+  TF_('Jesus fed a great crowd with five loaves and two fish.', true, 'Matthew 14:17–21', 'About five thousand men were fed.'),
+  TF_('Judas betrayed Jesus with a kiss.', true, 'Luke 22:47–48', '“Betrayest thou the Son of man with a kiss?”'),
+  TF_('Jesus rose from the dead on the third day.', true, '1 Corinthians 15:4', 'He rested over the Sabbath and rose the first day of the week.'),
+  TF_('Jesus ascended to heaven from the Mount of Olives.', true, 'Acts 1:9–12', 'Angels promised He would return the same way.'),
+  TF_('The Holy Spirit was poured out on the believers at Christmas.', false, 'Acts 2:1–4', 'It happened at Pentecost.'),
+  TF_('The apostle John wrote the book of Revelation.', true, 'Revelation 1:1, 9', 'He wrote it on the isle of Patmos.'),
+  TF_('The first book of the Bible is Genesis.', true, 'Genesis 1:1', 'It means “beginning.”'),
+  TF_('The Bible has two main parts: the Old and New Testaments.', true, 'Bible overview', '39 Old Testament books and 27 New Testament books.'),
+  TF_('God created the world in six days and rested on the seventh.', true, 'Genesis 1–2', 'The seventh day became the Sabbath.'),
+  TF_('Eve was created from Adam’s foot.', false, 'Genesis 2:21–22', 'She was made from one of Adam’s ribs.'),
+  TF_('A serpent tempted Eve in the Garden of Eden.', true, 'Genesis 3:1–6', 'Sin entered the world through disobedience.'),
+  TF_('Lot’s wife was turned into a pillar of salt.', true, 'Genesis 19:26', '“Remember Lot’s wife,” said Jesus.'),
+  TF_('Moses struck a rock and water came out for the people.', true, 'Exodus 17:6', 'God provided water in the desert.'),
+  TF_('David was a carpenter before he became king.', false, '1 Samuel 16:11–13', 'He was a shepherd who cared for his father’s sheep.'),
+  TF_('Nebuchadnezzar was a king of Egypt.', false, 'Daniel 2:1', 'He was king of Babylon.'),
+  TF_('The prophet Isaiah foretold the birth of the Messiah.', true, 'Isaiah 9:6', '“For unto us a child is born.”'),
+  TF_('Mary and Joseph fled to Babylon with the baby Jesus.', false, 'Matthew 2:13–14', 'They fled to Egypt to escape King Herod.'),
+  TF_('Jesus grew up in the town of Capernaum.', false, 'Matthew 2:23', 'He grew up in Nazareth.'),
+  TF_('Jesus had a disciple named Thomas who doubted the resurrection.', true, 'John 20:24–25', 'He believed when he saw the risen Jesus.'),
+  TF_('Zacchaeus was a tall man who easily saw over the crowd.', false, 'Luke 19:3–4', 'He was short and climbed a sycamore tree.'),
+  TF_('A good shepherd leaves the ninety-nine to find one lost sheep.', true, 'Luke 15:4', 'A picture of God’s love for the lost.'),
+  TF_('The early church shared their possessions with one another.', true, 'Acts 2:44–45', 'They had all things common.'),
+  TF_('Stephen was the first Christian martyr.', true, 'Acts 7:59–60', 'He prayed for those who stoned him.'),
+  TF_('Revelation describes a new heaven and a new earth.', true, 'Revelation 21:1', 'God will dwell with His people forever.'),
+  TF_('Abel built the first city mentioned in the Bible.', false, 'Genesis 4:17', 'Cain built it and named it after his son Enoch.'),
+  TF_('The rainbow was given as the sign of God’s covenant after the flood.', true, 'Genesis 9:13', 'A promise never to flood the whole earth again.'),
+  TF_('Abraham was willing to offer his son Isaac on the altar.', true, 'Genesis 22:9–12', 'God provided a ram instead.'),
+  TF_('The Red Sea parted so the Israelites could cross on dry land.', true, 'Exodus 14:21–22', 'The waters were a wall on both sides.'),
+  TF_('Goliath was an Egyptian giant.', false, '1 Samuel 17:4', 'He was a Philistine, defeated by young David.'),
+  TF_('King David built the first temple in Jerusalem.', false, '1 Kings 6; 1 Chronicles 22', 'David prepared for it, but Solomon built it.'),
+  TF_('Noah’s ark came to rest on Mount Sinai.', false, 'Genesis 8:4', 'It rested on the mountains of Ararat.'),
+  TF_('The apostle Paul was never put in prison.', false, 'Acts 16:23–24', 'He was imprisoned several times for the gospel.'),
+  TF_('Jesus said, “I am the way, the truth, and the life.”', true, 'John 14:6', '“No man cometh unto the Father, but by me.”'),
+  TF_('Daniel prayed to God once a day.', false, 'Daniel 6:10', 'He prayed three times a day, even against the king’s decree.'),
+  TF_('The tabernacle in the wilderness contained the ark of the covenant.', true, 'Exodus 25–26', 'It was the centre of Israel’s worship.'),
+  TF_('King Saul was Israel’s first king.', true, '1 Samuel 10:1', 'Samuel anointed him.'),
+  TF_('The apostle Peter was originally a tax collector.', false, 'Matthew 4:18', 'Peter was a fisherman; Matthew was the tax collector.'),
+  TF_('Elijah was fed by lions at the brook Cherith.', false, '1 Kings 17:6', 'He was fed by ravens during the drought.'),
+  TF_('Jesus wept at the tomb of Lazarus.', true, 'John 11:35', '“Jesus wept” is the shortest verse in the Bible.'),
+  TF_('There are twelve books in the New Testament.', false, 'Bible overview', 'There are twenty-seven books in the New Testament.'),
+  TF_('Pentecost took place thirty days after the resurrection.', false, 'Acts 2:1', 'Pentecost means “fiftieth” — fifty days after.'),
+  TF_('Jesus had twelve apostles, one of whom betrayed Him.', true, 'Luke 6:13–16', 'Judas Iscariot was the betrayer.'),
+  TF_('The prophet Isaiah interpreted Nebuchadnezzar’s dream of a great image.', false, 'Daniel 2', 'It was Daniel who interpreted the dream.'),
+  TF_('Jesus was crucified, buried, and rose again.', true, '1 Corinthians 15:3–4', 'The heart of the gospel.'),
+  TF_('The book of Acts tells the story of the early Christian church.', true, 'Acts 1:1–8', 'It begins with the ascension and Pentecost.')
+];
+
+const GAMES = {
+  g_said: { bank: SAID, kind: 'mc', name: 'gSaid' },
+  g_book: { bank: BOOKQ, kind: 'mc', name: 'gBook' },
+  g_did: { bank: DIDQ, kind: 'mc', name: 'gDid' },
+  g_tf: { bank: TF, kind: 'tf', name: 'gTf' }
+};
+function tfItem(o) { return { c: 'tf', q: o.q, opts: [x('tTrue'), x('tFalse')], ci: o.a ? 0 : 1, r: o.r, n: o.n }; }
 
 /* ---------- Interface text ---------- */
 const T = {
@@ -1419,7 +1848,11 @@ const X = {
     hostT: 'Host a Team Quiz', hostD: 'Show this screen on a TV or projector. Teams answer out loud, and you tap who got it right.',
     hTeams: 'How many teams?', hNames: 'Team names', hTeam: n => `Team ${n}`, hCount: 'How many questions?', hTimer: 'Show a 30-second timer',
     hCat: 'Choose a category to start:', hShow: 'Show the answer', hWho: 'Who got it right? Tap each team.', hNext: 'Next question',
-    hFinal: 'Final scores', hWin: n => `${n} wins!`, hTie: 'It\'s a tie!', hNew: 'New team quiz', hQ: (a, b) => `Question ${a} of ${b}`, hEnd: 'End quiz'
+    hFinal: 'Final scores', hWin: n => `${n} wins!`, hTie: 'It\'s a tie!', hNew: 'New team quiz', hQ: (a, b) => `Question ${a} of ${b}`, hEnd: 'End quiz',
+    gSaid: 'Who Said It?', gBook: 'Guess the Book', gDid: 'Who Did It?', gTf: 'True or False',
+    hGames: 'Or pick another Bible game:', tTrue: 'True', tFalse: 'False',
+    hReview: 'Review the questions', hReviewLast: 'Review the last quiz’s questions', hReviewTitle: 'Question review',
+    hReviewSub: 'Go through the questions, answers and explanations together.', hAnswer: 'Answer', hNoReview: 'No questions to review yet.'
   },
   ceb: {
     chT: 'Hagit sa Igpapahulay', chD: 'Napulo ka pangutana, parehas sa tanan. Usa ka higayon matag hapon sa Igpapahulay.',
@@ -1456,7 +1889,11 @@ const X = {
     hostT: 'Quiz sa mga Grupo', hostD: 'Ipakita kini sa TV o projector. Motubag og kusog ang mga grupo, ug tuplokon nimo kinsa ang husto.',
     hTeams: 'Pila ka grupo?', hNames: 'Ngalan sa mga grupo', hTeam: n => `Grupo ${n}`, hCount: 'Pila ka pangutana?', hTimer: 'Ipakita ang 30 segundos nga timer',
     hCat: 'Pagpili og kategorya aron magsugod:', hShow: 'Ipakita ang tubag', hWho: 'Kinsa ang husto? Tuploka ang matag grupo.', hNext: 'Sunod nga pangutana',
-    hFinal: 'Katapusang puntos', hWin: n => `Midaog ang ${n}!`, hTie: 'Tabla!', hNew: 'Bag-ong quiz', hQ: (a, b) => `Pangutana ${a} sa ${b}`, hEnd: 'Tapuson ang quiz'
+    hFinal: 'Katapusang puntos', hWin: n => `Midaog ang ${n}!`, hTie: 'Tabla!', hNew: 'Bag-ong quiz', hQ: (a, b) => `Pangutana ${a} sa ${b}`, hEnd: 'Tapuson ang quiz',
+    gSaid: 'Kinsa ang Nag-ingon?', gBook: 'Tag-ana ang Libro', gDid: 'Kinsa ang Naghimo?', gTf: 'Tinuod o Bakak',
+    hGames: 'O pagpili og laing dula sa Bibliya:', tTrue: 'Tinuod', tFalse: 'Bakak',
+    hReview: 'Repasohon ang mga pangutana', hReviewLast: 'Repasohon ang miaging quiz', hReviewTitle: 'Pagrepaso sa mga pangutana',
+    hReviewSub: 'Ribyuhon ang mga pangutana, tubag ug katin-awan.', hAnswer: 'Tubag', hNoReview: 'Wala pay pangutana nga mabalikan.'
   }
 };
 const x = k => { const v = X[LANG][k]; return v !== undefined ? v : X.en[k]; };
@@ -1903,14 +2340,23 @@ function renderHostSetup() {
     <p class="lbl">${x('hNames')}</p><div class="names">${names.map((v, i) => `<input class="hname" data-i="${i}" maxlength="18" value="${esc(v)}" placeholder="${esc(x('hTeam')(i + 1))}">`).join('')}</div>
     <p class="lbl">${x('hCount')}</p><div class="seg">${[10, 15, 20].map(n => `<button class="${HOST.count === n ? 'on' : ''}" data-act="hcount" data-n="${n}">${n}</button>`).join('')}</div>
     <label class="hchk"><input type="checkbox" id="hTimer" ${HOST.timer ? 'checked' : ''}> ${x('hTimer')}</label>
-    <p class="lbl">${x('hCat')}</p>${catButtons('hcat')}</div>`;
+    <p class="lbl">${x('hCat')}</p>${catButtons('hcat')}
+    <p class="lbl">${x('hGames')}</p>${gameButtons()}
+    ${(store.get('hostReview', []) || []).length ? `<p style="margin-top:16px"><button class="secondary" data-act="hreviewlast">${x('hReviewLast')}</button></p>` : ''}</div>`;
 }
 function readHostNames() { document.querySelectorAll('.hname').forEach(i => { HOST.names[Number(i.dataset.i)] = i.value.trim(); }); const tm = document.getElementById('hTimer'); if (tm) HOST.timer = tm.checked; }
+function gameButtons() {
+  const games = [['g_said', 'gSaid', SAID.length], ['g_book', 'gBook', BOOKQ.length], ['g_did', 'gDid', DIDQ.length], ['g_tf', 'gTf', TF.length]];
+  return `<div class="cats">${games.map(([k, nm, n]) => `<button class="cat" data-act="hcat" data-cat="${k}">${x(nm)}<small>${t('nQ')(n)}</small></button>`).join('')}</div>`;
+}
 function startHost(cat) {
   readHostNames();
-  const pool = cat === 'all' ? QUIZ : QUIZ.filter(q => q.c === cat);
-  S = { mode: 'host', i: 0, items: shuffle(pool).slice(0, Math.min(HOST.count, pool.length)).map(qItem),
-    teams: Array.from({ length: HOST.teams }, (_, i) => ({ name: HOST.names[i] || x('hTeam')(i + 1), pts: 0 })), shown: false, got: new Set() };
+  let items;
+  const g = GAMES[cat];
+  if (g) { items = shuffle(g.bank).slice(0, Math.min(HOST.count, g.bank.length)).map(g.kind === 'tf' ? tfItem : qItem); }
+  else { const pool = cat === 'all' ? QUIZ : QUIZ.filter(q => q.c === cat); items = shuffle(pool).slice(0, Math.min(HOST.count, pool.length)).map(qItem); }
+  S = { mode: 'host', i: 0, items, game: cat,
+    teams: Array.from({ length: HOST.teams }, (_, i) => ({ name: HOST.names[i] || x('hTeam')(i + 1), pts: 0 })), shown: false, got: new Set(), reviewed: [] };
   document.body.classList.add('hosting'); renderHostQ();
 }
 function hostBoard() { return `<div class="hboard">${S.teams.map(tm => `<div><b>${esc(tm.name)}</b><span>${tm.pts}</span></div>`).join('')}</div>`; }
@@ -1920,22 +2366,40 @@ function renderHostQ() {
   app.innerHTML = `${hostBoard()}<div class="card host"><p class="eyebrow">${x('hQ')(S.i + 1, S.items.length)}${HOST.timer && !S.shown ? ' · ⏱ <span id="hT">30</span>' : ''}</p>
     <h2 class="hq">${esc(it.q)}</h2>
     <div class="hopts">${it.opts.map((o, k) => `<div class="hopt ${S.shown && k === it.ci ? 'right' : ''} ${S.shown && k !== it.ci ? 'dim' : ''}"><b>${L[k]}</b>${esc(o)}</div>`).join('')}</div>
-    ${S.shown ? `${it.r ? `<p class="href">${esc(it.r)}</p>` : ''}<p class="lbl">${x('hWho')}</p><div class="hteams">${S.teams.map((tm, i) => `<button class="${S.got.has(i) ? 'on' : ''}" data-act="hgot" data-i="${i}">${esc(tm.name)} +100</button>`).join('')}</div>
-      <div class="btnrow"><button class="primary" data-act="hnext">${S.i + 1 < S.items.length ? x('hNext') : x('hFinal')}</button></div>`
+    ${S.shown ? `${it.r ? `<p class="href">${esc(it.r)}</p>` : ''}${it.n ? `<p class="hnote">${esc(it.n)}</p>` : ''}<p class="lbl">${x('hWho')}</p><div class="hteams">${S.teams.map((tm, i) => `<button class="${S.got.has(i) ? 'on' : ''}" data-act="hgot" data-i="${i}">${esc(tm.name)} +100</button>`).join('')}</div>
+      <div class="btnrow"><button class="primary" data-act="hnext">${S.i + 1 < S.items.length ? x('hNext') : x('hFinal')}</button><button class="secondary" data-act="hend">${x('hEnd')}</button></div>`
     : `<div class="btnrow"><button class="primary" data-act="hshow">${x('hShow')}</button><button class="secondary" data-act="hend">${x('hEnd')}</button></div>`}</div>`;
   if (HOST.timer && !S.shown) {
     const t0 = Date.now();
     S.timer = setInterval(() => { const left = Math.max(0, 30 - Math.floor((Date.now() - t0) / 1000)); const el = document.getElementById('hT'); if (el) { el.textContent = left; el.parentElement.classList.toggle('low', left <= 5); } if (!left) { stopTimer(); S.shown = true; renderHostQ(); } }, 250);
   }
 }
+function hostRecord() {
+  const it = S.items[S.i];
+  if (it && S.reviewed) S.reviewed.push({ q: it.q, a: it.opts[it.ci], r: it.r, n: it.n, got: [...S.got].map(i => S.teams[i].name) });
+}
 function hostNext() {
+  if (S.shown) hostRecord();
   S.got.forEach(i => { S.teams[i].pts += 100; });
   S.got = new Set(); S.shown = false; S.i++;
   if (S.i < S.items.length) { renderHostQ(); return; }
+  hostFinal();
+}
+function hostFinal() {
+  stopTimer();
+  store.set('hostReview', S.reviewed || []);
+  const anyPts = S.teams.some(tm => tm.pts > 0);
   const top = Math.max(...S.teams.map(tm => tm.pts)), winners = S.teams.filter(tm => tm.pts === top);
-  app.innerHTML = `<div class="card host res"><h2 class="hq">${winners.length > 1 ? x('hTie') : '🏆 ' + x('hWin')(esc(winners[0].name))}</h2>
+  app.innerHTML = `<div class="card host res"><h2 class="hq">${!anyPts ? x('hFinal') : winners.length > 1 ? x('hTie') : '🏆 ' + x('hWin')(esc(winners[0].name))}</h2>
     <ol class="lb big">${S.teams.slice().sort((a, b) => b.pts - a.pts).map(tm => `<li><span class="lb-name">${esc(tm.name)}</span><b>${tm.pts}</b></li>`).join('')}</ol>
-    <div class="btnrow"><button class="primary" data-act="mode-host">${x('hNew')}</button><button class="secondary" data-act="home">${t('home')}</button></div></div>`;
+    <div class="btnrow">${(S.reviewed && S.reviewed.length) ? `<button class="primary" data-act="hreview">${x('hReview')}</button>` : ''}<button class="secondary" data-act="mode-host">${x('hNew')}</button><button class="secondary" data-act="home">${t('home')}</button></div></div>`;
+  document.body.classList.remove('hosting');
+}
+function hostReview(list) {
+  stopTimer(); setChrome('play'); document.body.classList.remove('hosting');
+  const rev = list || (S && S.reviewed) || store.get('hostReview', []);
+  const rows = (rev || []).map((o, i) => `<div class="rev-row"><p class="rev-q">${i + 1}. ${esc(o.q)}</p><p class="rev-a"><b>${x('hAnswer')}:</b> ${esc(o.a)}${o.r ? ` <span class="rev-ref">${esc(o.r)}</span>` : ''}</p>${o.n ? `<p class="rev-n">${esc(o.n)}</p>` : ''}${o.got && o.got.length ? `<p class="rev-got">✔ ${esc(o.got.join(', '))}</p>` : ''}</div>`).join('');
+  app.innerHTML = `<div class="card"><h2>${x('hReviewTitle')}</h2><p class="sub">${x('hReviewSub')}</p>${rows || `<p class="muted">${x('hNoReview')}</p>`}<div class="btnrow"><button class="secondary" data-act="mode-host">${x('hNew')}</button><button class="secondary" data-act="home">${t('home')}</button></div></div>`;
 }
 
 /* ---------- clicks for the new parts (these run before the original handlers) ---------- */
@@ -1966,7 +2430,8 @@ document.addEventListener('click', e => {
     hteams: () => { readHostNames(); HOST.teams = Number(b.dataset.n); renderHostSetup(); }, hcount: () => { readHostNames(); HOST.count = Number(b.dataset.n); renderHostSetup(); },
     hcat: () => startHost(b.dataset.cat), hshow: () => { stopTimer(); S.shown = true; renderHostQ(); },
     hgot: () => { const i = Number(b.dataset.i); if (S.got.has(i)) S.got.delete(i); else S.got.add(i); b.classList.toggle('on'); }, hnext: hostNext,
-    hend: () => { stopTimer(); document.body.classList.remove('hosting'); renderHome(); }
+    hend: () => { if (S.shown) hostRecord(); S.got.forEach(i => { S.teams[i].pts += 100; }); S.got = new Set(); hostFinal(); },
+    hreview: () => hostReview(), hreviewlast: () => hostReview(store.get('hostReview', []))
   };
   if (acts[a]) { stop(); acts[a](); }
 }, true);
