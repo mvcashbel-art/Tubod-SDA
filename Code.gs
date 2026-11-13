@@ -25,7 +25,8 @@ const SCHEMA = {
   Visitors:  ['id', 'name', 'contact', 'heard', 'message', 'createdAt', 'handled', 'handledBy', 'consent'],
   Prayers:   ['id', 'name', 'contact', 'request', 'private', 'createdAt', 'handled', 'handledBy', 'consent'],
   Offerings: ['id', 'date', 'kind', 'amount', 'note', 'recordedBy', 'createdAt'],
-  Transfers: ['id', 'name', 'direction', 'church', 'date', 'note', 'recordedBy', 'createdAt']
+  Transfers: ['id', 'name', 'direction', 'church', 'date', 'note', 'recordedBy', 'createdAt'],
+  Activity:  ['id', 'time', 'uid', 'name', 'action', 'detail']
 };
 /* who may do what: admin = everything; clerk = members, records and attendance; editor = announcements, This Sabbath, events, program and attendance */
 const LEVELS = ['admin', 'clerk', 'editor', 'member'];
@@ -267,7 +268,7 @@ function resetPasswordFromEditor() {
 
 /* ---------- web app entry points ---------- */
 function doGet() {
-  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, giving: true, roster: true, anniversaries: true, visitors: true, prayers: true, lesson: true, offerings: true, transfers: true, consent: true, v: 13 });
+  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, giving: true, roster: true, anniversaries: true, visitors: true, prayers: true, lesson: true, offerings: true, transfers: true, consent: true, activity: true, photoMonths: true, v: 14 });
 }
 
 function doPost(e) {
@@ -411,6 +412,7 @@ const ACTIONS = {
     if (m.mstatus === 'deceased') throw err_('This account is closed. Talk to the church admin.', 'closed');
     purgeSessions_();
     const tok = newSession_(m.id);
+    activity_(m, 'login', 'Signed in');
     let firstSync = null;
     try { firstSync = ACTIONS.sync({ token: tok }, m); } catch (e) {}
     return { token: tok, sync: firstSync };
@@ -457,8 +459,10 @@ const ACTIONS = {
     const text = clean_(r.text, 3000, true);
     const photos = (Array.isArray(r.photos) ? r.photos : []).slice(0, 10);
     if (!text && !photos.length) throw err_('Write something or add a photo first.', 'invalid');
-    const dest = photos.length ? memberFolder_(me) : null;
-    const ids = photos.map(function (d) { return saveImage_(d, 'post', dest); });
+    const now = nowMs_();
+    const dest = photos.length ? monthFolder_(me, now) : null;
+    const stamp = phStamp_(now);
+    const ids = photos.map(function (d, i) { return saveImage_(d, stamp + '_' + cat + '_' + (i + 1), dest); });
     let svc = '';
     if (cat === 'announcement' && r.svc) {
       const sv = services_().filter(function (x) { return x.id === r.svc; })[0];
@@ -466,6 +470,7 @@ const ACTIONS = {
     }
     const id = id_('p');
     append_('Posts', { id: id, authorId: me.id, cat: cat, text: text, photos: ids.join(','), pinned: (canPost_(me) && r.pinned) ? '1' : '', createdAt: String(Date.now()), svc: svc, grp: grp });
+    activity_(me, 'post', (grp ? 'Group post' : cat === 'announcement' ? 'Announcement' : cat) + (text ? ': ' + text.slice(0, 60) : '') + (ids.length ? ' · ' + ids.length + ' photo' + (ids.length > 1 ? 's' : '') : ''));
     if (cat === 'announcement' && !grp) osPush_(getSetting_('churchName') || 'Tubod SDA Church', text);
     return { id: id };
   },
@@ -494,6 +499,7 @@ const ACTIONS = {
     if (!text) throw err_('Write something first.', 'invalid');
     if (!readAll_('Posts').some(function (p) { return p.id === r.postId; })) throw err_('That post is gone.', 'missing');
     append_('Comments', { id: id_('c'), postId: r.postId, authorId: me.id, text: text, createdAt: String(Date.now()) });
+    activity_(me, 'comment', text.slice(0, 80));
     return {};
   },
 
@@ -510,7 +516,7 @@ const ACTIONS = {
     const rid = String(r.postId) + '_' + me.id;
     const had = readAll_('Reactions').some(function (x) { return x.id === rid; });
     if (had) remove_('Reactions', function (x) { return x.id === rid; });
-    else append_('Reactions', { id: rid, postId: String(r.postId), uid: me.id, createdAt: String(Date.now()) });
+    else { append_('Reactions', { id: rid, postId: String(r.postId), uid: me.id, createdAt: String(Date.now()) }); activity_(me, 'like', 'Liked a post'); }
     return {};
   },
 
@@ -579,6 +585,7 @@ const ACTIONS = {
       id: id_('f'), title: title, cat: fileCats_().indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
       driveId: f.getId(), name: name, mime: mime, size: String(bytes.length), authorId: me.id, createdAt: String(Date.now())
     });
+    activity_(me, 'upload', 'Uploaded a file: ' + title);
     return {};
   },
 
@@ -647,6 +654,7 @@ const ACTIONS = {
       id: id_('f'), title: title, cat: fileCats_().indexOf(r.cat) >= 0 ? r.cat : 'other', desc: clean_(r.desc, 300, true),
       driveId: f.getId(), name: name, mime: mime, size: String(f.getSize()), authorId: me.id, createdAt: String(Date.now())
     });
+    activity_(me, 'upload', 'Uploaded a file: ' + title);
     return {};
   },
 
@@ -804,6 +812,17 @@ const ACTIONS = {
     const rows = readAll_('Log').map(function (x) { return { id: x.id, time: Number(x.time) || 0, by: x.byName, kind: x.kind, targetId: x.targetId, target: x.targetName, detail: x.detail }; });
     rows.sort(function (a, b) { return b.time - a.time; });
     return { log: rows.slice(0, 5000) };
+  },
+
+  /* Admin-only: every activity of one member (logins, posts, comments, likes, uploads). */
+  memberActivity: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only the church admin can see a member\'s activity.', 'denied');
+    const uid = String(r.uid || '');
+    if (!uid) throw err_('Choose a member first.', 'invalid');
+    const rows = readAll_('Activity').filter(function (x) { return x.uid === uid; })
+      .map(function (x) { return { id: x.id, time: Number(x.time) || 0, action: x.action, detail: x.detail }; });
+    rows.sort(function (a, b) { return b.time - a.time; });
+    return { activity: rows.slice(0, 500), name: nameOf_(uid) };
   },
 
   getAttendance: function (r, me) {
@@ -1335,6 +1354,12 @@ function programText_(svc) {
   return items.filter(function (i) { return i.name; }).map(function (i) { return (i.role ? i.role + ': ' : '') + i.name; }).join(', ');
 }
 function phDate_(ms) { return new Date(ms + 8 * 36e5).toISOString().slice(0, 10); }
+var MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function phStamp_(ms) { const iso = new Date((Number(ms) || nowMs_()) + 8 * 36e5).toISOString(); return iso.slice(0, 10) + '_' + iso.slice(11, 19).replace(/:/g, ''); }
+function phMonthLabel_(ms) { const d = new Date((Number(ms) || nowMs_()) + 8 * 36e5); return d.toISOString().slice(0, 7) + ' ' + MONTH_NAMES[d.getUTCMonth()]; }
+function monthFolder_(me, ms) { const base = memberFolder_(me), label = phMonthLabel_(ms); const it = base.getFoldersByName(label); return it.hasNext() ? it.next() : base.createFolder(label); }
+/* quiet per-person activity trail (admins only can read it) */
+function activity_(me, action, detail) { if (!me) return; try { append_('Activity', { id: id_('ac'), time: String(nowMs_()), uid: me.id, name: me.name, action: action, detail: String(detail || '').slice(0, 300) }); } catch (e) {} }
 function time12_(hhmm) {
   const hm = String(hhmm).split(':'); let h = Number(hm[0]);
   const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
