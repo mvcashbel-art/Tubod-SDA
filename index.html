@@ -249,7 +249,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pf{padding:0;overflow:hidden}
 .cover{height:170px;background:linear-gradient(120deg,#BFDDEB,#E7EFD9 60%,#F4E7BE);position:relative}
 .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.pf-main{position:relative;display:flex;gap:16px;align-items:flex-end;padding:0 18px;margin-top:-52px;flex-wrap:wrap}
+.pf-av{position:absolute;left:18px;bottom:0;transform:translateY(50%);z-index:2}
+.pf-main{position:relative;display:flex;justify-content:space-between;gap:12px;align-items:flex-end;padding:62px 18px 0;flex-wrap:wrap}
 .pf-id{flex:1;min-width:160px;padding-bottom:6px}
 .pf-id h1{font-size:2rem}
 .role{color:var(--accent-dark);font-weight:600}
@@ -2101,8 +2102,8 @@ function renderProfile(){
   const cover = p.cover ? imgUrl(p.cover, 1200) : '';
   keepInputs(slot, () => {
     slot.innerHTML = `<section class="card pf">
-      <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
-      <div class="pf-main">${av(id, 'xl')}<div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
+      <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}<span class="pf-av">${av(id, 'xl')}</span></div>
+      <div class="pf-main"><div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
         ${S.canMem && !own ? `<div class="pf-btns"><button class="btn primary" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
         ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${(pushConfigured() ? osOn() : notifOn()) ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
