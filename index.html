@@ -983,9 +983,74 @@ function loadImg(file){
     i.src = url;
   });
 }
-async function shrink(file, {w, h, crop = false, q = .8, maxChars = 0}){
+/* read EXIF orientation (1-8) from a JPEG; returns 1 if there is none */
+async function exifOrient(file){
+  try {
+    if (!file || !/jpe?g/i.test(file.type || '')) return 1;
+    const buf = await file.slice(0, 256 * 1024).arrayBuffer();
+    const v = new DataView(buf);
+    if (v.getUint16(0) !== 0xFFD8) return 1;
+    let off = 2;
+    while (off + 4 < v.byteLength){
+      const marker = v.getUint16(off);
+      if ((marker & 0xFF00) !== 0xFF00) break;
+      const size = v.getUint16(off + 2);
+      if (marker === 0xFFE1){
+        const s = off + 4;
+        if (v.getUint32(s) === 0x45786966){
+          const tiff = s + 6, little = v.getUint16(tiff) === 0x4949;
+          const u16 = o => v.getUint16(o, little), u32 = o => v.getUint32(o, little);
+          const ifd = tiff + u32(tiff + 4), n = u16(ifd);
+          for (let i = 0; i < n; i++){ const e = ifd + 2 + i * 12; if (u16(e) === 0x0112) return u16(e + 8) || 1; }
+        }
+        return 1;
+      }
+      off += 2 + size;
+    }
+  } catch (e) {}
+  return 1;
+}
+function orientCanvas(img, o){
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const c = document.createElement('canvas'), swap = o >= 5;
+  c.width = swap ? ih : iw; c.height = swap ? iw : ih;
+  const x = c.getContext('2d');
+  switch (o){
+    case 2: x.transform(-1, 0, 0, 1, iw, 0); break;
+    case 3: x.transform(-1, 0, 0, -1, iw, ih); break;
+    case 4: x.transform(1, 0, 0, -1, 0, ih); break;
+    case 5: x.transform(0, 1, 1, 0, 0, 0); break;
+    case 6: x.transform(0, 1, -1, 0, ih, 0); break;
+    case 7: x.transform(0, -1, -1, 0, ih, iw); break;
+    case 8: x.transform(0, -1, 1, 0, 0, iw); break;
+  }
+  x.drawImage(img, 0, 0);
+  return c;
+}
+/* does this browser already apply EXIF orientation to <img> itself? probe once with a known rotated image */
+let _autoOrientProbe = null;
+function imgAutoOriented(){
+  if (_autoOrientProbe) return _autoOrientProbe;
+  const b64 = '/9j/4QAiRXhpZgAATU0AKgAAAAgAAQESAAMAAAABAAYAAAAAAAD/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAEAAgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwCxRRRXpnnH/9k=';
+  _autoOrientProbe = new Promise(res => { const i = new Image(); i.onload = () => res(i.naturalHeight > i.naturalWidth); i.onerror = () => res(false); i.src = 'data:image/jpeg;base64,' + b64; });
+  return _autoOrientProbe;
+}
+/* load an image with its EXIF orientation already applied, so portrait photos stay portrait */
+async function getOrientedImg(file){
+  try {
+    if (typeof createImageBitmap === 'function'){
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return { img: bmp, w: bmp.width, h: bmp.height };
+    }
+  } catch (e) {}
   const img = await loadImg(file);
-  let sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0, dw, dh;
+  const o = await exifOrient(file);
+  if (o > 1 && !(await imgAutoOriented())){ const c = orientCanvas(img, o); return { img: c, w: c.width, h: c.height }; }
+  return { img, w: img.naturalWidth, h: img.naturalHeight };
+}
+async function shrink(file, {w, h, crop = false, q = .8, maxChars = 0}){
+  const src = await getOrientedImg(file);
+  let sw = src.w, sh = src.h, sx = 0, sy = 0, dw, dh;
   if (crop){
     const ar = w / h;
     if (sw / sh > ar){ const nw = sh * ar; sx = (sw - nw) / 2; sw = nw; } else { const nh = sw / ar; sy = (sh - nh) / 2; sh = nh; }
@@ -998,7 +1063,7 @@ async function shrink(file, {w, h, crop = false, q = .8, maxChars = 0}){
     const c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(dw * scale)); c.height = Math.max(1, Math.round(dh * scale));
     const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
-    x.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    x.drawImage(src.img, sx, sy, sw, sh, 0, 0, c.width, c.height);
     const d = c.toDataURL('image/jpeg', quality);
     if (!maxChars || d.length <= maxChars) return d;
     quality = Math.max(.45, quality - .1); scale *= .85;
@@ -1880,10 +1945,15 @@ function onPickPhotos(e){
   composerBits();
 }
 const readDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(new Error('Could not read that photo.')); r.readAsDataURL(f); });
-/* photos are sent exactly as they are. Only if the church server is the old version do we send smaller copies. */
+/* photos are corrected for rotation and kept at up to 4K. GIFs (animation) and anything the browser can't decode are sent as they are. */
+async function prepPhoto(f){
+  if (/^image\/gif$/.test(f.type)) return readDataUrl(f);
+  try { return await shrink(f, {w:3840, q:.9, maxChars:12000000}); }
+  catch (e){ return readDataUrl(f); }
+}
 async function sendPost(cat, text, list, pinned){
   const files = list.map(x => x.file);
-  let photos = await Promise.all(files.map(async f => ORIG_TYPES.test(f.type) ? readDataUrl(f) : shrink(f, {w:4000, q:.95, maxChars:30000000})));
+  let photos = await Promise.all(files.map(prepPhoto));
   try { return await api('post', {cat, text, photos, pinned}); }
   catch (e){
     if (e.code !== 'bad_image' || !files.length) throw e;
