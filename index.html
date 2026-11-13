@@ -1423,9 +1423,9 @@ function gameCard(){
   if (!GAME) return '<div id="gameCard"></div>';
   const ph = phNow(), sat = ph.getUTCDay() === 6, rows = GAME.challenge && GAME.challenge.length && sat ? GAME.challenge : GAME.lastChallenge || [];
   const top = (GAME.weekly || []).slice(0, 3);
-  if (!rows.length && !top.length) return `<div class="card more" id="gameCard"><h3>Bible game</h3><p class="muted">Play Scripture Quest and join the Sabbath Challenge every Sabbath afternoon.</p><p style="margin-top:8px"><a class="btn sm primary" href="bible-game.html">Play</a></p></div>`;
+  if (!rows.length && !top.length) return `<div class="card" id="gameCard"><h3>Bible game</h3><p class="muted">Play Scripture Quest and join the Sabbath Challenge every Sabbath afternoon.</p><p style="margin-top:8px"><a class="btn sm primary" href="bible-game.html">Play</a></p></div>`;
   const li = (r, i, key) => `<li><span>${['🥇','🥈','🥉'][i] || i + 1}</span><span class="g-n">${esc(r.name)}</span><b>${r[key]}</b></li>`;
-  return `<div class="card more" id="gameCard"><h3>Bible game</h3>
+  return `<div class="card" id="gameCard"><h3>Bible game</h3>
     ${rows.length ? `<p class="meta">${sat && GAME.challenge && GAME.challenge.length ? 'Sabbath Challenge today' : 'Last Sabbath Challenge winners'}</p><ol class="g-lb">${rows.slice(0, 3).map((r, i) => li(r, i, 'score')).join('')}</ol>` : ''}
     ${top.length ? `<p class="meta" style="margin-top:8px">Top players this week</p><ol class="g-lb">${top.map((r, i) => li(r, i, 'points')).join('')}</ol>` : ''}
     <p style="margin-top:10px"><a class="btn sm primary" href="bible-game.html">Play</a></p></div>`;
@@ -1440,7 +1440,7 @@ function renderSide(){
   const st = S.settings, n = Object.values(S.profiles).filter(p => !isDead(p)).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${givingCard()}${thisSabbathCard()}${lessonCard()}${rosterCard()}${eventsCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
+  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${givingCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
     <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
     <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
 }
@@ -1593,7 +1593,7 @@ function mount(){
     buildComposer();
   } else if (S.route === 'news'){
     S.chatInit = false;
-    v.innerHTML = `${bannerHTML}<section class="card chat" aria-label="Church announcements">
+    v.innerHTML = `${bannerHTML}<div id="newsCards">${thisSabbathCard()}${lessonCard()}${rosterCard()}${eventsCard()}</div><section class="card chat" aria-label="Church announcements">
       <div class="chat-head">${av('system', 'md')}<div><b>Church announcements</b><small>Messages from the church leaders</small></div></div>
       <div class="msgs" id="msgs" tabindex="0" aria-label="Announcements"></div>
       ${S.canPost ? `<form class="chat-in wrap" id="annForm"><textarea id="aText" rows="1" maxlength="1500" placeholder="Write an announcement" aria-label="Write an announcement"></textarea><button class="btn primary" type="submit" id="aSend">Send</button>
@@ -1626,7 +1626,7 @@ function refresh(){
   if (S.route === 'home'){ renderFilters(); const homeP = livePosts().filter(p => !p.grp); renderFeed(S.filter === 'all' ? homeP : homeP.filter(p => p.cat === S.filter), 'No posts here yet. Be the first to share something.'); refreshComposer(); }
   else if (S.route === 'groups') renderGroups();
   else if (S.route === 'group') renderGroup();
-  else if (S.route === 'news') renderChat();
+  else if (S.route === 'news'){ renderChat(); const nc = $('#newsCards'); if (nc) nc.innerHTML = thisSabbathCard() + lessonCard() + rosterCard() + eventsCard(); }
   else if (S.route === 'library') renderLibrary();
   else if (S.route === 'members'){ renderOfficers(); renderMembers(); }
   else renderProfile();
