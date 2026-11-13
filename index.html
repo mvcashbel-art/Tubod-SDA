@@ -83,6 +83,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* layout */
 .shell{max-width:var(--pageW);margin:0 auto;padding:20px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+.shell.full{grid-template-columns:minmax(0,1fr)}
 .side{position:sticky;top:calc(var(--topH,62px) + var(--stripH,0px) + 16px);display:flex;flex-direction:column;gap:14px}
 #view{display:flex;flex-direction:column;gap:14px;min-width:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 1px 2px rgba(23,50,77,.05)}
@@ -448,7 +449,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   .brand small{display:none}
   .mark{height:46px}
   .auth-brand .mark{height:60px}
-  .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+  .tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
   .tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:.7rem;font-weight:500;color:var(--muted);text-decoration:none;border-radius:10px}
   .tabs a.on{color:var(--accent-dark);background:var(--soft)}
   #toast{bottom:90px}
@@ -716,7 +717,7 @@ const CATS = {
 };
 const DEF_LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
 const DEF_ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
-const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['groups','Groups','heart',null,'notabs'],['game','Bible Game','book','bible-game.html'],['me','My profile','user']];
+const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['groups','Groups','heart',null,'notabs'],['game','Game','book','bible-game.html'],['me','My profile','user']];
 let LIB_CATS = DEF_LIB_CATS, ROLES = DEF_ROLES, NAV = DEF_NAV, NAV_BIS = {}, NAV_HIDE = {};
 /* what admins changed on the Edit the site page */
 let SITE = {texts:{}, color:'blue', tabs:[], roles:[], libCats:[]}, siteSig = '';
@@ -1322,11 +1323,12 @@ function fromHash(){
   if (['home','news','library','members','groups'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && (n[3] || n[4]))).map(([r, label0, ic, href]) => {
+  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[4])).map(([r, label0, ic, href]) => {
     const bisL = LANG === 'ceb' && NAV_BIS[r], label = bisL || label0, nt = bisL ? ' data-notr' : '';
     if (href) return `<a href="${href}"${nt}>${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : r === 'groups' ? (S.route === 'groups' || S.route === 'group') : S.route === r);
-    return `<a href="#${r}"${nt} data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${kind === 'tabs' && label === 'Announcements' ? '<span class="lg">Announcements</span><span class="sh">News</span>' : `<span>${esc(label)}</span>`}</a>`;
+    const shortTab = kind === 'tabs' && (label === 'Announcements' ? ['Announcements', 'News'] : (r === 'me' && label === 'My profile') ? ['My profile', 'Profile'] : null);
+    return `<a href="#${r}"${nt} data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${shortTab ? `<span class="lg">${esc(shortTab[0])}</span><span class="sh">${esc(shortTab[1])}</span>` : `<span>${esc(label)}</span>`}</a>`;
   }).join('');
 }
 
@@ -1502,10 +1504,14 @@ function liveNow(){
   return w && w.on ? {url, manual:false, name:w.sv.name} : null;
 }
 function renderSide(){
+  const side = $('#side'), shell = side.closest('.shell');
+  /* the side column belongs to Home only; keep it off every other tab (phone and laptop alike) */
+  if (S.route !== 'home'){ side.hidden = true; side.innerHTML = ''; if (shell) shell.classList.add('full'); return; }
+  side.hidden = false; if (shell) shell.classList.remove('full');
   const st = S.settings, n = Object.values(S.profiles).filter(p => !isDead(p)).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  $('#side').innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${givingCard()}${birthdaysCard()}${gameCard()}${sched}${verse}
+  side.innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${birthdaysCard()}${sched}${verse}
     <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
     <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
 }
@@ -2109,6 +2115,7 @@ function renderProfile(){
         ${p.household ? `<div class="fam"><p class="fam-h"><span>Family</span> <b data-notr>${esc(p.household)}</b></p>${familyOf(p).length ? `<div class="grp-mem">${familyOf(p).map(x => `<span class="chipmem"><button type="button" data-act="profile" data-uid="${esc(x.id)}">${av(x.id, 'sm')}<span>${esc(x.name)}</span></button></span>`).join('')}</div>` : ''}</div>` : ''}
         ${p.baptDate || p.baptBy || p.baptPlace ? `<div class="facts bapt">${p.baptDate ? `<span>Baptized <b>${esc(baptText(p.baptDate))}</b></span>` : ''}${p.baptBy ? `<span>Baptized by <b data-notr>${esc(p.baptBy)}</b></span>` : ''}${p.baptPlace ? `<span>Place of baptism <b data-notr>${esc(p.baptPlace)}</b></span>` : ''}</div>` : ''}
       </div></section>
+      ${own ? givingCard() : ''}
       ${mine2.length || own ? `<div class="sec-row"><h2 class="sec">Photos and videos</h2>${own ? `<button class="btn primary sm" data-act="myupload">${icon('upload')}Add photos or videos</button>` : ''}</div>${own || S.isAdmin ? storageHTML(id) : ''}
         ${pAlbums.length ? `<div class="grid">${pAlbums.sort((x, y) => Math.max(...y.items.map(f => +f.createdAt || 0)) - Math.max(...x.items.map(f => +f.createdAt || 0))).map(albumCard).join('')}</div>` : ''}
         ${loose.length ? `<div class="card pf-gal"><div class="alb-grid">${loose.slice(0, S.galLimit).map(albItem).join('')}</div>${loose.length > S.galLimit ? `<div style="text-align:center;margin-top:12px"><button class="btn" data-act="galmore">Show more (${loose.length - S.galLimit} more)</button></div>` : ''}</div>` : ''}
