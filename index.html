@@ -1647,7 +1647,7 @@ function renderStrip(){
   const live = liveNow();
   if (live) rows += `<a class="live-row" href="${esc(live.url)}" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span><span class="grow">LIVE now${live.name ? ' · ' + esc(live.name) : ''} · Tap to watch</span>${S.canPost && live.manual ? '<button type="button" data-act="endlive">End</button>' : ''}</a>`;
   if (w) rows += `<div class="wr" role="status"><span class="iw">${LOGO}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
-  if (list.length && S.route !== 'news'){
+  if (list.length && S.route === 'home'){
     const p = list[0];
     rows += `<a href="#news" data-route="news" aria-label="Open announcements"><span class="iw">${icon('bell')}</span><span class="bd"><b>Announcement \u00b7 ${ago(p.createdAt)}</b><span class="t">${esc(p.text || 'Photo announcement')}</span></span>${list.length > 1 ? `<span class="more">+${list.length - 1} more</span>` : ''}</a>`;
   }
