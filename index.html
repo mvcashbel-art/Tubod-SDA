@@ -2467,7 +2467,7 @@ function openMembersModal(){
   const rows = Object.values(S.profiles).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(p => {
     const acct = p.access !== 'roll', me = p.id === S.uid;
     const roleSel = adm && acct && !me ? `<select class="msel" data-act="mlevel" data-uid="${esc(p.id)}" aria-label="Role on the site for ${esc(p.name)}">${LV_NAMES.map(([k, l]) => `<option value="${k}" ${p.access === k ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '';
-    const btns = me ? '<span class="meta">You</span>' : `<button class="btn sm" data-act="medit" data-uid="${esc(p.id)}">Edit</button><button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button>${roleSel}${adm && acct ? `<button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button>` : ''}${adm ? `<button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>` : ''}`;
+    const btns = me ? '<span class="meta">You</span>' : `<button class="btn sm" data-act="medit" data-uid="${esc(p.id)}">Edit</button><button class="btn sm" data-act="mstatus" data-uid="${esc(p.id)}">Status</button>${roleSel}${adm && acct ? `<button class="btn sm" data-act="mpw" data-uid="${esc(p.id)}">New password</button>` : ''}${adm ? `<button class="btn sm" data-act="mact" data-uid="${esc(p.id)}">Activity</button>` : ''}${adm ? `<button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Remove</button>` : ''}`;
     return `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">${esc(lvName(p.access))}${p.role ? ' · ' + esc(p.role) : ''}</span>${stPill(p)}</div>${btns}</div>`;
   }).join('');
   const wait = adm ? (S.waiting || []).map(p => `<div class="mrow">${av(p.id, 'sm')}<div class="mi"><b>${esc(p.name)}</b><span class="meta">Joined ${ago(p.createdAt)} · waiting for approval</span></div><button class="btn sm primary" data-act="macc" data-uid="${esc(p.id)}" data-to="member">Approve</button><button class="btn sm danger" data-act="mdel" data-uid="${esc(p.id)}">Decline</button></div>`).join('') : '';
@@ -3115,6 +3115,18 @@ async function memberAction(a, uid, to){
         try { await api('resetPassword', {uid, password:$('#rPw', m).value}); closeModal(); toast('Password changed. Share it with them in person.'); }
         catch (err){ toast(errMsg(err)); }
       });
+    } else if (a === 'mact'){
+      const m = openModal('Activity — ' + p.name, '<div class="m-body" style="padding:0"><p class="muted">Loading…</p></div>');
+      try {
+        const res = await api('memberActivity', {uid});
+        const rows = res.activity || [];
+        const ICON = {login:'🔑', post:'📝', comment:'💬', like:'❤️', upload:'📎'};
+        const LABEL = {login:'Signed in', post:'Posted', comment:'Commented', like:'Liked a post', upload:'Uploaded'};
+        const body = $('.m-body', m);
+        body.innerHTML = `<p class="muted" style="margin-bottom:8px">Every sign-in, post, comment, like and upload — newest first. Only you (the church admin) can see this.</p>
+          ${rows.length ? `<div class="mlist">${rows.map(x => `<div class="mrow"><span style="font-size:18px;width:26px;text-align:center">${ICON[x.action] || '•'}</span><div style="flex:1;min-width:0"><div><b>${esc(LABEL[x.action] || x.action)}</b>${x.detail ? ' — ' + esc(x.detail) : ''}</div><div class="meta">${esc(ago(x.time))}</div></div></div>`).join('')}</div>` : '<p class="muted">No activity recorded yet.</p>'}
+          <div class="m-actions"><button class="btn" type="button" data-act="members">Back</button><button class="btn primary" type="button" data-act="closemodal">Done</button></div>`;
+      } catch (err){ const b = $('.m-body', m); if (b) b.innerHTML = `<p class="muted">${esc(err && err.code === 'bad_action' ? 'The church server needs its update first.' : errMsg(err))}</p><div class="m-actions"><button class="btn primary" type="button" data-act="members">Back</button></div>`; }
     }
   } catch (err){ toast(errMsg(err)); }
 }
@@ -3223,7 +3235,7 @@ document.addEventListener('click', e => {
     case 'signout': signOut(); break;
     case 'settings': if (S.isAdmin) openSettingsModal(); else if (S.canAttend) openToolsModal(); break;
     case 'members': if (S.canMem) openMembersModal(); break;
-    case 'macc': case 'mdel': case 'mpw': memberAction(a, el.dataset.uid, el.dataset.to); break;
+    case 'macc': case 'mdel': case 'mpw': case 'mact': memberAction(a, el.dataset.uid, el.dataset.to); break;
     case 'copyann': copyAnn(id); break;
     case 'smsann': smsAnn(id); break;
     case 'smsinfo': smsInfo(id); break;
