@@ -1366,6 +1366,7 @@ function go(route, id){
 }
 function fromHash(){
   const h = (location.hash || '').slice(1);
+  if (h === 'messages'){ try { history.replaceState(null, '', location.pathname + location.search + '#home'); } catch (e) {} if (S.uid && S.msgOn !== false) setTimeout(openMessages, 50); return; }
   if (h === 'me'){ if (S.uid) return go('profile', S.uid); return; }
   if (['home','news','library','members','groups'].includes(h) && h !== S.route) go(h);
 }
@@ -2930,7 +2931,7 @@ async function toggleNotif(){
   const r = await Notification.requestPermission();
   if (r !== 'granted'){ toast('Notifications are blocked. Allow them for this site in your browser settings.'); return; }
   lsSet(NOTIF_KEY, '1'); lsSet(ANN_SEEN, String(Date.now()));
-  toast('Notifications are on. New announcements pop up while the church page is open or in the background.'); renderProfile();
+  toast('Notifications are on. New announcements and messages pop up while the church page is open or in the background.'); renderProfile();
 }
 function notifyNew(){
   if (pushConfigured() || !notifOn()) return;
@@ -3217,9 +3218,32 @@ let msgPoll = 0; const MSG = { conv: null, count: 0 };
 function msgClock(ms){ const d = new Date(ms + TZ * 36e5); let h = d.getUTCHours(); const mn = String(d.getUTCMinutes()).padStart(2, '0'); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + mn + ' ' + ap; }
 function msgDay(ms){ const iso = phISO(ms); if (iso === phISO()) return 'Today'; if (iso === phISO(Date.now() - 864e5)) return 'Yesterday'; const [Y, M, D] = iso.split('-').map(Number); return MONTHS[M - 1] + ' ' + D + (Y !== phNow().getUTCFullYear() ? ' ' + Y : ''); }
 function paintMsgBadge(){ const b = $('#msgBadge'); if (!b) return; const n = S.msgUnread || 0; b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; }
+function msgNotifyOn(){ return ('Notification' in window) && Notification.permission === 'granted' && (pushConfigured() ? (typeof osOn === 'function' && osOn()) : notifOn()); }
+/* pop up a notification when a new message arrives while the app is open or in the background */
+function notifyChat(convos){
+  const seen = S.convSeen || (S.convSeen = {});
+  const first = S.convSeenInit !== true;
+  const fresh = [];
+  convos.forEach(c => {
+    const lt = c.lastTime || 0, prev = seen[c.id] || 0;
+    if (!first && lt > prev && !c.fromMe && c.unread > 0){
+      const viewing = MSG.conv && !document.hidden && $('#thread') && ((MSG.conv.to && c.uid === MSG.conv.to) || (MSG.conv.groupId && c.groupId === MSG.conv.groupId) || (MSG.conv.convId && c.id === MSG.conv.convId));
+      if (!viewing) fresh.push(c);
+    }
+    seen[c.id] = Math.max(prev, lt);
+  });
+  S.convSeenInit = true;
+  if (first || !fresh.length || !msgNotifyOn()) return;
+  fresh.sort((a, b) => b.lastTime - a.lastTime);
+  const top = fresh[0];
+  const title = fresh.length > 1 ? (fresh.length + ' new messages') : (top.kind === 'group' ? top.who + ' (group chat)' : top.who);
+  const opt = { body: String(top.lastText || 'New message').slice(0, 180), icon: 'icon-192.png', badge: 'icon-192.png', tag: 'tubod-chat', renotify: true, data: { chat: 1 } };
+  const show = () => { try { new Notification(title, opt); } catch (e) {} };
+  if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(r => r ? r.showNotification(title, opt) : show()).catch(show); else show();
+}
 async function refreshConvos(){
   if (!S.uid) return;
-  try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; S.msgOn = true; paintMsgBadge(); const b = $('#fabChat'); if (b) b.hidden = false; if ($('#msgList') && !MSG.conv) renderConvoList(); }
+  try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; S.msgOn = true; paintMsgBadge(); const b = $('#fabChat'); if (b) b.hidden = false; notifyChat(j.convos || []); if ($('#msgList') && !MSG.conv) renderConvoList(); }
   catch (e){ if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#fabChat'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); } }
 }
 function ensureMsgModal(){
@@ -3615,7 +3639,7 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   'Coming up':'Umaabot', 'Happy birthday':'Malipayong adlaw nga natawhan', 'Scripture reading':'Pagbasa sa Kasulatan', 'Sabbath School lesson':'Leksyon sa Tulunghaan sa Igpapahulay',
   'Welcome to our church family. Happy Sabbath!':'Maayong pag-abot sa among pamilya sa simbahan. Malipayong Igpapahulay!',
   'Notifications':'Mga pahibalo sa cellphone', 'Notifications: on':'Mga pahibalo: on', 'Notifications are off on this phone.':'Gipalong ang mga pahibalo niini nga cellphone.',
-  'Notifications are on. New announcements pop up while the church page is open or in the background.':'Naka-on na ang mga pahibalo. Mogawas ang bag-ong pahibalo samtang abli ang panid sa simbahan o naa sa likod.',
+  'Notifications are on. New announcements and messages pop up while the church page is open or in the background.':'Naka-on na ang mga pahibalo. Mogawas ang bag-ong pahibalo ug mensahe samtang abli ang panid sa simbahan o naa sa likod.',
   'Notifications are blocked. Allow them for this site in your browser settings.':'Gi-block ang mga pahibalo. Tugoti kini nga site sa setting sa imong browser.',
   'The member list is downloading. Keep it private: do not post it online.':'Nag-download na ang lista sa miyembro. Ayaw kini ipakaylap: ayaw i-post sa internet.',
   'Edit the site':'Usba ang site', 'Texts':'Mga teksto', 'Logo and colors':'Logo ug kolor', 'Menu tabs':'Mga tab sa menu', 'Lists':'Mga lista',

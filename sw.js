@@ -2,7 +2,7 @@
    Put this file next to index.html on GitHub. The site registers it by itself. */
 /* OneSignal push (only does anything once an App ID is set in config.js and you have subscribed). Guarded so the site still works offline if it cannot load. */
 try { self.importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch (e) { /* offline or not configured: the site still works */ }
-const VERSION = 'tubod-v3';
+const VERSION = 'tubod-v4';
 const CORE = ['./', './index.html', './config.js', './manifest.json', './logo-mark.png', './icon-192.png', './icon-512.png', './bible-game.html'];
 const PICS = 'tubod-pics-v1';
 const MAX_PICS = 250;
@@ -66,11 +66,13 @@ self.addEventListener('fetch', e => {
 
 /* tapping a church notification opens the church page */
 self.addEventListener('notificationclick', e => {
-  if (e.notification && e.notification.tag && e.notification.tag !== 'tubod-ann') return; // let OneSignal handle its own notifications
+  const tag = e.notification && e.notification.tag;
+  if (tag && tag !== 'tubod-ann' && tag !== 'tubod-chat') return; // let OneSignal handle its own notifications
+  const dest = tag === 'tubod-chat' ? './#messages' : './#news';
   e.notification.close();
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
     const open = list.find(c => c.url.indexOf(self.registration.scope) === 0);
-    if (open) { open.focus(); if (open.navigate) open.navigate('./#news').catch(() => {}); return; }
-    return self.clients.openWindow('./#news');
+    if (open) { open.focus(); if (open.navigate) open.navigate(dest).catch(() => {}); return; }
+    return self.clients.openWindow(dest);
   }));
 });
