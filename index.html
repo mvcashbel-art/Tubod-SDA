@@ -973,6 +973,7 @@ function applySync(j){
   const wasPending = S.pending; S.pending = !!j.pending;
   if (S.pending) setTimeout(() => showAuth('pending'), 0);
   if (!S.pending) setTimeout(loadGame, 300);
+  if (!S.pending) setTimeout(refreshConvos, 600);
   if (!S.pending && wasPending && $('#auth')){ const a = $('#auth'); a.remove(); setTimeout(() => { mount(); fromHash(); toast('Your account is approved. Welcome to the church family!'); }, 0); }
   schedule();
 }
@@ -1392,7 +1393,7 @@ function renderChrome(){
   $('#gearBtn').hidden = !S.canAttend; $('#gearBtn').setAttribute('aria-label', S.isAdmin ? 'Church settings' : 'Leader tools');
   $('#meBtn').innerHTML = S.uid ? av(S.uid, 'md') : '';
   $('#meBtn').hidden = !S.uid;
-  $('#msgBtn').hidden = !S.uid; paintMsgBadge();
+  $('#msgBtn').hidden = !S.uid || S.msgOn === false; paintMsgBadge();
   $('#fabGame').classList.toggle('on', !!S.uid);
 }
 /* ---------- this Sabbath, events, birthdays, livestream ---------- */
@@ -2151,7 +2152,7 @@ function renderProfile(){
     slot.innerHTML = `<section class="card pf">
       <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}<span class="pf-av">${av(id, 'xl')}</span></div>
       <div class="pf-main"><div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
-        ${!own ? `<div class="pf-btns">${S.uid && p.access !== 'roll' && !isDead(p) ? `<button class="btn primary" data-act="opendm" data-uid="${esc(id)}" data-title="${esc(p.name)}">${icon('chat')}Message</button>` : ''}${S.canMem ? `<button class="btn" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button>` : ''}</div>` : ''}
+        ${!own ? `<div class="pf-btns">${S.uid && S.msgOn !== false && p.access !== 'roll' && !isDead(p) ? `<button class="btn primary" data-act="opendm" data-uid="${esc(id)}" data-title="${esc(p.name)}">${icon('chat')}Message</button>` : ''}${S.canMem ? `<button class="btn" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button>` : ''}</div>` : ''}
         ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${(pushConfigured() ? osOn() : notifOn()) ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
         ${stOf(p) !== 'active' ? `<div class="st-box st-${stOf(p)}"><h3>${isDead(p) ? 'In loving memory' : 'Status: ' + mstLabel(stOf(p))}</h3>${p.statusDate ? `<p>${isDead(p) ? 'Passed away' : 'Since'} <b>${esc(stDate(p.statusDate))}</b></p>` : ''}${p.statusNote ? `<p data-notr>${esc(p.statusNote)}</p>` : ''}</div>` : ''}
@@ -2818,7 +2819,7 @@ function renderGroup(){
   const others = Object.values(S.profiles).filter(p => !isDead(p) && !(p.groups || []).includes(g.id)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
   keepInputs(slot, () => {
     slot.innerHTML = `<section class="card grp-head"><div class="sec-row"><div><p class="meta"><button type="button" class="linkish" data-act="gogroups">Ministry groups</button></p><h1>${esc(g.name)}</h1>${g.desc ? `<p class="muted" data-notr style="white-space:pre-wrap">${esc(g.desc)}</p>` : ''}</div>
-      <div class="se-acts">${canWrite ? `<button class="btn primary" data-act="opengroupchat" data-gid="${esc(g.id)}" data-title="${esc(g.name)}">${icon('chat')}Group chat</button>` : ''}<button class="btn ${me ? '' : 'primary'}" data-act="joingroup" data-id="${esc(g.id)}" data-on="${me ? '' : '1'}">${me ? 'Leave the group' : 'Join the group'}</button>${S.canMem ? `<button class="btn" data-act="editgroup" data-id="${esc(g.id)}">Edit</button><button class="btn danger" data-act="delgroup" data-id="${esc(g.id)}">Remove group</button>` : ''}</div></div>
+      <div class="se-acts">${canWrite && S.msgOn !== false ? `<button class="btn primary" data-act="opengroupchat" data-gid="${esc(g.id)}" data-title="${esc(g.name)}">${icon('chat')}Group chat</button>` : ''}<button class="btn ${me ? '' : 'primary'}" data-act="joingroup" data-id="${esc(g.id)}" data-on="${me ? '' : '1'}">${me ? 'Leave the group' : 'Join the group'}</button>${S.canMem ? `<button class="btn" data-act="editgroup" data-id="${esc(g.id)}">Edit</button><button class="btn danger" data-act="delgroup" data-id="${esc(g.id)}">Remove group</button>` : ''}</div></div>
       <h3 class="rec-h">Members <span class="meta">(${mem.length})</span></h3>
       <div class="grp-mem">${mem.map(p => `<span class="chipmem"><button type="button" data-act="profile" data-uid="${esc(p.id)}">${av(p.id, 'sm')}<span>${esc(p.name)}</span></button>${S.canMem ? `<button type="button" class="x" data-act="grpdel" data-uid="${esc(p.id)}" aria-label="Take ${esc(p.name)} out of the group">${icon('x')}</button>` : ''}</span>`).join('') || '<span class="muted">No members yet.</span>'}</div>
       ${S.canMem && others.length ? `<div class="se-acts" style="margin-top:10px"><select id="grpAdd" aria-label="Add a member to the group"><option value="">Add a member…</option>${others.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select><button class="btn sm" data-act="grpadd">Add</button></div>` : ''}</section>
@@ -3218,8 +3219,8 @@ function msgDay(ms){ const iso = phISO(ms); if (iso === phISO()) return 'Today';
 function paintMsgBadge(){ const b = $('#msgBadge'); if (!b) return; const n = S.msgUnread || 0; b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; }
 async function refreshConvos(){
   if (!S.uid) return;
-  try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; paintMsgBadge(); if ($('#msgList') && !MSG.conv) renderConvoList(); }
-  catch (e){ /* badge stays as-is */ }
+  try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; S.msgOn = true; paintMsgBadge(); const b = $('#msgBtn'); if (b) b.hidden = false; if ($('#msgList') && !MSG.conv) renderConvoList(); }
+  catch (e){ if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#msgBtn'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); } }
 }
 function ensureMsgModal(){
   if ($('#msgPane')) return $('#modal');
