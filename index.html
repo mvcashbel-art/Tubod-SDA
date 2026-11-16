@@ -702,22 +702,47 @@ const API_URL = /^https:\/\/script\.google(usercontent)?\.com\//.test(RAW_URL) ?
 /* OneSignal: notifications even when the church page is fully closed. Off unless an App ID is set in config.js. */
 const OS_APP_ID = String((window.CHURCH_CONFIG && window.CHURCH_CONFIG.ONESIGNAL_APP_ID) || '').trim();
 const pushConfigured = () => !!OS_APP_ID;
-let OS = null, osReady = false;
+let OS = null, osReady = false, osSdkFailed = false;
+/* Does this browser support real push at all? In-app browsers (opening the link
+   inside Messenger, Facebook, Gmail, Viber) have no service worker / push, so
+   push can never start there and we tell the member to open it in Chrome. */
+function pushSupported(){
+  return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+}
 function osLoad(){
-  if (!pushConfigured() || window.OneSignalDeferred) return;
-  window.OneSignalDeferred = [];
-  window.OneSignalDeferred.push(async OneSignal => {
-    OS = OneSignal;
-    try {
-      await OneSignal.init({ appId: OS_APP_ID, serviceWorkerPath: 'sw.js', serviceWorkerParam: { scope: './' }, allowLocalhostAsSecureOrigin: true, autoResubscribe: true });
-      osReady = true;
-      osLogin();
-      if (S.route === 'profile' && S.profileId === S.uid) renderProfile();
-    } catch (e) { /* the simpler notifications still work */ }
+  if (!pushConfigured() || !pushSupported()) return;
+  if (!window.OneSignalDeferred){
+    window.OneSignalDeferred = [];
+    window.OneSignalDeferred.push(async OneSignal => {
+      OS = OneSignal;
+      try {
+        await OneSignal.init({ appId: OS_APP_ID, serviceWorkerPath: 'sw.js', serviceWorkerParam: { scope: './' }, allowLocalhostAsSecureOrigin: true, autoResubscribe: true });
+        osReady = true;
+        osLogin();
+        if (S.route === 'profile' && S.profileId === S.uid) renderProfile();
+      } catch (e) { /* the simpler notifications still work */ }
+    });
+  }
+  /* (re)load the SDK. If an earlier load failed (weak signal), a fresh attempt retries it. */
+  const old = document.getElementById('os-sdk'); if (old && osSdkFailed) old.remove();
+  if (!document.getElementById('os-sdk')){
+    osSdkFailed = false;
+    const sc = document.createElement('script'); sc.id = 'os-sdk';
+    sc.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'; sc.defer = true;
+    sc.onerror = () => { osSdkFailed = true; };
+    document.head.appendChild(sc);
+  }
+}
+/* wait up to ms for OneSignal to finish starting, polling as it loads */
+function osWaitReady(ms){
+  return new Promise(resolve => {
+    const t0 = Date.now();
+    (function chk(){
+      if (osReady && OS) return resolve(true);
+      if (osSdkFailed || Date.now() - t0 > ms) return resolve(false);
+      setTimeout(chk, 300);
+    })();
   });
-  const sc = document.createElement('script'); sc.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'; sc.defer = true;
-  sc.onerror = () => { osReady = false; };
-  document.head.appendChild(sc);
 }
 const osSub = () => (OS && OS.User && OS.User.PushSubscription) || null;
 const osOn = () => { const u = osSub(); return !!(u && u.optedIn); };
@@ -2918,7 +2943,13 @@ const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else 
 const notifOn = () => lsGet(NOTIF_KEY) === '1' && 'Notification' in window && Notification.permission === 'granted';
 async function toggleNotif(){
   if (pushConfigured()){
-    if (!osReady || !OS){ toast('Notifications are still starting up. Try again in a moment.'); return; }
+    if (!pushSupported()){ toast('To turn on notifications, open this page in Chrome — not inside Messenger, Facebook or Gmail. Tap the ⋮ menu and choose "Open in Chrome", then try again.'); return; }
+    if (!osReady || !OS){
+      toast('Starting notifications…');
+      osLoad();
+      const ready = await osWaitReady(10000);
+      if (!ready){ toast('Notifications could not start. Make sure you opened this in Chrome and have signal, then tap Notifications again.'); return; }
+    }
     try {
       const u = osSub();
       if (u && u.optedIn){ await u.optOut(); toast('Notifications are off on this phone.'); }
