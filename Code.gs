@@ -26,7 +26,10 @@ const SCHEMA = {
   Prayers:   ['id', 'name', 'contact', 'request', 'private', 'createdAt', 'handled', 'handledBy', 'consent'],
   Offerings: ['id', 'date', 'kind', 'amount', 'note', 'recordedBy', 'createdAt'],
   Transfers: ['id', 'name', 'direction', 'church', 'date', 'note', 'recordedBy', 'createdAt'],
-  Activity:  ['id', 'time', 'uid', 'name', 'action', 'detail']
+  Activity:  ['id', 'time', 'uid', 'name', 'action', 'detail'],
+  Convos:    ['id', 'kind', 'a', 'b', 'groupId', 'lastTime', 'lastText', 'lastFrom'],
+  Messages:  ['id', 'convId', 'from', 'text', 'time'],
+  MsgReads:  ['convId', 'uid', 'time']
 };
 /* who may do what: admin = everything; clerk = members, records and attendance; editor = announcements, This Sabbath, events, program and attendance */
 const LEVELS = ['admin', 'clerk', 'editor', 'member'];
@@ -268,7 +271,7 @@ function resetPasswordFromEditor() {
 
 /* ---------- web app entry points ---------- */
 function doGet() {
-  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, giving: true, roster: true, anniversaries: true, visitors: true, prayers: true, lesson: true, offerings: true, transfers: true, consent: true, activity: true, photoMonths: true, v: 14 });
+  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, giving: true, roster: true, anniversaries: true, visitors: true, prayers: true, lesson: true, offerings: true, transfers: true, consent: true, activity: true, photoMonths: true, messaging: true, v: 15 });
 }
 
 function doPost(e) {
@@ -305,7 +308,7 @@ const OPEN = { ping: true, publicInfo: true, register: true, login: true, visito
 /* what a new member may do while waiting for approval */
 const PENDING_OK = { sync: true, logout: true, ping: true };
 /* these change no shared data, so they must not make everyone reload (and must not throw away the saved copy) */
-const NOBUMP = { login: true, logout: true, backupNow: true, saveScore: true, addOffering: true, deleteOffering: true, addTransfer: true, deleteTransfer: true };
+const NOBUMP = { login: true, logout: true, backupNow: true, saveScore: true, addOffering: true, deleteOffering: true, addTransfer: true, deleteTransfer: true, sendMsg: true, markRead: true };
 const WRITE = {
   register: true, login: true, logout: true, post: true, deletePost: true, pinPost: true, comment: true,
   deleteComment: true, react: true, saveProfile: true, changePassword: true, uploadFile: true, finishUpload: true, deleteFile: true,
@@ -314,7 +317,8 @@ const WRITE = {
   setMemberStatus: true, addPerson: true, adminSaveMember: true, saveSite: true,
   saveAttendance: true, saveGroup: true, deleteGroup: true, joinGroup: true, setGroupMember: true,
   saveOfficers: true, saveGiving: true, saveRoster: true, handleVisitor: true,
-  prayerRequest: true, handlePrayer: true, saveLesson: true, addOffering: true, deleteOffering: true, addTransfer: true, deleteTransfer: true
+  prayerRequest: true, handlePrayer: true, saveLesson: true, addOffering: true, deleteOffering: true, addTransfer: true, deleteTransfer: true,
+  sendMsg: true, markRead: true
 };
 
 const ACTIONS = {
@@ -823,6 +827,133 @@ const ACTIONS = {
       .map(function (x) { return { id: x.id, time: Number(x.time) || 0, action: x.action, detail: x.detail }; });
     rows.sort(function (a, b) { return b.time - a.time; });
     return { activity: rows.slice(0, 500), name: nameOf_(uid) };
+  },
+
+  /* ---------- messaging: direct messages + group chats ---------- */
+
+  /* Send a message to one member (to) or to a group chat (groupId). */
+  sendMsg: function (r, me) {
+    const text = clean_(r.text, 4000, true);
+    if (!text) throw err_('Write a message first.', 'invalid');
+    let convId, kind, a = '', b = '', groupId = '', label = '';
+    if (r.groupId) {
+      const g = readAll_('Groups').filter(function (x) { return x.id === r.groupId; })[0];
+      if (!g) throw err_('That group is gone.', 'missing');
+      if (me.access !== 'admin' && !inGroup_(me, g.id)) throw err_('You are not in that group.', 'denied');
+      kind = 'group'; groupId = g.id; convId = grpConvId_(g.id); label = 'Group chat: ' + g.name;
+    } else {
+      const to = memberById_(r.to);
+      if (!to) throw err_('That member is no longer here.', 'missing');
+      if (to.id === me.id) throw err_('You cannot message yourself.', 'invalid');
+      if (!to.hash) throw err_('That member does not have an account yet.', 'invalid');
+      if (to.access === 'roll' || to.mstatus === 'deceased') throw err_('You cannot message that member.', 'invalid');
+      kind = 'dm'; const pair = [me.id, to.id].sort(); a = pair[0]; b = pair[1]; convId = dmConvId_(me.id, to.id); label = 'Messaged ' + to.name;
+    }
+    const now = nowMs_();
+    const mid = id_('m');
+    append_('Messages', { id: mid, convId: convId, from: me.id, text: text, time: String(now) });
+    const snippet = text.slice(0, 120);
+    const existing = readAll_('Convos').filter(function (x) { return x.id === convId; })[0];
+    if (existing) update_('Convos', convId, { lastTime: String(now), lastText: snippet, lastFrom: me.id });
+    else append_('Convos', { id: convId, kind: kind, a: a, b: b, groupId: groupId, lastTime: String(now), lastText: snippet, lastFrom: me.id });
+    setRead_(convId, me.id, now);
+    activity_(me, 'message', label);
+    return { id: mid, time: now, convId: convId };
+  },
+
+  /* The member's conversation list: their DMs and the group chats they belong to, newest first, with unread counts. */
+  convos: function (r, me) {
+    const convos = readAll_('Convos');
+    const reads = {};
+    readAll_('MsgReads').forEach(function (x) { if (x.uid === me.id) reads[x.convId] = Number(x.time) || 0; });
+    const unreadBy = {};
+    readAll_('Messages').forEach(function (m) {
+      if (m.from === me.id) return;
+      if ((Number(m.time) || 0) > (reads[m.convId] || 0)) unreadBy[m.convId] = (unreadBy[m.convId] || 0) + 1;
+    });
+    const groups = readAll_('Groups');
+    const out = [], seen = {};
+    convos.forEach(function (c) {
+      if (c.kind === 'dm' && (c.a === me.id || c.b === me.id)) {
+        const other = c.a === me.id ? c.b : c.a, om = memberById_(other);
+        if (!om || om.access === 'roll' || om.mstatus === 'deceased') return;
+        out.push({ id: c.id, kind: 'dm', who: om.name, uid: other, avatar: om.avatar || '', lastText: c.lastText, lastTime: Number(c.lastTime) || 0, fromMe: c.lastFrom === me.id, unread: unreadBy[c.id] || 0 });
+        seen[c.id] = true;
+      } else if (c.kind === 'group' && inGroup_(me, c.groupId)) {
+        const g = groups.filter(function (x) { return x.id === c.groupId; })[0];
+        out.push({ id: c.id, kind: 'group', who: g ? g.name : 'Group', groupId: c.groupId, lastText: c.lastText, lastTime: Number(c.lastTime) || 0, fromMe: c.lastFrom === me.id, unread: unreadBy[c.id] || 0 });
+        seen[c.id] = true;
+      }
+    });
+    groups.forEach(function (g) {
+      if (!inGroup_(me, g.id)) return;
+      const cid = grpConvId_(g.id);
+      if (!seen[cid]) out.push({ id: cid, kind: 'group', who: g.name, groupId: g.id, lastText: '', lastTime: 0, fromMe: false, unread: 0 });
+    });
+    out.sort(function (a, b) { return b.lastTime - a.lastTime; });
+    return { convos: out, unread: out.reduce(function (s, c) { return s + c.unread; }, 0) };
+  },
+
+  /* Read one conversation's messages. Give groupId, a peer's uid (to), or convId. */
+  thread: function (r, me) {
+    let convId, kind, title = '', peer = null;
+    if (r.groupId) {
+      const g = readAll_('Groups').filter(function (x) { return x.id === r.groupId; })[0];
+      if (!g) throw err_('That group is gone.', 'missing');
+      if (me.access !== 'admin' && !inGroup_(me, g.id)) throw err_('You are not in that group.', 'denied');
+      convId = grpConvId_(g.id); kind = 'group'; title = g.name;
+    } else if (r.to) {
+      const to = memberById_(r.to);
+      if (!to) throw err_('That member is no longer here.', 'missing');
+      convId = dmConvId_(me.id, to.id); kind = 'dm'; title = to.name; peer = { id: to.id, name: to.name, avatar: to.avatar || '' };
+    } else if (r.convId) {
+      const c = readAll_('Convos').filter(function (x) { return x.id === r.convId; })[0];
+      if (!c) return { convId: r.convId, kind: 'dm', title: '', messages: [] };
+      convId = c.id;
+      if (c.kind === 'dm') {
+        if (c.a !== me.id && c.b !== me.id) throw err_('That is not your conversation.', 'denied');
+        const other = c.a === me.id ? c.b : c.a, om = memberById_(other);
+        kind = 'dm'; title = om ? om.name : 'Member'; peer = om ? { id: other, name: om.name, avatar: om.avatar || '' } : null;
+      } else {
+        if (me.access !== 'admin' && !inGroup_(me, c.groupId)) throw err_('That is not your conversation.', 'denied');
+        const g = readAll_('Groups').filter(function (x) { return x.id === c.groupId; })[0];
+        kind = 'group'; title = g ? g.name : 'Group';
+      }
+    } else throw err_('No conversation chosen.', 'invalid');
+    const msgs = readAll_('Messages').filter(function (m) { return m.convId === convId; })
+      .map(function (m) { return { id: m.id, from: m.from, fromName: nameOf_(m.from), text: m.text, time: Number(m.time) || 0, mine: m.from === me.id }; })
+      .sort(function (a, b) { return a.time - b.time; });
+    return { convId: convId, kind: kind, title: title, peer: peer, messages: msgs.slice(-300) };
+  },
+
+  /* Mark a conversation read up to now (called when the member opens or reads it). */
+  markRead: function (r, me) {
+    const convId = String(r.convId || '');
+    if (!convId) throw err_('No conversation.', 'invalid');
+    setRead_(convId, me.id, nowMs_());
+    return {};
+  },
+
+  /* Admin safeguarding: list every conversation. */
+  adminConvos: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only the church admin can review messages.', 'denied');
+    const groups = readAll_('Groups');
+    const out = readAll_('Convos').map(function (c) {
+      if (c.kind === 'dm') return { id: c.id, kind: 'dm', who: (nameOf_(c.a) || '?') + ' & ' + (nameOf_(c.b) || '?'), lastText: c.lastText, lastTime: Number(c.lastTime) || 0 };
+      const g = groups.filter(function (x) { return x.id === c.groupId; })[0];
+      return { id: c.id, kind: 'group', who: (g ? g.name : 'Group') + ' (group chat)', lastText: c.lastText, lastTime: Number(c.lastTime) || 0 };
+    }).sort(function (a, b) { return b.lastTime - a.lastTime; });
+    return { convos: out };
+  },
+
+  /* Admin safeguarding: read any conversation (does not change members' read state). */
+  adminThread: function (r, me) {
+    if (me.access !== 'admin') throw err_('Only the church admin can review messages.', 'denied');
+    const convId = String(r.convId || '');
+    const msgs = readAll_('Messages').filter(function (m) { return m.convId === convId; })
+      .map(function (m) { return { from: m.from, fromName: nameOf_(m.from), text: m.text, time: Number(m.time) || 0 }; })
+      .sort(function (a, b) { return a.time - b.time; });
+    return { messages: msgs };
   },
 
   getAttendance: function (r, me) {
@@ -1360,6 +1491,22 @@ function phMonthLabel_(ms) { const d = new Date((Number(ms) || nowMs_()) + 8 * 3
 function monthFolder_(me, ms) { const base = memberFolder_(me), label = phMonthLabel_(ms); const it = base.getFoldersByName(label); return it.hasNext() ? it.next() : base.createFolder(label); }
 /* quiet per-person activity trail (admins only can read it) */
 function activity_(me, action, detail) { if (!me) return; try { append_('Activity', { id: id_('ac'), time: String(nowMs_()), uid: me.id, name: me.name, action: action, detail: String(detail || '').slice(0, 300) }); } catch (e) {} }
+
+/* ---------- messaging ---------- */
+function memberById_(uid) { return readAll_('Members').filter(function (x) { return x.id === uid; })[0]; }
+function inGroup_(m, gid) { return !!m && String(m.groups || '').split(',').indexOf(gid) >= 0; }
+function dmConvId_(u1, u2) { return 'dm_' + [u1, u2].sort().join('~'); }
+function grpConvId_(gid) { return 'grp_' + gid; }
+function setRead_(convId, uid, time) {
+  const s = sh_('MsgReads'), n = s.getLastRow();
+  if (n >= 2) {
+    const vals = s.getRange(2, 1, n - 1, 2).getValues();
+    for (let i = 0; i < vals.length; i++) {
+      if (String(vals[i][0]) === convId && String(vals[i][1]) === uid) { s.getRange(i + 2, 3).setValue(String(time)); return; }
+    }
+  }
+  append_('MsgReads', { convId: convId, uid: uid, time: String(time) });
+}
 function time12_(hhmm) {
   const hm = String(hhmm).split(':'); let h = Number(hm[0]);
   const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
