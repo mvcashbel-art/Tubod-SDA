@@ -55,6 +55,23 @@ function osPush_(title, body) {
     });
   } catch (e) { /* push is best-effort */ }
 }
+/* push to specific members only (by their member id = OneSignal external id). Used for messages and worship parts. */
+function osPushTo_(ids, title, body) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const appId = props.getProperty('ONESIGNAL_APP_ID'), key = props.getProperty('ONESIGNAL_API_KEY');
+    const list = (ids || []).filter(Boolean).map(String);
+    if (!appId || !key || !list.length) return;
+    UrlFetchApp.fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'post', contentType: 'application/json',
+      headers: { Authorization: 'Basic ' + key },
+      payload: JSON.stringify({ app_id: appId, include_external_user_ids: list.slice(0, 2000), channel_for_external_user_ids: 'push',
+        headings: { en: String(title || 'Tubod SDA Church').slice(0, 80) },
+        contents: { en: String(body || '').replace(/\s+/g, ' ').trim().slice(0, 200) || 'New message' } }),
+      muteHttpExceptions: true
+    });
+  } catch (e) { /* push is best-effort */ }
+}
 /* the record of changes, so leaders can always see who changed what */
 function log_(me, kind, target, detail) {
   append_('Log', { id: id_('l'), time: String(nowMs_()), by: me ? me.id : 'system', byName: me ? me.name : 'System', kind: kind,
@@ -271,7 +288,7 @@ function resetPasswordFromEditor() {
 
 /* ---------- web app entry points ---------- */
 function doGet() {
-  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, giving: true, roster: true, anniversaries: true, visitors: true, prayers: true, lesson: true, offerings: true, transfers: true, consent: true, activity: true, photoMonths: true, messaging: true, v: 15 });
+  return json_({ ok: true, app: 'Tubod SDA Church', rev: rev_(), bigUpload: true, memberFolders: true, memberStatus: true, siteEditor: true, records: true, officers: true, push: true, giving: true, roster: true, anniversaries: true, visitors: true, prayers: true, lesson: true, offerings: true, transfers: true, consent: true, activity: true, photoMonths: true, messaging: true, pushTargeted: true, v: 16 });
 }
 
 function doPost(e) {
@@ -858,6 +875,14 @@ const ACTIONS = {
     else append_('Convos', { id: convId, kind: kind, a: a, b: b, groupId: groupId, lastTime: String(now), lastText: snippet, lastFrom: me.id });
     setRead_(convId, me.id, now);
     activity_(me, 'message', label);
+    /* notify the people on the other end, even when their app is closed */
+    try {
+      const preview = text.slice(0, 160);
+      if (kind === 'dm') osPushTo_([b === me.id ? a : b], me.name, preview);
+      else { const g2 = readAll_('Groups').filter(function (x) { return x.id === groupId; })[0];
+        const ids = readAll_('Members').filter(function (m) { return m.id !== me.id && m.hash && inGroup_(m, groupId); }).map(function (m) { return m.id; });
+        osPushTo_(ids, (g2 ? g2.name : 'Group chat') + ' · ' + me.name, preview); }
+    } catch (e) {}
     return { id: mid, time: now, convId: convId };
   },
 
@@ -1183,10 +1208,26 @@ const ACTIONS = {
       return { role: clean_(x && x.role, 40), name: clean_(x && x.name, 80) };
     }).filter(function (x) { return x.role || x.name; });
     const id = sv.id + '_' + r.date;
+    const prev = readAll_('Program').filter(function (x) { return x.id === id; })[0];
     const row = { id: id, svcId: sv.id, date: r.date, items: JSON.stringify(items), updatedAt: String(nowMs_()) };
-    if (readAll_('Program').some(function (x) { return x.id === id; })) update_('Program', id, row);
+    if (prev) update_('Program', id, row);
     else append_('Program', row);
     remove_('Program', function (x) { return x.date < phDate_(nowMs_() - 60 * 864e5); });
+    /* notify members newly given a part (matched by name to an account) */
+    try {
+      let oldItems = []; if (prev) { try { oldItems = JSON.parse(prev.items || '[]'); } catch (e) {} }
+      const had = {}; oldItems.forEach(function (it) { had[(it.role || '') + '|' + (it.name || '')] = 1; });
+      const nameMap = {}; readAll_('Members').forEach(function (m) { if (m.hash && m.access !== 'roll' && m.mstatus !== 'deceased') nameMap[String(m.name).trim().toLowerCase()] = m.id; });
+      const parts = {};
+      items.forEach(function (it) {
+        if (!it.name || had[(it.role || '') + '|' + it.name]) return;
+        const uid = nameMap[it.name.trim().toLowerCase()];
+        if (uid) (parts[uid] = parts[uid] || []).push(it.role || 'a part');
+      });
+      Object.keys(parts).forEach(function (uid) {
+        osPushTo_([uid], 'Worship assignment', 'You have ' + parts[uid].join(', ') + ' for the worship on ' + r.date + '.');
+      });
+    } catch (e) {}
     return {};
   },
 
