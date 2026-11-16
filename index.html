@@ -711,6 +711,7 @@ function osLoad(){
     try {
       await OneSignal.init({ appId: OS_APP_ID, serviceWorkerPath: 'sw.js', serviceWorkerParam: { scope: './' }, allowLocalhostAsSecureOrigin: true, autoResubscribe: true });
       osReady = true;
+      osLogin();
       if (S.route === 'profile' && S.profileId === S.uid) renderProfile();
     } catch (e) { /* the simpler notifications still work */ }
   });
@@ -720,6 +721,8 @@ function osLoad(){
 }
 const osSub = () => (OS && OS.User && OS.User.PushSubscription) || null;
 const osOn = () => { const u = osSub(); return !!(u && u.optedIn); };
+/* tie this phone's push subscription to the signed-in member, so messages can reach only them */
+function osLogin(){ if (OS && osReady && S.uid){ try { OS.login(S.uid); } catch (e) {} } }
 
 /* ---------- helpers ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -974,6 +977,7 @@ function applySync(j){
   if (S.pending) setTimeout(() => showAuth('pending'), 0);
   if (!S.pending) setTimeout(loadGame, 300);
   if (!S.pending) setTimeout(refreshConvos, 600);
+  if (!S.pending) setTimeout(osLogin, 1200);
   if (!S.pending && wasPending && $('#auth')){ const a = $('#auth'); a.remove(); setTimeout(() => { mount(); fromHash(); toast('Your account is approved. Welcome to the church family!'); }, 0); }
   schedule();
 }
