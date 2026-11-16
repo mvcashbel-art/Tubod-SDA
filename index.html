@@ -561,6 +561,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sms-opt input{margin-top:3px}
 /* sign in and join */
 body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth) .ann-strip{visibility:hidden}
+body:has(#auth) .fab-game{display:none!important}
 .auth{position:fixed;inset:0;z-index:40;display:grid;place-items:start center;padding:24px 16px;overflow-y:auto;background:rgba(238,244,247,.7);backdrop-filter:blur(8px)}
 .auth-card{width:100%;max-width:430px;display:flex;flex-direction:column;gap:14px;padding:22px;margin:auto 0}
 .auth-brand{display:flex;gap:12px;align-items:center}
@@ -619,6 +620,45 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
 .cal-more{color:var(--muted);font-size:.68rem}
 .cal-note{font-size:.8rem;margin-top:10px}
 @media (max-width:520px){.cal-c{min-height:52px;font-size:.66rem}.cal-c .cal-ev{font-size:.62rem}}
+/* floating Bible-game button */
+.fab-game{position:fixed;right:16px;bottom:20px;z-index:19;display:none;align-items:center;gap:7px;background:var(--ink);color:#fff;border-radius:999px;padding:11px 16px;font-weight:600;font-size:.9rem;box-shadow:0 6px 18px rgba(0,0,0,.22);text-decoration:none;cursor:pointer}
+.fab-game .ic{width:20px;height:20px}
+.fab-game.on{display:flex}
+@media (max-width:900px){.fab-game{right:14px;bottom:calc(72px + env(safe-area-inset-bottom,0px))}}
+/* messaging */
+.msg-btn{position:relative}
+.msg-badge{position:absolute;top:-1px;right:-1px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+#msgPane{display:flex;flex-direction:column;min-height:0;height:min(68vh,560px)}
+.convo-list{overflow-y:auto;display:flex;flex-direction:column;margin:0 -4px}
+.convo-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 8px;cursor:pointer;color:inherit;font:inherit}
+.convo-row:hover{background:#F2F7F9}
+.convo-row.un .convo-pre{font-weight:600;color:var(--ink)}
+.convo-grp{background:var(--accent-dark,#2a7d5f);color:#fff}
+.convo-grp .ic{width:20px;height:20px}
+.convo-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.convo-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.convo-top b{font-size:.95rem}
+.convo-time{font-size:.72rem;color:var(--muted);flex:none}
+.convo-pre{font-size:.85rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.convo-badge{flex:none;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.msg-review{margin:8px 0;width:100%}
+.msg-review-note{font-size:.85rem;margin-bottom:6px}
+.thread-head{display:flex;align-items:center;gap:8px;padding:0 0 8px;border-bottom:1px solid var(--line)}
+.thread-head .btn{padding:6px 8px}
+.thread-head b{font-size:1rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;padding:10px 2px}
+.thread-day{text-align:center;margin:8px 0 4px}
+.thread-day span{font-size:.72rem;color:var(--muted);background:#EEF3F5;padding:2px 10px;border-radius:999px}
+.bub{max-width:80%;padding:7px 11px;border-radius:14px;font-size:.92rem;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub.me{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:5px}
+.bub.them{align-self:flex-start;background:#EEF3F5;color:var(--ink);border-bottom-left-radius:5px}
+.bub-name{display:block;font-size:.72rem;font-weight:700;color:var(--accent-dark,#2a7d5f);margin-bottom:2px}
+.bub-time{display:block;font-size:.62rem;opacity:.7;margin-top:3px;text-align:right}
+.thread-send{display:flex;gap:8px;align-items:flex-end;padding-top:8px;border-top:1px solid var(--line)}
+.thread-send textarea{flex:1;border:1px solid var(--line);border-radius:18px;padding:9px 14px;resize:none;max-height:120px;background:#F7FAFB;line-height:1.4;font:inherit}
+.thread-send textarea:focus{background:#fff}
+.thread-send button{flex:none;border-radius:50%;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center}
+.thread-send button .ic{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -635,6 +675,7 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
   <nav class="dnav" id="dnav" aria-label="Main"></nav>
   <div class="top-r">
     <button class="lang-btn" id="langBtn" type="button" data-act="lang" data-notr></button>
+    <button class="icon-btn msg-btn" id="msgBtn" data-act="messages" aria-label="Messages" hidden><span class="msg-badge" id="msgBadge" hidden></span></button>
     <button class="icon-btn" id="gearBtn" data-act="settings" aria-label="Church settings" hidden></button>
     <button class="me-btn" id="meBtn" data-act="me" aria-label="My profile" hidden></button>
   </div>
@@ -646,6 +687,7 @@ body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth
   <aside class="side" id="side"></aside>
 </div>
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
+<a class="fab-game" id="fabGame" href="bible-game.html" aria-label="Open the Bible game"><span>Game</span></a>
 <div id="upbar" hidden role="status" aria-live="polite"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <noscript><div class="note warn" style="margin:16px">This site needs JavaScript. Please turn it on in your browser.</div></noscript>
@@ -703,6 +745,8 @@ const ICONS = {
   file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6',
   music:'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
   x:'M18 6L6 18M6 6l12 12',
+  send:'M22 2L11 13M22 2l-7 20-4-9-9-4z',
+  back:'M19 12H5M12 19l-7-7 7-7',
   book:'M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z',
   up:'M12 19V5M5 12l7-7 7 7',
   down:'M12 5v14M19 12l-7 7-7-7',
@@ -970,7 +1014,7 @@ let pollTimer = 0, polling = false;
 async function pollNow(){
   if (polling || !S.token || (document.hidden && !notifOn())) return;
   polling = true;
-  try { const j = await api('ping'); if (j.rev !== S.rev) await sync(); else if (S.offline){ S.offline = false; schedule(); } }
+  try { const j = await api('ping'); if (j.rev !== S.rev) await sync(); else if (S.offline){ S.offline = false; schedule(); } refreshConvos(); }
   catch (e){ if (e.code === 'network'){ S.offline = true; schedule(); } }
   polling = false;
 }
@@ -1325,7 +1369,7 @@ function fromHash(){
   if (['home','news','library','members','groups'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[4])).map(([r, label0, ic, href]) => {
+  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && (n[3] || n[4]))).map(([r, label0, ic, href]) => {
     const bisL = LANG === 'ceb' && NAV_BIS[r], label = bisL || label0, nt = bisL ? ' data-notr' : '';
     if (href) return `<a href="${href}"${nt}>${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : r === 'groups' ? (S.route === 'groups' || S.route === 'group') : S.route === r);
@@ -1348,6 +1392,8 @@ function renderChrome(){
   $('#gearBtn').hidden = !S.canAttend; $('#gearBtn').setAttribute('aria-label', S.isAdmin ? 'Church settings' : 'Leader tools');
   $('#meBtn').innerHTML = S.uid ? av(S.uid, 'md') : '';
   $('#meBtn').hidden = !S.uid;
+  $('#msgBtn').hidden = !S.uid; paintMsgBadge();
+  $('#fabGame').classList.toggle('on', !!S.uid);
 }
 /* ---------- this Sabbath, events, birthdays, livestream ---------- */
 const phNow = () => new Date(Date.now() + TZ * 36e5);
@@ -2105,7 +2151,7 @@ function renderProfile(){
     slot.innerHTML = `<section class="card pf">
       <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}<span class="pf-av">${av(id, 'xl')}</span></div>
       <div class="pf-main"><div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
-        ${S.canMem && !own ? `<div class="pf-btns"><button class="btn primary" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button></div>` : ''}
+        ${!own ? `<div class="pf-btns">${S.uid && p.access !== 'roll' && !isDead(p) ? `<button class="btn primary" data-act="opendm" data-uid="${esc(id)}" data-title="${esc(p.name)}">${icon('chat')}Message</button>` : ''}${S.canMem ? `<button class="btn" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button>` : ''}</div>` : ''}
         ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${(pushConfigured() ? osOn() : notifOn()) ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
         ${stOf(p) !== 'active' ? `<div class="st-box st-${stOf(p)}"><h3>${isDead(p) ? 'In loving memory' : 'Status: ' + mstLabel(stOf(p))}</h3>${p.statusDate ? `<p>${isDead(p) ? 'Passed away' : 'Since'} <b>${esc(stDate(p.statusDate))}</b></p>` : ''}${p.statusNote ? `<p data-notr>${esc(p.statusNote)}</p>` : ''}</div>` : ''}
@@ -2772,7 +2818,7 @@ function renderGroup(){
   const others = Object.values(S.profiles).filter(p => !isDead(p) && !(p.groups || []).includes(g.id)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
   keepInputs(slot, () => {
     slot.innerHTML = `<section class="card grp-head"><div class="sec-row"><div><p class="meta"><button type="button" class="linkish" data-act="gogroups">Ministry groups</button></p><h1>${esc(g.name)}</h1>${g.desc ? `<p class="muted" data-notr style="white-space:pre-wrap">${esc(g.desc)}</p>` : ''}</div>
-      <div class="se-acts"><button class="btn ${me ? '' : 'primary'}" data-act="joingroup" data-id="${esc(g.id)}" data-on="${me ? '' : '1'}">${me ? 'Leave the group' : 'Join the group'}</button>${S.canMem ? `<button class="btn" data-act="editgroup" data-id="${esc(g.id)}">Edit</button><button class="btn danger" data-act="delgroup" data-id="${esc(g.id)}">Remove group</button>` : ''}</div></div>
+      <div class="se-acts">${canWrite ? `<button class="btn primary" data-act="opengroupchat" data-gid="${esc(g.id)}" data-title="${esc(g.name)}">${icon('chat')}Group chat</button>` : ''}<button class="btn ${me ? '' : 'primary'}" data-act="joingroup" data-id="${esc(g.id)}" data-on="${me ? '' : '1'}">${me ? 'Leave the group' : 'Join the group'}</button>${S.canMem ? `<button class="btn" data-act="editgroup" data-id="${esc(g.id)}">Edit</button><button class="btn danger" data-act="delgroup" data-id="${esc(g.id)}">Remove group</button>` : ''}</div></div>
       <h3 class="rec-h">Members <span class="meta">(${mem.length})</span></h3>
       <div class="grp-mem">${mem.map(p => `<span class="chipmem"><button type="button" data-act="profile" data-uid="${esc(p.id)}">${av(p.id, 'sm')}<span>${esc(p.name)}</span></button>${S.canMem ? `<button type="button" class="x" data-act="grpdel" data-uid="${esc(p.id)}" aria-label="Take ${esc(p.name)} out of the group">${icon('x')}</button>` : ''}</span>`).join('') || '<span class="muted">No members yet.</span>'}</div>
       ${S.canMem && others.length ? `<div class="se-acts" style="margin-top:10px"><select id="grpAdd" aria-label="Add a member to the group"><option value="">Add a member…</option>${others.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select><button class="btn sm" data-act="grpadd">Add</button></div>` : ''}</section>
@@ -3165,6 +3211,110 @@ async function addComment(pid, input){
   const i2 = document.getElementById(input.id); if (i2){ i2.disabled = false; i2.focus(); }
 }
 
+/* ---------- messaging ---------- */
+let msgPoll = 0; const MSG = { conv: null, count: 0 };
+function msgClock(ms){ const d = new Date(ms + TZ * 36e5); let h = d.getUTCHours(); const mn = String(d.getUTCMinutes()).padStart(2, '0'); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + mn + ' ' + ap; }
+function msgDay(ms){ const iso = phISO(ms); if (iso === phISO()) return 'Today'; if (iso === phISO(Date.now() - 864e5)) return 'Yesterday'; const [Y, M, D] = iso.split('-').map(Number); return MONTHS[M - 1] + ' ' + D + (Y !== phNow().getUTCFullYear() ? ' ' + Y : ''); }
+function paintMsgBadge(){ const b = $('#msgBadge'); if (!b) return; const n = S.msgUnread || 0; b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; }
+async function refreshConvos(){
+  if (!S.uid) return;
+  try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; paintMsgBadge(); if ($('#msgList') && !MSG.conv) renderConvoList(); }
+  catch (e){ /* badge stays as-is */ }
+}
+function ensureMsgModal(){
+  if ($('#msgPane')) return $('#modal');
+  const m = openModal('Messages', '<div id="msgPane"></div>', true);
+  const mo = new MutationObserver(() => { if (!document.body.contains(m)){ stopThreadPoll(); MSG.conv = null; mo.disconnect(); } });
+  mo.observe(document.body, { childList: true });
+  return m;
+}
+function openMessages(){ ensureMsgModal(); showConvoList(); }
+function showConvoList(){
+  stopThreadPoll(); MSG.conv = null;
+  const p = $('#msgPane'); if (!p) return;
+  $('#mTitle').textContent = 'Messages';
+  p.innerHTML = '<div id="msgList" class="convo-list"><p class="muted" style="padding:14px">Loading…</p></div>';
+  refreshConvos();
+}
+function renderConvoList(){
+  const list = $('#msgList'); if (!list) return;
+  const cs = S.convos || [];
+  const review = S.isAdmin ? '<button class="btn sm quiet msg-review" data-act="msgreview">Review all messages (safeguarding)</button>' : '';
+  if (!cs.length){ list.innerHTML = review + '<p class="muted" style="padding:14px">No conversations yet. Open a member’s profile and tap <b>Message</b>, or open a group and tap <b>Group chat</b>.</p>'; return; }
+  list.innerHTML = review + cs.map(c => {
+    const badge = c.unread ? `<span class="convo-badge">${c.unread > 99 ? '99+' : c.unread}</span>` : '';
+    const ava = c.kind === 'group' ? `<span class="av md convo-grp">${icon('users')}</span>` : av(c.uid, 'md');
+    const pre = c.lastText ? (c.fromMe ? 'You: ' : '') + c.lastText : 'No messages yet';
+    const act = c.kind === 'group' ? `data-act="opengroupchat" data-gid="${esc(c.groupId)}"` : `data-act="opendm" data-uid="${esc(c.uid)}"`;
+    return `<button class="convo-row${c.unread ? ' un' : ''}" ${act} data-title="${esc(c.who)}">${ava}<span class="convo-main"><span class="convo-top"><b>${esc(c.who)}</b>${c.lastTime ? `<span class="convo-time">${esc(ago(c.lastTime))}</span>` : ''}</span><span class="convo-pre">${esc(pre)}</span></span>${badge}</button>`;
+  }).join('');
+}
+function openThreadView(opts){
+  ensureMsgModal(); stopThreadPoll(); MSG.conv = opts; MSG.count = 0;
+  $('#mTitle').textContent = 'Messages';
+  const p = $('#msgPane');
+  p.innerHTML = `<div class="thread-head"><button class="btn sm quiet" type="button" data-act="msgback" aria-label="Back to conversations">${icon('back')}</button><b>${esc(opts.title || '')}</b></div>
+    <div class="thread" id="thread"><p class="muted" style="padding:14px">Loading…</p></div>
+    <form class="thread-send" id="threadSend"><textarea id="tMsg" rows="1" maxlength="4000" placeholder="Write a message…" aria-label="Message"></textarea><button class="btn primary" type="submit" aria-label="Send">${icon('send')}</button></form>`;
+  const ta = $('#tMsg');
+  $('#threadSend').addEventListener('submit', e => { e.preventDefault(); sendThreadMsg(); });
+  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; });
+  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendThreadMsg(); } });
+  loadThread(true);
+  startThreadPoll();
+}
+function nearBottom(el){ return el.scrollHeight - el.scrollTop - el.clientHeight < 80; }
+function scrollThread(){ const t = $('#thread'); if (t) t.scrollTop = t.scrollHeight; }
+async function loadThread(forceScroll){
+  const q = MSG.conv; if (!q) return;
+  try {
+    const j = await api('thread', q.to ? { to: q.to } : q.groupId ? { groupId: q.groupId } : { convId: q.convId });
+    if (!MSG.conv) return;
+    MSG.conv.convId = j.convId;
+    const t = $('#thread'); const wasNear = t ? nearBottom(t) : true;
+    const grew = (j.messages || []).length > MSG.count; MSG.count = (j.messages || []).length;
+    renderMessages(j.messages || [], j.kind);
+    if (forceScroll || (grew && wasNear)) scrollThread();
+    if ((j.messages || []).length){ api('markRead', { convId: j.convId }).then(() => { const c = (S.convos || []).find(x => x.id === j.convId); if (c){ S.msgUnread = Math.max(0, (S.msgUnread || 0) - (c.unread || 0)); c.unread = 0; paintMsgBadge(); } }).catch(() => {}); }
+  } catch (e){ const t = $('#thread'); if (t && !MSG.count) t.innerHTML = `<p class="muted" style="padding:14px">${esc(errMsg(e))}</p>`; }
+}
+function renderMessages(msgs, kind){
+  const t = $('#thread'); if (!t) return;
+  if (!msgs.length){ t.innerHTML = '<p class="muted" style="padding:26px 14px;text-align:center">No messages yet.</p>'; return; }
+  let lastFrom = '', lastDay = '';
+  t.innerHTML = msgs.map(m => {
+    const day = msgDay(m.time); const sep = day !== lastDay ? `<div class="thread-day"><span>${esc(day)}</span></div>` : ''; lastDay = day;
+    const showName = kind === 'group' && !m.mine && m.from !== lastFrom; lastFrom = m.from;
+    return sep + `<div class="bub ${m.mine ? 'me' : 'them'}">${showName ? `<span class="bub-name">${esc(m.fromName)}</span>` : ''}<span class="bub-t">${esc(m.text)}</span><span class="bub-time">${esc(msgClock(m.time))}</span></div>`;
+  }).join('');
+}
+async function sendThreadMsg(){
+  const ta = $('#tMsg'); if (!ta) return; const text = ta.value.trim(); if (!text) return;
+  const q = MSG.conv; if (!q) return;
+  ta.value = ''; ta.style.height = 'auto';
+  try { await api('sendMsg', q.to ? { to: q.to, text } : { groupId: q.groupId, text }); await loadThread(true); refreshConvos(); }
+  catch (e){ toast(errMsg(e)); ta.value = text; }
+}
+function startThreadPoll(){ stopThreadPoll(); msgPoll = setInterval(() => { if (MSG.conv && !document.hidden) loadThread(false); }, 5000); }
+function stopThreadPoll(){ if (msgPoll){ clearInterval(msgPoll); msgPoll = 0; } }
+/* admin safeguarding review */
+async function openMsgReview(){
+  ensureMsgModal(); stopThreadPoll(); MSG.conv = null;
+  $('#mTitle').textContent = 'Message review';
+  $('#msgPane').innerHTML = '<p class="muted msg-review-note">For safeguarding only. You can read any conversation here; members are not told.</p><div id="msgList" class="convo-list"><p class="muted" style="padding:14px">Loading…</p></div>';
+  try {
+    const j = await api('adminConvos'); const cs = j.convos || [];
+    $('#msgList').innerHTML = cs.length ? cs.map(c => `<button class="convo-row" data-act="reviewconvo" data-cid="${esc(c.id)}" data-title="${esc(c.who)}"><span class="av md convo-grp">${icon(c.kind === 'group' ? 'users' : 'chat')}</span><span class="convo-main"><span class="convo-top"><b>${esc(c.who)}</b>${c.lastTime ? `<span class="convo-time">${esc(ago(c.lastTime))}</span>` : ''}</span><span class="convo-pre">${esc(c.lastText || 'No messages')}</span></span></button>`).join('') : '<p class="muted" style="padding:14px">No conversations yet.</p>';
+  } catch (e){ const l = $('#msgList'); if (l) l.innerHTML = `<p class="muted" style="padding:14px">${esc(errMsg(e))}</p>`; }
+}
+async function reviewConvo(cid, title){
+  MSG.conv = null;
+  $('#mTitle').textContent = 'Message review';
+  $('#msgPane').innerHTML = `<div class="thread-head"><button class="btn sm quiet" type="button" data-act="msgreview" aria-label="Back">${icon('back')}</button><b>${esc(title || '')}</b></div><div class="thread" id="thread"><p class="muted" style="padding:14px">Loading…</p></div>`;
+  try { const j = await api('adminThread', { convId: cid }); renderMessages((j.messages || []).map(m => Object.assign({ mine: false }, m)), 'group'); scrollThread(); }
+  catch (e){ const t = $('#thread'); if (t) t.innerHTML = `<p class="muted" style="padding:14px">${esc(errMsg(e))}</p>`; }
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
   const nav = e.target.closest('a[data-route]');
@@ -3176,6 +3326,12 @@ document.addEventListener('click', e => {
   switch (a){
     case 'me': if (S.uid) go('profile', S.uid); break;
     case 'profile': go('profile', el.dataset.uid); break;
+    case 'messages': openMessages(); break;
+    case 'opendm': openThreadView({ to: el.dataset.uid, title: el.dataset.title }); break;
+    case 'opengroupchat': openThreadView({ groupId: el.dataset.gid, title: el.dataset.title }); break;
+    case 'msgback': showConvoList(); break;
+    case 'msgreview': if (S.isAdmin) openMsgReview(); break;
+    case 'reviewconvo': if (S.isAdmin) reviewConvo(el.dataset.cid, el.dataset.title); break;
     case 'filter': S.filter = el.dataset.f; S.limit = 30; refresh(); break;
     case 'more': S.limit += 30; refresh(); break;
     case 'ccat': S.draft.cat = el.dataset.cat; composerBits(); break;
@@ -3613,7 +3769,7 @@ function boot(){
   const setTop = () => { const t = $('.top'); if (t) document.documentElement.style.setProperty('--topH', t.offsetHeight + 'px'); };
   setTop(); window.addEventListener('resize', setTop); if (document.fonts && document.fonts.ready) document.fonts.ready.then(setTop);
   $('#langBtn').innerHTML = LANG === 'ceb' ? '<span class="lg">English</span><span class="sh">EN</span>' : '<span class="lg">Bisaya</span><span class="sh">BIS</span>'; $('#langBtn').setAttribute('aria-label', LANG === 'ceb' ? 'Switch to English' : 'Ilisan sa Bisaya');
-  $('#mark').innerHTML = LOGO; $('#gearBtn').innerHTML = icon('gear');
+  $('#mark').innerHTML = LOGO; $('#gearBtn').innerHTML = icon('gear'); $('#msgBtn').insertAdjacentHTML('afterbegin', icon('chat')); $('#fabGame').insertAdjacentHTML('afterbegin', icon('book'));
   startBisaya();
   const h = (location.hash || '').slice(1);
   if (['home','news','library','members','groups'].includes(h)) S.route = h;
