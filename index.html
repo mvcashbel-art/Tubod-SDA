@@ -561,7 +561,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sms-opt input{margin-top:3px}
 /* sign in and join */
 body:has(#auth) .top,body:has(#auth) .shell,body:has(#auth) .tabs,body:has(#auth) .ann-strip{visibility:hidden}
-body:has(#auth) .fab-game{display:none!important}
+body:has(#auth) .fabs{display:none!important}
 .auth{position:fixed;inset:0;z-index:40;display:grid;place-items:start center;padding:24px 16px;overflow-y:auto;background:rgba(238,244,247,.7);backdrop-filter:blur(8px)}
 .auth-card{width:100%;max-width:430px;display:flex;flex-direction:column;gap:14px;padding:22px;margin:auto 0}
 .auth-brand{display:flex;gap:12px;align-items:center}
@@ -620,14 +620,15 @@ body:has(#auth) .fab-game{display:none!important}
 .cal-more{color:var(--muted);font-size:.68rem}
 .cal-note{font-size:.8rem;margin-top:10px}
 @media (max-width:520px){.cal-c{min-height:52px;font-size:.66rem}.cal-c .cal-ev{font-size:.62rem}}
-/* floating Bible-game button */
-.fab-game{position:fixed;right:16px;bottom:20px;z-index:19;display:none;align-items:center;gap:7px;background:var(--ink);color:#fff;border-radius:999px;padding:11px 16px;font-weight:600;font-size:.9rem;box-shadow:0 6px 18px rgba(0,0,0,.22);text-decoration:none;cursor:pointer}
-.fab-game .ic{width:20px;height:20px}
-.fab-game.on{display:flex}
-@media (max-width:900px){.fab-game{right:14px;bottom:calc(72px + env(safe-area-inset-bottom,0px))}}
+/* floating buttons (chat + game) */
+.fabs{position:fixed;right:16px;bottom:20px;z-index:19;display:none;flex-direction:column;gap:10px;align-items:flex-end}
+.fabs.on{display:flex}
+@media (max-width:900px){.fabs{right:14px;bottom:calc(72px + env(safe-area-inset-bottom,0px))}}
+.fab{display:flex;align-items:center;gap:7px;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:11px 16px;font-weight:600;font-size:.9rem;box-shadow:0 6px 18px rgba(0,0,0,.22);cursor:pointer;text-decoration:none;position:relative}
+.fab .ic{width:20px;height:20px}
+.fab-chat{background:var(--accent-dark,#2a7d5f)}
+.fab-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
 /* messaging */
-.msg-btn{position:relative}
-.msg-badge{position:absolute;top:-1px;right:-1px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
 #msgPane{display:flex;flex-direction:column;min-height:0;height:min(68vh,560px)}
 .convo-list{overflow-y:auto;display:flex;flex-direction:column;margin:0 -4px}
 .convo-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 8px;cursor:pointer;color:inherit;font:inherit}
@@ -675,7 +676,6 @@ body:has(#auth) .fab-game{display:none!important}
   <nav class="dnav" id="dnav" aria-label="Main"></nav>
   <div class="top-r">
     <button class="lang-btn" id="langBtn" type="button" data-act="lang" data-notr></button>
-    <button class="icon-btn msg-btn" id="msgBtn" data-act="messages" aria-label="Messages" hidden><span class="msg-badge" id="msgBadge" hidden></span></button>
     <button class="icon-btn" id="gearBtn" data-act="settings" aria-label="Church settings" hidden></button>
     <button class="me-btn" id="meBtn" data-act="me" aria-label="My profile" hidden></button>
   </div>
@@ -687,7 +687,7 @@ body:has(#auth) .fab-game{display:none!important}
   <aside class="side" id="side"></aside>
 </div>
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
-<a class="fab-game" id="fabGame" href="bible-game.html" aria-label="Open the Bible game"><span>Game</span></a>
+<div class="fabs" id="fabs"><button class="fab fab-chat" id="fabChat" type="button" data-act="messages" aria-label="Messages"><span>Chat</span><span class="fab-badge" id="msgBadge" hidden></span></button><a class="fab fab-game" id="fabGame" href="bible-game.html" aria-label="Open the Bible game"><span>Game</span></a></div>
 <div id="upbar" hidden role="status" aria-live="polite"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <noscript><div class="note warn" style="margin:16px">This site needs JavaScript. Please turn it on in your browser.</div></noscript>
@@ -1370,7 +1370,7 @@ function fromHash(){
   if (['home','news','library','members','groups'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !NAV_HIDE[n[0]] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && (n[3] || n[4]))).map(([r, label0, ic, href]) => {
+  return NAV.filter(n => !NAV_HIDE[n[0]] && !n[3] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[4])).map(([r, label0, ic, href]) => {
     const bisL = LANG === 'ceb' && NAV_BIS[r], label = bisL || label0, nt = bisL ? ' data-notr' : '';
     if (href) return `<a href="${href}"${nt}>${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : r === 'groups' ? (S.route === 'groups' || S.route === 'group') : S.route === r);
@@ -1393,8 +1393,8 @@ function renderChrome(){
   $('#gearBtn').hidden = !S.canAttend; $('#gearBtn').setAttribute('aria-label', S.isAdmin ? 'Church settings' : 'Leader tools');
   $('#meBtn').innerHTML = S.uid ? av(S.uid, 'md') : '';
   $('#meBtn').hidden = !S.uid;
-  $('#msgBtn').hidden = !S.uid || S.msgOn === false; paintMsgBadge();
-  $('#fabGame').classList.toggle('on', !!S.uid);
+  $('#fabs').classList.toggle('on', !!S.uid);
+  $('#fabChat').hidden = S.msgOn === false; paintMsgBadge();
 }
 /* ---------- this Sabbath, events, birthdays, livestream ---------- */
 const phNow = () => new Date(Date.now() + TZ * 36e5);
@@ -3219,8 +3219,8 @@ function msgDay(ms){ const iso = phISO(ms); if (iso === phISO()) return 'Today';
 function paintMsgBadge(){ const b = $('#msgBadge'); if (!b) return; const n = S.msgUnread || 0; b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; }
 async function refreshConvos(){
   if (!S.uid) return;
-  try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; S.msgOn = true; paintMsgBadge(); const b = $('#msgBtn'); if (b) b.hidden = false; if ($('#msgList') && !MSG.conv) renderConvoList(); }
-  catch (e){ if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#msgBtn'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); } }
+  try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; S.msgOn = true; paintMsgBadge(); const b = $('#fabChat'); if (b) b.hidden = false; if ($('#msgList') && !MSG.conv) renderConvoList(); }
+  catch (e){ if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#fabChat'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); } }
 }
 function ensureMsgModal(){
   if ($('#msgPane')) return $('#modal');
@@ -3770,7 +3770,7 @@ function boot(){
   const setTop = () => { const t = $('.top'); if (t) document.documentElement.style.setProperty('--topH', t.offsetHeight + 'px'); };
   setTop(); window.addEventListener('resize', setTop); if (document.fonts && document.fonts.ready) document.fonts.ready.then(setTop);
   $('#langBtn').innerHTML = LANG === 'ceb' ? '<span class="lg">English</span><span class="sh">EN</span>' : '<span class="lg">Bisaya</span><span class="sh">BIS</span>'; $('#langBtn').setAttribute('aria-label', LANG === 'ceb' ? 'Switch to English' : 'Ilisan sa Bisaya');
-  $('#mark').innerHTML = LOGO; $('#gearBtn').innerHTML = icon('gear'); $('#msgBtn').insertAdjacentHTML('afterbegin', icon('chat')); $('#fabGame').insertAdjacentHTML('afterbegin', icon('book'));
+  $('#mark').innerHTML = LOGO; $('#gearBtn').innerHTML = icon('gear'); $('#fabChat').insertAdjacentHTML('afterbegin', icon('chat')); $('#fabGame').insertAdjacentHTML('afterbegin', icon('book'));
   startBisaya();
   const h = (location.hash || '').slice(1);
   if (['home','news','library','members','groups'].includes(h)) S.route = h;
