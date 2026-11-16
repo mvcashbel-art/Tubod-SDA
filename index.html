@@ -977,8 +977,11 @@ const photoImg = id => { const u = imgUrl(id, 1600); return u ? `<img src="${u}"
 async function api(action, data = {}){
   if (!API_URL) throw new Error('This site is not connected yet. See SETUP.md.');
   let res;
-  try { res = await fetch(API_URL, {method:'POST', body:JSON.stringify({action, token:S.token, withSync:true, ...data})}); }
-  catch (e){ const err = new Error('Cannot reach the church server. Check your internet and try again.'); err.code = 'network'; throw err; }
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), 30000) : null;
+  try { res = await fetch(API_URL, {method:'POST', body:JSON.stringify({action, token:S.token, withSync:true, ...data}), signal: ctrl ? ctrl.signal : undefined}); }
+  catch (e){ const err = new Error((ctrl && ctrl.signal.aborted) ? 'The church server is taking too long — it may be waking up. Try again in a moment.' : 'Cannot reach the church server. Check your internet and try again.'); err.code = 'network'; throw err; }
+  finally { if (timer) clearTimeout(timer); }
   let j;
   try { j = await res.json(); }
   catch (e){ const err = new Error('The church server sent an unexpected reply. Try again in a moment.'); err.code = 'bad_reply'; throw err; }
@@ -3279,7 +3282,14 @@ function notifyChat(convos){
 async function refreshConvos(){
   if (!S.uid) return;
   try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; S.msgOn = true; paintMsgBadge(); const b = $('#fabChat'); if (b) b.hidden = false; notifyChat(j.convos || []); if ($('#msgList') && !MSG.conv) renderConvoList(); }
-  catch (e){ if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#fabChat'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); } }
+  catch (e){
+    if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#fabChat'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); return; }
+    /* slow server or weak signal: don't leave the panel stuck on "Loading…" */
+    const list = $('#msgList');
+    if (list && !MSG.conv && !(S.convos && S.convos.length)){
+      list.innerHTML = `<p class="muted" style="padding:14px">${esc(errMsg(e))}<br><button class="btn sm" type="button" data-act="msgretry" style="margin-top:10px">Try again</button></p>`;
+    }
+  }
 }
 function ensureMsgModal(){
   if ($('#msgPane')) return $('#modal');
@@ -3390,6 +3400,7 @@ document.addEventListener('click', e => {
     case 'opendm': openThreadView({ to: el.dataset.uid, title: el.dataset.title }); break;
     case 'opengroupchat': openThreadView({ groupId: el.dataset.gid, title: el.dataset.title }); break;
     case 'msgback': showConvoList(); break;
+    case 'msgretry': showConvoList(); break;
     case 'msgreview': if (S.isAdmin) openMsgReview(); break;
     case 'reviewconvo': if (S.isAdmin) reviewConvo(el.dataset.cid, el.dataset.title); break;
     case 'filter': S.filter = el.dataset.f; S.limit = 30; refresh(); break;
