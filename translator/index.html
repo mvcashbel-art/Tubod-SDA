@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Live Translator</title>
+<style>
+  :root{
+    --bg:#0b1220; --card:#131c2e; --card2:#1a2540; --line:#26334f;
+    --text:#eef2ff; --muted:#93a0bd; --accent:#4f8cff; --accent2:#22c1a0; --danger:#ef4a5a;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  body{padding:max(12px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom))}
+  .wrap{max-width:760px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px;gap:10px}
+  h1{font-size:1.15rem;margin:0;letter-spacing:.2px}
+  h1 span{color:var(--accent)}
+  .status{font-size:.8rem;color:var(--muted);min-height:1.2em;text-align:right}
+  .status.err{color:var(--danger)}
+
+  .modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .modes select{width:auto;flex:1;min-width:150px;padding:10px;font-size:.88rem}
+  .langs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px}
+  body.auto .langs{grid-template-columns:1fr 28px 1fr}
+  .pair{color:var(--muted);text-align:center;font-size:1.1rem}
+  select,input[type=text],input[type=password],input[type=url],textarea{
+    width:100%;background:var(--card);color:var(--text);border:1px solid var(--line);
+    border-radius:12px;padding:12px;font-size:1rem;font-family:inherit}
+  select:focus,input:focus,textarea:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .swap{background:var(--card);border:1px solid var(--line);color:var(--text);
+    width:44px;height:44px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+  .swap:active{transform:rotate(180deg)}
+
+  .live{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+  .live .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px}
+  .src{min-height:2.6em;color:var(--muted);font-size:1.05rem;line-height:1.4;margin-bottom:14px;word-wrap:break-word}
+  .dst{min-height:3.6em;font-size:1.6rem;line-height:1.3;font-weight:600;word-wrap:break-word}
+  .dst.pending{opacity:.55}
+  body.big .dst{font-size:clamp(2.2rem,8vw,4rem)}
+  body.big .src{font-size:1.25rem}
+  .placeholder{color:var(--muted);font-weight:400;font-size:1.05rem}
+
+  .controls{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0;flex-wrap:wrap}
+  .mic{width:84px;height:84px;border-radius:50%;border:none;cursor:pointer;color:#fff;font-size:2rem;
+    background:var(--accent);box-shadow:0 6px 24px rgba(79,140,255,.35);transition:transform .1s}
+  .mic:active{transform:scale(.95)}
+  .mic.on{background:var(--danger);box-shadow:0 0 0 0 rgba(239,74,90,.6);animation:pulse 1.5s infinite}
+  .mic:disabled{background:#3a4560;box-shadow:none;cursor:not-allowed;animation:none}
+  @keyframes pulse{70%{box-shadow:0 0 0 22px rgba(239,74,90,0)}100%{box-shadow:0 0 0 0 rgba(239,74,90,0)}}
+  .mini{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:12px;
+    padding:10px 14px;font-size:.9rem;cursor:pointer}
+  .mini[aria-pressed=true]{background:var(--accent2);border-color:var(--accent2);color:#04251e;font-weight:600}
+
+  .typebox{display:flex;gap:8px;margin-bottom:6px}
+  .typebox button{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:0 18px;font-size:1rem;cursor:pointer}
+  .hint{font-size:.78rem;color:var(--muted);margin:6px 2px 0;line-height:1.45}
+
+  details.settings{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-top:16px}
+  details.settings summary{cursor:pointer;font-size:.9rem;color:var(--muted)}
+  details.settings label{display:block;font-size:.78rem;color:var(--muted);margin:12px 0 4px}
+  details.settings .row{display:flex;gap:8px;align-items:center;margin-top:12px}
+  details.settings .note{font-size:.75rem;color:var(--muted);margin-top:8px;line-height:1.45}
+
+  .histhead{display:flex;justify-content:space-between;align-items:center;margin:22px 0 8px}
+  .histhead h2{font-size:.9rem;margin:0;color:var(--muted);font-weight:600}
+  .histhead button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+  .item .o{color:var(--muted);font-size:.9rem;margin-bottom:4px}
+  .item .tag{display:inline-block;font-size:.68rem;background:var(--card2);border:1px solid var(--line);
+    border-radius:6px;padding:1px 6px;margin-right:6px;color:var(--accent);vertical-align:1px}
+  .item .t{font-size:1.1rem;font-weight:600}
+  .item .row{display:flex;gap:6px;margin-top:8px}
+  .item .row button{background:var(--card2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:5px 10px;font-size:.78rem;cursor:pointer}
+  .empty{color:var(--muted);font-size:.9rem;text-align:center;padding:18px}
+
+  #screen{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;
+    padding:6vw;z-index:50;cursor:pointer}
+  #screenText{color:#fff;font-weight:700;text-align:center;line-height:1.25;
+    font-size:clamp(2rem,7vw,6.5rem);word-wrap:break-word;max-width:100%;transition:opacity .15s}
+  #screenText.pending{opacity:.6}
+  #screenText .ph{font-size:clamp(1rem,2.5vw,1.6rem);color:#5b6785;font-weight:400}
+  #screenClose{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;background:rgba(255,255,255,.12);
+    border:none;color:#fff;border-radius:10px;padding:8px 14px;font-size:.9rem;cursor:pointer;opacity:.5}
+  #screenClose:hover{opacity:1}
+  body.display .wrap{display:none}
+  body.display #screenClose{display:none}
+  footer{margin-top:22px;font-size:.72rem;color:var(--muted);text-align:center;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Live <span>Translator</span></h1>
+    <div class="status" id="status" role="status" aria-live="polite">Ready</div>
+  </header>
+
+  <div class="modes">
+    <button class="mini" id="autoToggle" aria-pressed="true" title="Detect which language is being spoken and translate to the other one">🔄 Auto-detect</button>
+    <select id="engine" aria-label="Microphone engine">
+      <option value="cloud">Cloud mic — hears Bisaya + English together</option>
+      <option value="browser">Browser mic (free) — one language at a time</option>
+    </select>
+    <select id="bLang" aria-label="Language the browser mic listens for"></select>
+  </div>
+
+  <div class="langs">
+    <select id="from" aria-label="Language A"></select>
+    <button class="swap" id="swap" title="Swap languages" aria-label="Swap languages">⇄</button>
+    <select id="to" aria-label="Language B"></select>
+  </div>
+
+  <section class="live" aria-label="Live translation">
+    <div class="lbl" id="srcLbl">Original</div>
+    <div class="src" id="src"><span class="placeholder">Tap the mic and start talking…</span></div>
+    <div class="lbl" id="dstLbl">Translation</div>
+    <div class="dst" id="dst"></div>
+  </section>
+
+  <div class="controls">
+    <button class="mini" id="speakToggle" aria-pressed="false" title="Read translations aloud">🔊 Speak</button>
+    <button class="mic" id="mic" aria-label="Start listening">🎤</button>
+    <button class="mini" id="bigToggle" aria-pressed="false" title="Bigger text">🔠 Big text</button>
+  </div>
+
+  <div class="controls" style="margin-top:-4px">
+    <button class="mini" id="fsBtn" title="Show only the translation, full screen">⛶ Full-screen captions</button>
+    <button class="mini" id="winBtn" title="Open a caption window to drag onto a projector / TV">🖥 Display window</button>
+  </div>
+
+  <div class="typebox">
+    <input type="text" id="typed" placeholder="…or type here and press Enter" autocomplete="off" enterkeyhint="send">
+    <button id="typedGo">Go</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <details class="settings" id="settings">
+    <summary>⚙ Cloud mic setup (needed to hear Bisaya + English mixed)</summary>
+    <label for="tokenUrl">Token service URL (your Apps Script web app)</label>
+    <input type="url" id="tokenUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+    <label for="pass">Passcode (optional, if you set one in the script)</label>
+    <input type="password" id="pass" autocomplete="off">
+    <label for="apiKey">…or paste an ElevenLabs API key (quick test only)</label>
+    <input type="password" id="apiKey" placeholder="sk_…" autocomplete="off">
+    <div class="row"><button class="mini" id="saveCfg">Save</button><span class="hint" id="cfgMsg"></span></div>
+    <div class="note">The token service keeps your API key on the server and hands this page a short-lived token. Pasting the key here stores it in this browser only and is meant for testing — don't do that on a shared or public device.</div>
+  </details>
+
+  <div class="histhead"><h2>History</h2><button id="clear">Clear</button></div>
+  <div id="history"><div class="empty">Translations will appear here.</div></div>
+
+  <footer>
+    Translation is machine-generated — double-check anything important.
+  </footer>
+</div>
+
+<div id="screen" hidden>
+  <button id="screenClose" aria-label="Close captions">✕ Close</button>
+  <div id="screenText"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // name, speech code (null = browsers can't recognise it), translate code, TTS lang
+  var LANGS = [
+    {id:"en",  name:"English",            sp:"en-US",  tr:"en",    tts:"en-US"},
+    {id:"fil", name:"Filipino (Tagalog)", sp:"fil-PH", tr:"tl",    tts:"fil-PH"},
+    {id:"ceb", name:"Cebuano (Bisaya)",   sp:null,     tr:"ceb",   tts:"fil-PH"},
+    {id:"war", name:"Waray",              sp:null,     tr:"war",   tts:"fil-PH"},
+    {id:"es",  name:"Spanish",            sp:"es-ES",  tr:"es",    tts:"es-ES"},
+    {id:"ja",  name:"Japanese",           sp:"ja-JP",  tr:"ja",    tts:"ja-JP"},
+    {id:"ko",  name:"Korean",             sp:"ko-KR",  tr:"ko",    tts:"ko-KR"},
+    {id:"zh",  name:"Chinese (Mandarin)", sp:"cmn-Hans-CN", tr:"zh-CN", tts:"zh-CN"},
+    {id:"fr",  name:"French",             sp:"fr-FR",  tr:"fr",    tts:"fr-FR"},
+    {id:"de",  name:"German",             sp:"de-DE",  tr:"de",    tts:"de-DE"},
+    {id:"pt",  name:"Portuguese",         sp:"pt-BR",  tr:"pt",    tts:"pt-BR"},
+    {id:"it",  name:"Italian",            sp:"it-IT",  tr:"it",    tts:"it-IT"},
+    {id:"ru",  name:"Russian",            sp:"ru-RU",  tr:"ru",    tts:"ru-RU"},
+    {id:"ar",  name:"Arabic",             sp:"ar-SA",  tr:"ar",    tts:"ar-SA"},
+    {id:"hi",  name:"Hindi",              sp:"hi-IN",  tr:"hi",    tts:"hi-IN"},
+    {id:"id",  name:"Indonesian",         sp:"id-ID",  tr:"id",    tts:"id-ID"},
+    {id:"ms",  name:"Malay",              sp:"ms-MY",  tr:"ms",    tts:"ms-MY"},
+    {id:"th",  name:"Thai",               sp:"th-TH",  tr:"th",    tts:"th-TH"},
+    {id:"vi",  name:"Vietnamese",         sp:"vi-VN",  tr:"vi",    tts:"vi-VN"}
+  ];
+  function byId(id){ for (var i=0;i<LANGS.length;i++) if (LANGS[i].id===id) return LANGS[i]; return LANGS[0]; }
+  function byTr(code){
+    code=(code||"").toLowerCase(); if(code==="fil") code="tl";
+    for (var i=0;i<LANGS.length;i++) if (LANGS[i].tr.toLowerCase()===code) return LANGS[i];
+    return null;
+  }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var elFrom=$("from"), elTo=$("to"), elSrc=$("src"), elDst=$("dst"), elMic=$("mic"),
+      elStatus=$("status"), elHint=$("hint"), elHist=$("history"), elTyped=$("typed"),
+      elSpeak=$("speakToggle"), elBig=$("bigToggle"), elAuto=$("autoToggle"),
+      elEngine=$("engine"), elBLang=$("bLang");
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var synth = window.speechSynthesis;
+
+  var state = {
+    listening:false, speaking:false, speak:false,
+    recog:null, seq:0, timer:null, cache:{}, history:[],
+    lastCommit:{t:"",at:0}, retries:0
+  };
+
+  // ---------- prefs ----------
+  function save(k,v){ try{ localStorage.setItem("lt_"+k, v); }catch(e){} }
+  function load(k,d){ try{ var v=localStorage.getItem("lt_"+k); return v===null?d:v; }catch(e){ return d; } }
+
+  var cfg = {
+    auto:     load("auto","1")==="1",
+    tokenUrl: load("tokenUrl",""),
+    pass:     load("pass",""),
+    apiKey:   load("apiKey",""),
+    bLang:    load("bLang","fil")
+  };
+  cfg.engine = load("engine", (cfg.tokenUrl||cfg.apiKey) ? "cloud" : "browser");
+
+  // ---------- UI setup ----------
+  LANGS.forEach(function(l){
+    [elFrom, elTo].forEach(function(sel){
+      var o=document.createElement("option"); o.value=l.id; o.textContent=l.name; sel.appendChild(o);
+    });
+    if (l.sp){ var b=document.createElement("option"); b.value=l.id; b.textContent="Browser mic hears: "+l.name; elBLang.appendChild(b); }
+  });
+  elFrom.value = load("from","en");
+  elTo.value   = load("to","ceb");
+  if (elFrom.value===elTo.value) elTo.value = elFrom.value==="en" ? "ceb" : "en";
+  elEngine.value = cfg.engine;
+  elBLang.value = cfg.bLang;
+  elAuto.setAttribute("aria-pressed", String(cfg.auto));
+  $("tokenUrl").value=cfg.tokenUrl; $("pass").value=cfg.pass; $("apiKey").value=cfg.apiKey;
+
+  if (load("speak","0")==="1"){ state.speak=true; elSpeak.setAttribute("aria-pressed","true"); }
+  if (load("big","0")==="1"){ document.body.classList.add("big"); elBig.setAttribute("aria-pressed","true"); }
+
+  function setStatus(msg, isErr){ elStatus.textContent=msg; elStatus.classList.toggle("err", !!isErr); }
+  function setLabels(from,to){
+    if (from) $("srcLbl").textContent = from.name;
+    if (to)   $("dstLbl").textContent = to.name;
+  }
+  function cloudConfigured(){ return !!(cfg.tokenUrl || cfg.apiKey); }
+  function browserSpeechCode(){ return cfg.auto ? byId(cfg.bLang).sp : byId(elFrom.value).sp; }
+
+  function refreshLangUI(){
+    var A=byId(elFrom.value), B=byId(elTo.value);
+    document.body.classList.toggle("auto", cfg.auto);
+    $("swap").style.visibility = cfg.auto ? "hidden" : "visible";
+    elFrom.setAttribute("aria-label", cfg.auto ? "Language A" : "Speak / type in");
+    elTo.setAttribute("aria-label",   cfg.auto ? "Language B" : "Translate to");
+    elBLang.hidden = !(cfg.engine==="browser" && cfg.auto);
+    if (cfg.auto){
+      $("srcLbl").textContent = "Heard (language auto-detected)";
+      $("dstLbl").textContent = A.name+"  ⇄  "+B.name;
+    } else setLabels(A,B);
+
+    var can, hint="";
+    if (cfg.engine==="cloud"){
+      can = !!(navigator.mediaDevices && window.WebSocket);
+      if (!cloudConfigured()) hint = "Cloud mic needs a one-time setup — open “Cloud mic setup” below. Until then, switch the mic to Browser (free) or just type.";
+      else if (location.protocol==="file:") hint = "Tip: browsers block the mic on file:// pages. Host this on HTTPS (e.g. GitHub Pages) or use localhost.";
+    } else {
+      can = !!SR && !!browserSpeechCode();
+      if (!SR) hint = "Voice input isn't supported in this browser — typing still works. Try Chrome, Edge or Safari.";
+      else if (!browserSpeechCode()) hint = A.name+" can't be recognised by the browser mic — type it, or use the Cloud mic.";
+      else if (cfg.auto) hint = "Browser mic hears one language at a time (it can't understand Bisaya). Translation direction is still auto-detected. For Bisaya + English mixed, use the Cloud mic.";
+      else if (location.protocol==="file:") hint = "Tip: some browsers block the mic on file:// pages. Host it on HTTPS or use localhost.";
+    }
+    elMic.disabled = !can;
+    elHint.textContent = hint;
+  }
+
+  function onLangChange(){
+    save("from", elFrom.value); save("to", elTo.value);
+    refreshLangUI();
+    if (state.listening && cfg.engine==="browser") restartRecognition();
+  }
+  elFrom.addEventListener("change", function(){ if(elFrom.value===elTo.value) elTo.value = elFrom.value==="en"?"ceb":"en"; onLangChange(); });
+  elTo.addEventListener("change", function(){ if(elFrom.value===elTo.value) elFrom.value = elTo.value==="en"?"fil":"en"; onLangChange(); });
+  $("swap").addEventListener("click", function(){
+    var a=elFrom.value; elFrom.value=elTo.value; elTo.value=a; onLangChange();
+  });
+
+  elAuto.addEventListener("click", function(){
+    cfg.auto=!cfg.auto; save("auto", cfg.auto?"1":"0");
+    elAuto.setAttribute("aria-pressed", String(cfg.auto));
+    refreshLangUI();
+    if (state.listening && cfg.engine==="browser") restartRecognition();
+  });
+  elEngine.addEventListener("change", function(){
+    var wasOn=state.listening;
+    if (wasOn) stopAll();
+    cfg.engine=elEngine.value; save("engine", cfg.engine);
+    refreshLangUI();
+  });
+  elBLang.addEventListener("change", function(){
+    cfg.bLang=elBLang.value; save("bLang", cfg.bLang);
+    refreshLangUI();
+    if (state.listening && cfg.engine==="browser") restartRecognition();
+  });
+
+  elSpeak.addEventListener("click", function(){
+    state.speak=!state.speak;
+    elSpeak.setAttribute("aria-pressed", String(state.speak));
+    save("speak", state.speak?"1":"0");
+    if (!state.speak && synth) synth.cancel();
+  });
+  elBig.addEventListener("click", function(){
+    var on=!document.body.classList.contains("big");
+    document.body.classList.toggle("big", on);
+    elBig.setAttribute("aria-pressed", String(on));
+    save("big", on?"1":"0");
+  });
+
+  $("saveCfg").addEventListener("click", function(){
+    cfg.tokenUrl=$("tokenUrl").value.trim(); cfg.pass=$("pass").value; cfg.apiKey=$("apiKey").value.trim();
+    save("tokenUrl",cfg.tokenUrl); save("pass",cfg.pass); save("apiKey",cfg.apiKey);
+    $("cfgMsg").textContent = cloudConfigured() ? "Saved ✓ — pick “Cloud mic” above." : "Saved (nothing set).";
+    refreshLangUI();
+  });
+
+  // ---------- translation ----------
+  function fetchJSON(url, ms, opts){
+    var ctl = ("AbortController" in window) ? new AbortController() : null;
+    var to = setTimeout(function(){ if(ctl) ctl.abort(); }, ms||8000);
+    var o = opts || {}; if (ctl) o.signal = ctl.signal;
+    return fetch(url, o).then(function(r){
+      clearTimeout(to);
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return r.json();
+    }, function(e){ clearTimeout(to); throw e; });
+  }
+
+  // Google's free endpoint. With sl=auto it also reports the detected language (j[2]).
+  function gtx(text, sl, tl){
+    var url = "https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl="+sl+"&tl="+tl+"&q="+encodeURIComponent(text);
+    return fetchJSON(url).then(function(j){
+      var out = (j[0]||[]).map(function(p){ return p[0]||""; }).join("");
+      if(!out) throw new Error("empty");
+      return {out:out, src:(j[2]||sl)};
+    });
+  }
+  function mymemory(text, from, to){
+    var url = "https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+from+"|"+to;
+    return fetchJSON(url).then(function(j){
+      var out = j && j.responseData && j.responseData.translatedText;
+      if(!out) throw new Error("empty");
+      return out;
+    });
+  }
+  function cached(key, fn){
+    if (state.cache[key]) return Promise.resolve(state.cache[key]);
+    return fn().then(function(v){ state.cache[key]=v; return v; });
+  }
+
+  function translateManual(text){
+    var from=byId(elFrom.value), to=byId(elTo.value);
+    return cached("m:"+from.tr+">"+to.tr+"|"+text, function(){
+      return gtx(text, from.tr, to.tr).then(function(r){ return r.out; })
+        .catch(function(){ return mymemory(text, from.tr, to.tr); })
+        .then(function(out){ return {out:out, from:from, to:to}; });
+    });
+  }
+
+  // Auto-detect: figure out the language of what was said, send it to the *other* one.
+  // A = first language (English), B = second (Cebuano). Anything that isn't A (Cebuano,
+  // Tagalog, Waray, a Bisaya–English mix that reads as Bisaya…) goes to A.
+  function translateAuto(text){
+    var A=byId(elFrom.value), B=byId(elTo.value);
+    return cached("a:"+A.tr+"|"+B.tr+"|"+text, function(){
+      return gtx(text, "auto", B.tr).then(function(r){
+        var det = byTr(r.src) || {name:String(r.src||"?").toUpperCase(), tr:r.src, tts:r.src};
+        if (det.tr===A.tr) return {out:r.out, from:A, to:B};
+        if (det.tr===B.tr) return gtx(text, B.tr, A.tr).then(function(r2){ return {out:r2.out, from:B, to:A}; });
+        return gtx(text, det.tr, A.tr).then(function(r2){ return {out:r2.out, from:det, to:A}; });
+      });
+    });
+  }
+  function translateSmart(text){ return cfg.auto ? translateAuto(text) : translateManual(text); }
+
+  // ---------- caption screen (full-screen overlay + second window) ----------
+  var elScreen=$("screen"), elScreenText=$("screenText");
+  var isDisplay = location.hash==="#display";
+  var bc = null;
+  try{ if("BroadcastChannel" in window) bc = new BroadcastChannel("lt_display"); }catch(e){}
+
+  function paintScreen(text, pending){
+    elScreenText.innerHTML="";
+    if(!text){
+      var p=document.createElement("span"); p.className="ph"; p.textContent = isDisplay ? "Waiting for captions…" : "";
+      elScreenText.appendChild(p);
+    } else elScreenText.textContent=text;
+    elScreenText.classList.toggle("pending", !!pending);
+  }
+  function openScreen(){
+    elScreen.hidden=false;
+    var d=document.documentElement;
+    try{ if(d.requestFullscreen) d.requestFullscreen().catch(function(){}); }catch(e){}
+  }
+  function closeScreen(){
+    elScreen.hidden=true;
+    try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  }
+  $("fsBtn").addEventListener("click", openScreen);
+  $("screenClose").addEventListener("click", function(e){ e.stopPropagation(); closeScreen(); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape" && !isDisplay) closeScreen(); });
+  $("winBtn").addEventListener("click", function(){
+    var url = location.href.split("#")[0] + "#display";
+    var w=null;
+    try{ w = window.open(url, "lt_display", "width=1280,height=720"); }catch(e){}
+    if(!w) setStatus("Pop-up blocked — allow pop-ups, or open this page with #display on the end in a new tab.", true);
+    else setStatus("Display window opened — drag it to your screen and click it for full screen.");
+  });
+  if (isDisplay){
+    document.body.classList.add("display");
+    elScreen.hidden=false;
+    elScreen.addEventListener("click", function(){
+      try{ if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){}); }catch(e){}
+    });
+    paintScreen("",false);
+    if(bc) bc.onmessage=function(ev){ if(ev.data) paintScreen(ev.data.t, ev.data.p); };
+  }
+
+  // ---------- live caption display ----------
+  function showOriginal(text, interim){
+    elSrc.innerHTML="";
+    if (!text){ var p=document.createElement("span"); p.className="placeholder"; p.textContent=state.listening?"Listening…":"Tap the mic and start talking…"; elSrc.appendChild(p); return; }
+    var s=document.createElement("span"); s.textContent=text; s.style.opacity = interim?".75":"1"; elSrc.appendChild(s);
+  }
+  function showTranslation(text, pending){
+    elDst.textContent = text||"";
+    elDst.classList.toggle("pending", !!pending);
+    paintScreen(text, pending);
+    if(bc && !isDisplay){ try{ bc.postMessage({t:text||"", p:!!pending}); }catch(e){} }
+  }
+
+  // translate in-progress speech, debounced so we don't spam the API
+  function liveTranslate(text){
+    clearTimeout(state.timer);
+    var mySeq = ++state.seq;
+    state.timer = setTimeout(function(){
+      translateSmart(text).then(function(r){
+        if (mySeq===state.seq){ showTranslation(r.out, true); if(cfg.auto) setLabels(r.from,r.to); }
+      }).catch(function(){ /* ignore interim failures */ });
+    }, 350);
+  }
+
+  // finished sentence → translate, show, log, speak
+  function commit(text){
+    text = (text||"").trim();
+    if(!text) return;
+    var mySeq = ++state.seq;
+    clearTimeout(state.timer);
+    showOriginal(text,false);
+    translateSmart(text).then(function(r){
+      if (mySeq===state.seq){ showTranslation(r.out,false); setLabels(r.from,r.to); }
+      addHistory(text,r.out,r.from,r.to);
+      setStatus(state.listening?"Listening…":"Ready");
+      if (state.speak) speak(r.out,r.to);
+    }).catch(function(){
+      setStatus(cfg.auto ? "Couldn't auto-detect/translate — check your connection." : "Couldn't reach the translation service — check your connection.", true);
+    });
+  }
+
+  // ---------- history ----------
+  function short(l){ return (l && (l.id||l.tr) ? String(l.id||l.tr) : "?").toUpperCase(); }
+  function addHistory(o,t,from,to){
+    state.history.unshift({o:o,t:t,from:from,to:to});
+    if(state.history.length>50) state.history.pop();
+    renderHistory();
+  }
+  function renderHistory(){
+    elHist.innerHTML="";
+    if(!state.history.length){ var e=document.createElement("div"); e.className="empty"; e.textContent="Translations will appear here."; elHist.appendChild(e); return; }
+    state.history.forEach(function(h){
+      var d=document.createElement("div"); d.className="item";
+      var o=document.createElement("div"); o.className="o";
+      var tag=document.createElement("span"); tag.className="tag"; tag.textContent=short(h.from)+" → "+short(h.to);
+      o.appendChild(tag); o.appendChild(document.createTextNode(h.o));
+      var t=document.createElement("div"); t.className="t"; t.textContent=h.t;
+      var r=document.createElement("div"); r.className="row";
+      var c=document.createElement("button"); c.textContent="Copy";
+      c.addEventListener("click", function(){
+        try{ navigator.clipboard.writeText(h.t).then(function(){ c.textContent="Copied ✓"; setTimeout(function(){c.textContent="Copy";},1200); }); }catch(e){}
+      });
+      var s=document.createElement("button"); s.textContent="🔊 Play";
+      s.addEventListener("click", function(){ speak(h.t,h.to); });
+      r.appendChild(c); r.appendChild(s);
+      d.appendChild(o); d.appendChild(t); d.appendChild(r);
+      elHist.appendChild(d);
+    });
+  }
+  $("clear").addEventListener("click", function(){ state.history=[]; renderHistory(); });
+
+  // ---------- text to speech ----------
+  function speak(text, lang){
+    if(!synth || !text) return;
+    synth.cancel();
+    var code = (lang && lang.tts) || "en-US";
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = code;
+    var voices = synth.getVoices();
+    var pre = code.split("-")[0].toLowerCase();
+    var v = null;
+    for (var i=0;i<voices.length;i++){ if(voices[i].lang.replace("_","-").toLowerCase()===code.toLowerCase()){ v=voices[i]; break; } }
+    if(!v) for (var j=0;j<voices.length;j++){ if(voices[j].lang.toLowerCase().indexOf(pre)===0){ v=voices[j]; break; } }
+    if(v) u.voice=v;
+    // mute the mic while talking so we don't translate our own voice
+    state.speaking = true;
+    if (cfg.engine==="browser" && state.recog && state.listening){ try{ state.recog.stop(); }catch(e){} }
+    var done=function(){
+      state.speaking=false;
+      if (state.listening && cfg.engine==="browser") startRecognition();
+    };
+    u.onend=done; u.onerror=done;
+    synth.speak(u);
+  }
+
+  // ---------- browser speech recognition (free; one language) ----------
+  function buildRecognition(){
+    var r = new SR();
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = browserSpeechCode();
+    r.maxAlternatives = 1;
+
+    r.onstart = function(){ setStatus("Listening…"); showOriginal("",false); };
+
+    r.onresult = function(e){
+      var interim="", finals=[];
+      for (var i=e.resultIndex;i<e.results.length;i++){
+        var res=e.results[i];
+        if (res.isFinal) finals.push(res[0].transcript);
+        else interim += res[0].transcript;
+      }
+      if (finals.length) commit(finals.join(" "));
+      if (interim){
+        showOriginal(interim.trim(), true);
+        liveTranslate(interim.trim());
+      }
+    };
+
+    r.onerror = function(e){
+      if (e.error==="no-speech" || e.error==="aborted") return;
+      if (e.error==="not-allowed" || e.error==="service-not-allowed"){
+        state.listening=false; updateMic();
+        setStatus("Microphone blocked — allow mic access for this page and try again.", true);
+      } else if (e.error==="network"){
+        setStatus("Speech recognition needs an internet connection.", true);
+      } else {
+        setStatus("Mic error: "+e.error, true);
+      }
+    };
+
+    // browsers end recognition after silence; keep it running while "on"
+    r.onend = function(){
+      if (state.listening && !state.speaking && cfg.engine==="browser"){
+        setTimeout(function(){ if(state.listening && !state.speaking) startRecognition(); }, 150);
+      }
+    };
+    return r;
+  }
+  function startRecognition(){
+    try{ state.recog = buildRecognition(); state.recog.start(); }catch(e){ /* already started */ }
+  }
+  function restartRecognition(){
+    if (state.recog){ var old=state.recog; state.recog=null; old.onend=null; try{ old.abort(); }catch(e){} }
+    if (state.listening) setTimeout(startRecognition, 200);
+  }
+  function stopBrowserRecognition(){
+    if (state.recog){ var r=state.recog; state.recog=null; r.onend=null; try{ r.stop(); }catch(e){} }
+  }
+
+  // ---------- cloud mic: ElevenLabs Scribe v2 Realtime (auto language, mixed speech) ----------
+  var cloud = {ws:null, ctx:null, stream:null, node:null, src:null, sink:null, closing:false};
+
+  function mintToken(){
+    if (cfg.tokenUrl){
+      var u = cfg.tokenUrl + (cfg.pass ? (cfg.tokenUrl.indexOf("?")>-1?"&":"?")+"pass="+encodeURIComponent(cfg.pass) : "");
+      return fetchJSON(u, 12000).then(function(j){
+        var t = j && (j.token || (j.data && j.data.token));
+        if(!t) throw new Error((j && (j.error||j.detail)) ? JSON.stringify(j.error||j.detail) : "Token service returned no token");
+        return t;
+      });
+    }
+    if (cfg.apiKey){
+      return fetchJSON("https://api.elevenlabs.io/v1/single-use-token/realtime_scribe", 12000,
+        {method:"POST", headers:{"xi-api-key":cfg.apiKey}}).then(function(j){
+        if(!j || !j.token) throw new Error("No token returned — check the API key");
+        return j.token;
+      });
+    }
+    return Promise.reject(new Error("Set up the Cloud mic first (⚙ below)."));
+  }
+
+  function toBase64(bytes){
+    var s="", CH=0x8000;
+    for (var i=0;i<bytes.length;i+=CH) s += String.fromCharCode.apply(null, bytes.subarray(i,i+CH));
+    return btoa(s);
+  }
+  // downsample Float32 @ctx rate → Int16 @16 kHz (box-filter average)
+  function toPcm16(f32, inRate){
+    var ratio = inRate/16000, n = Math.floor(f32.length/ratio), out = new Int16Array(n);
+    for (var i=0;i<n;i++){
+      var a=Math.floor(i*ratio), b=Math.min(f32.length, Math.floor((i+1)*ratio)), sum=0, c=0;
+      for (var k=a;k<b;k++){ sum+=f32[k]; c++; }
+      var v = c ? sum/c : 0;
+      v = Math.max(-1, Math.min(1, v));
+      out[i] = v<0 ? v*0x8000 : v*0x7FFF;
+    }
+    return out;
+  }
+  function sendPcm(f32){
+    if (state.speaking || !cloud.ws || cloud.ws.readyState!==1) return;
+    var pcm = toPcm16(f32, cloud.ctx.sampleRate);
+    cloud.ws.send(JSON.stringify({
+      message_type:"input_audio_chunk",
+      audio_base_64: toBase64(new Uint8Array(pcm.buffer)),
+      commit:false,
+      sample_rate:16000
+    }));
+  }
+
+  var WORKLET_SRC =
+    "class P extends AudioWorkletProcessor{constructor(){super();this.b=[];this.n=0}" +
+    "process(i){var c=i[0]&&i[0][0];if(c){this.b.push(new Float32Array(c));this.n+=c.length;" +
+    "if(this.n>=2048){var o=new Float32Array(this.n),k=0;for(var x of this.b){o.set(x,k);k+=x.length}" +
+    "this.port.postMessage(o,[o.buffer]);this.b=[];this.n=0}}return true}}" +
+    "registerProcessor('pcm-tap',P);";
+
+  function startAudio(){
+    cloud.src = cloud.ctx.createMediaStreamSource(cloud.stream);
+    cloud.sink = cloud.ctx.createGain(); cloud.sink.gain.value = 0;
+    cloud.sink.connect(cloud.ctx.destination);
+    if (cloud.ctx.audioWorklet && window.AudioWorkletNode){
+      var url = URL.createObjectURL(new Blob([WORKLET_SRC], {type:"application/javascript"}));
+      return cloud.ctx.audioWorklet.addModule(url).then(function(){
+        URL.revokeObjectURL(url);
+        cloud.node = new AudioWorkletNode(cloud.ctx, "pcm-tap");
+        cloud.node.port.onmessage = function(e){ sendPcm(e.data); };
+        cloud.src.connect(cloud.node); cloud.node.connect(cloud.sink);
+      });
+    }
+    cloud.node = cloud.ctx.createScriptProcessor(4096,1,1);
+    cloud.node.onaudioprocess = function(e){ sendPcm(new Float32Array(e.inputBuffer.getChannelData(0))); };
+    cloud.src.connect(cloud.node); cloud.node.connect(cloud.sink);
+    return Promise.resolve();
+  }
+
+  function stopCloudResources(){
+    cloud.closing = true;
+    try{ if(cloud.ws){ cloud.ws.onclose=null; cloud.ws.onerror=null; cloud.ws.onmessage=null; cloud.ws.close(); } }catch(e){}
+    try{ if(cloud.node){ cloud.node.disconnect(); if(cloud.node.port) cloud.node.port.onmessage=null; cloud.node.onaudioprocess=null; } }catch(e){}
+    try{ if(cloud.src) cloud.src.disconnect(); }catch(e){}
+    try{ if(cloud.stream) cloud.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+    try{ if(cloud.ctx) cloud.ctx.close(); }catch(e){}
+    cloud.ws=cloud.node=cloud.src=cloud.sink=cloud.stream=cloud.ctx=null;
+  }
+
+  var FATAL = {auth_error:1, quota_exceeded:1, unaccepted_terms:1, invalid_request:1};
+  function onCloudMessage(ev){
+    var m; try{ m = JSON.parse(ev.data); }catch(e){ return; }
+    var t = m.message_type;
+    if (t==="partial_transcript"){
+      var p=(m.text||"").trim();
+      if(p){ showOriginal(p,true); liveTranslate(p); }
+    } else if (t==="committed_transcript" || t==="committed_transcript_with_timestamps"){
+      var c=(m.text||"").trim(), now=Date.now();
+      if(!c) return;
+      // both message types can arrive for one segment — don't translate twice
+      if (c===state.lastCommit.t && now-state.lastCommit.at<2500) return;
+      state.lastCommit={t:c,at:now};
+      commit(c);
+    } else if (t && t!=="session_started" && t!=="warning" && (/error|exceeded|limit|throttled|overflow|exhausted|terms|invalid|insufficient|chunk/.test(t))){
+      var msg = m.error || m.message || t;
+      if (t==="insufficient_audio_activity" || t==="commit_throttled") return;
+      setStatus("Cloud mic: "+msg, true);
+      if (FATAL[t]) stopAll();
+    }
+  }
+
+  function startCloud(){
+    cloud.closing = false;
+    setStatus("Connecting…");
+    var token;
+    return mintToken().then(function(t){
+      token = t;
+      return navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true}});
+    }).then(function(stream){
+      if (!state.listening){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+      cloud.stream = stream;
+      cloud.ctx = new (window.AudioContext||window.webkitAudioContext)();
+      var url = "wss://api.elevenlabs.io/v1/speech-to-text/realtime?model_id=scribe_v2_realtime" +
+                "&audio_format=pcm_16000&commit_strategy=vad&vad_silence_threshold_secs=0.7" +
+                "&token="+encodeURIComponent(token);
+      var ws = cloud.ws = new WebSocket(url);
+      ws.onopen = function(){
+        state.retries = 0;
+        cloud.ctx.resume().then(startAudio).then(function(){ setStatus("Listening…"); showOriginal("",false); })
+          .catch(function(e){ fail(e); });
+      };
+      ws.onmessage = onCloudMessage;
+      ws.onerror = function(){ /* onclose follows */ };
+      ws.onclose = function(){
+        if (!state.listening || cloud.closing) return;
+        if (state.retries < 3){
+          state.retries++; setStatus("Reconnecting…");
+          stopCloudResources();
+          setTimeout(function(){ if(state.listening) startCloud().catch(fail); }, 800);
+        } else fail(new Error("Cloud mic connection lost."));
+      };
+    });
+  }
+
+  // ---------- start / stop ----------
+  function updateMic(){
+    elMic.classList.toggle("on", state.listening);
+    elMic.textContent = state.listening ? "⏹" : "🎤";
+    elMic.setAttribute("aria-label", state.listening ? "Stop listening" : "Start listening");
+    if(!state.listening) setStatus("Ready");
+  }
+  function fail(e){
+    var msg = (e && e.name==="NotAllowedError") ? "Microphone blocked — allow mic access for this page and try again."
+            : (e && e.message) ? e.message : "Couldn't start the mic.";
+    stopAll();
+    setStatus(msg, true);
+  }
+  function stopAll(){
+    state.listening=false;
+    stopBrowserRecognition();
+    stopCloudResources();
+    if (synth) synth.cancel();
+    state.speaking=false;
+    updateMic();
+    showOriginal("",false);
+  }
+  function startAll(){
+    state.listening=true; state.retries=0; updateMic();
+    showTranslation("",false);
+    if (cfg.engine==="cloud"){
+      if (!cloudConfigured()){ $("settings").open=true; return fail(new Error("Set up the Cloud mic first — fill in the box below.")); }
+      startCloud().catch(fail);
+    } else startRecognition();
+  }
+  elMic.addEventListener("click", function(){ state.listening ? stopAll() : startAll(); });
+
+  // ---------- typed input ----------
+  function sendTyped(){
+    var v=elTyped.value.trim(); if(!v) return;
+    elTyped.value="";
+    setStatus("Translating…");
+    commit(v);
+  }
+  $("typedGo").addEventListener("click", sendTyped);
+  elTyped.addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); sendTyped(); } });
+  elTyped.addEventListener("input", function(){
+    var v=elTyped.value.trim();
+    if(v){ showOriginal(v,true); liveTranslate(v); }
+  });
+
+  if (synth && synth.onvoiceschanged!==undefined) synth.onvoiceschanged=function(){};
+  refreshLangUI();
+  showOriginal("",false);
+
+  // test hook (harmless in production)
+  window.__lt = {translateSmart:translateSmart, cfg:cfg, state:state, onCloudMessage:onCloudMessage, commit:commit};
+})();
+</script>
+</body>
+</html>
