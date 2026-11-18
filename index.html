@@ -624,10 +624,20 @@ body:has(#auth) .fabs{display:none!important}
 .fabs{position:fixed;right:16px;bottom:20px;z-index:19;display:none;flex-direction:column;gap:10px;align-items:flex-end}
 .fabs.on{display:flex}
 @media (max-width:900px){.fabs{right:14px;bottom:calc(72px + env(safe-area-inset-bottom,0px))}}
-.fab{display:flex;align-items:center;gap:7px;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:11px 16px;font-weight:600;font-size:.9rem;box-shadow:0 6px 18px rgba(0,0,0,.22);cursor:pointer;text-decoration:none;position:relative}
-.fab .ic{width:20px;height:20px}
+.fab{position:relative;display:flex;align-items:center;justify-content:center;width:56px;height:56px;padding:0;border-radius:50%;background:var(--ink);color:#fff;border:0;box-shadow:0 6px 18px rgba(0,0,0,.22);cursor:pointer;text-decoration:none}
+.fab>span:not(.fab-badge){position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.fab .ic{width:24px;height:24px}
 .fab-chat{background:var(--accent-dark,#2a7d5f)}
-.fab-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.fab-badge{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;border:2px solid var(--bg,#fff)}
+/* chat heads: faces of people with unread messages, newest nearest the button, max 3 */
+.chat-heads{display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.chat-head{position:relative;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;animation:headpop .22s ease-out}
+.chat-head .av{width:46px;height:46px;font-size:.95rem;border:2.5px solid var(--bg,#fff);box-shadow:0 4px 12px rgba(0,0,0,.26)}
+.chat-head .av.sys,.chat-head .grp-ic{background:var(--accent-dark,#2a7d5f);color:#fff}
+.chat-head .grp-ic{width:46px;height:46px;display:grid;place-items:center;border-radius:50%;border:2.5px solid var(--bg,#fff);box-shadow:0 4px 12px rgba(0,0,0,.26)}
+.chat-head .grp-ic .ic{width:22px;height:22px}
+.chat-head-dot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.64rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;border:2px solid var(--bg,#fff)}
+@keyframes headpop{from{opacity:0;transform:scale(.4) translateY(8px)}to{opacity:1;transform:none}}
 /* messaging */
 #msgPane{display:flex;flex-direction:column;min-height:0;height:min(68vh,560px)}
 .convo-list{overflow-y:auto;display:flex;flex-direction:column;margin:0 -4px}
@@ -694,7 +704,7 @@ body:has(#auth) .fabs{display:none!important}
   <aside class="side" id="side"></aside>
 </div>
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
-<div class="fabs" id="fabs"><button class="fab fab-chat" id="fabChat" type="button" data-act="messages" aria-label="Messages"><span>Chat</span><span class="fab-badge" id="msgBadge" hidden></span></button><a class="fab fab-game" id="fabGame" href="bible-game.html" aria-label="Open the Bible game"><span>Game</span></a></div>
+<div class="fabs" id="fabs"><div class="chat-heads" id="chatHeads"></div><button class="fab fab-chat" id="fabChat" type="button" data-act="messages" aria-label="Messages"><span>Chat</span><span class="fab-badge" id="msgBadge" hidden></span></button><a class="fab fab-game" id="fabGame" href="bible-game.html" aria-label="Open the Bible game"><span>Game</span></a></div>
 <div id="upbar" hidden role="status" aria-live="polite"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <noscript><div class="note warn" style="margin:16px">This site needs JavaScript. Please turn it on in your browser.</div></noscript>
@@ -3262,7 +3272,19 @@ async function addComment(pid, input){
 let msgPoll = 0; const MSG = { conv: null, count: 0 };
 function msgClock(ms){ const d = new Date(ms + TZ * 36e5); let h = d.getUTCHours(); const mn = String(d.getUTCMinutes()).padStart(2, '0'); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + mn + ' ' + ap; }
 function msgDay(ms){ const iso = phISO(ms); if (iso === phISO()) return 'Today'; if (iso === phISO(Date.now() - 864e5)) return 'Yesterday'; const [Y, M, D] = iso.split('-').map(Number); return MONTHS[M - 1] + ' ' + D + (Y !== phNow().getUTCFullYear() ? ' ' + Y : ''); }
-function paintMsgBadge(){ const b = $('#msgBadge'); if (!b) return; const n = S.msgUnread || 0; b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; }
+function paintMsgBadge(){ const b = $('#msgBadge'); if (b){ const n = S.msgUnread || 0; b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; } renderChatHeads(); }
+function renderChatHeads(){
+  const box = $('#chatHeads'); if (!box) return;
+  if (S.msgOn === false){ box.innerHTML = ''; return; }
+  /* show the faces of people with unread messages — newest nearest the button, at most 3 */
+  const un = (S.convos || []).filter(c => c.unread > 0).sort((a, b) => (a.lastTime || 0) - (b.lastTime || 0)).slice(-3);
+  box.innerHTML = un.map(c => {
+    const face = c.kind === 'group' ? `<span class="grp-ic">${icon('users')}</span>` : av(c.uid, 'md');
+    const act = c.kind === 'group' ? `data-act="opengroupchat" data-gid="${esc(c.groupId)}"` : `data-act="opendm" data-uid="${esc(c.uid)}"`;
+    const dot = c.unread > 99 ? '99+' : c.unread;
+    return `<button class="chat-head" type="button" ${act} data-title="${esc(c.who)}" aria-label="Open chat with ${esc(c.who)}, ${c.unread} new">${face}<span class="chat-head-dot">${dot}</span></button>`;
+  }).join('');
+}
 function msgNotifyOn(){ return ('Notification' in window) && Notification.permission === 'granted' && (pushConfigured() ? (typeof osOn === 'function' && osOn()) : notifOn()); }
 /* pop up a notification when a new message arrives while the app is open or in the background */
 function notifyChat(convos){
