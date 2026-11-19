@@ -1,0 +1,20 @@
+/* Animations for the Tubod church site: scroll reveal, page fade, progress bar, soft hover lift. */
+:root{--ease:cubic-bezier(.2,.7,.2,1);--accent2:#16a39b}
+#coolProgress{position:fixed;top:0;left:0;height:3px;width:0;z-index:70;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--gold));transition:width .12s linear}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2) 55%,var(--gold))}
+.btn{transition:transform .2s var(--ease),box-shadow .2s var(--ease),background .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary:hover{box-shadow:0 8px 18px -8px color-mix(in srgb,var(--accent) 70%,transparent)}
+.btn:disabled{transform:none;box-shadow:none}
+.icon-btn{transition:transform .2s var(--ease),background .2s}
+.card{transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+.side .card:hover{transform:translateY(-2px);box-shadow:0 14px 26px -18px color-mix(in srgb,var(--accent) 60%,transparent)}
+#view.view-in{animation:coolViewIn .4s var(--ease)}
+@keyframes coolViewIn{from{opacity:.2;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease);transition-delay:var(--d,0s)}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  #view.view-in{animation:none}
+  .btn:hover,.side .card:hover{transform:none}
+}
