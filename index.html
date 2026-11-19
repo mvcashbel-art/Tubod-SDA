@@ -1060,15 +1060,31 @@ function saveToken(){ try { S.token ? localStorage.setItem('tubodToken', S.token
 function loadToken(){ try { return localStorage.getItem('tubodToken') || ''; } catch (e) { return ''; } }
 
 /* poll cheaply: only fetch everything when something changed */
-let pollTimer = 0, polling = false;
+let pollTimer = 0, polling = false, lastConvos = 0;
+/* How often to check the server:
+   - tab open: every 30s
+   - tab hidden: not at all when push is set up (notifications cover the
+     background); a slow 2-min check only for the rare no-push case.
+   This keeps hundreds of idle/background tabs from hammering the backend. */
+function pollMs(){
+  if (!document.hidden) return 30000;
+  if (pushConfigured()) return 0;
+  if (notifOn()) return 120000;
+  return 0;
+}
 async function pollNow(){
   if (polling || !S.token || (document.hidden && !notifOn())) return;
   polling = true;
-  try { const j = await api('ping'); if (j.rev !== S.rev) await sync(); else if (S.offline){ S.offline = false; schedule(); } refreshConvos(); }
+  try {
+    const j = await api('ping');
+    if (j.rev !== S.rev) await sync(); else if (S.offline){ S.offline = false; schedule(); }
+    /* refresh the chat list only when chat is open, else at most ~every 90s */
+    if (document.getElementById('msgPane') || Date.now() - lastConvos > 85000){ lastConvos = Date.now(); refreshConvos(); }
+  }
   catch (e){ if (e.code === 'network'){ S.offline = true; schedule(); } }
   polling = false;
 }
-function startPolling(){ clearInterval(pollTimer); pollTimer = setInterval(pollNow, 30000); }
+function startPolling(){ clearInterval(pollTimer); const ms = pollMs(); pollTimer = ms ? setInterval(pollNow, ms) : 0; }
 
 /* ---------- image shrinking ---------- */
 function loadImg(file){
@@ -3391,11 +3407,27 @@ async function sendThreadMsg(){
   const ta = $('#tMsg'); if (!ta) return; const text = ta.value.trim(); if (!text) return;
   const q = MSG.conv; if (!q) return;
   ta.value = ''; ta.style.height = 'auto';
-  try { await api('sendMsg', q.to ? { to: q.to, text } : { groupId: q.groupId, text }); await loadThread(true); refreshConvos(); }
+  try { await api('sendMsg', q.to ? { to: q.to, text } : { groupId: q.groupId, text }); bumpThreadPoll(); await loadThread(true); refreshConvos(); }
   catch (e){ toast(errMsg(e)); ta.value = text; }
 }
-function startThreadPoll(){ stopThreadPoll(); msgPoll = setInterval(() => { if (MSG.conv && !document.hidden) loadThread(false); }, 5000); }
-function stopThreadPoll(){ if (msgPoll){ clearInterval(msgPoll); msgPoll = 0; } }
+/* Poll an open chat quickly while it's lively, then ease off when it goes
+   quiet — so a chat left open doesn't keep calling every few seconds forever. */
+let msgGap = 4000;
+function bumpThreadPoll(){ msgGap = 4000; }
+function startThreadPoll(){
+  stopThreadPoll(); msgGap = 4000;
+  const loop = async () => {
+    if (!MSG.conv){ msgPoll = 0; return; }
+    if (!document.hidden){
+      const before = MSG.count;
+      await loadThread(false);
+      msgGap = (MSG.count > before) ? 4000 : Math.min(msgGap + 3000, 20000);
+    }
+    msgPoll = setTimeout(loop, msgGap);
+  };
+  msgPoll = setTimeout(loop, msgGap);
+}
+function stopThreadPoll(){ if (msgPoll){ clearTimeout(msgPoll); msgPoll = 0; } }
 /* admin safeguarding review */
 async function openMsgReview(){
   ensureMsgModal(); stopThreadPoll(); MSG.conv = null;
@@ -3541,7 +3573,10 @@ document.addEventListener('change', e => {
   if (t.matches && t.matches('select.msel[data-act=mlevel]')) memberAction('macc', t.dataset.uid, t.value);
 });
 window.addEventListener('hashchange', fromHash);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) pollNow(); });
+document.addEventListener('visibilitychange', () => {
+  startPolling();                                   /* switch cadence for foreground/background */
+  if (!document.hidden){ pollNow(); if (MSG.conv){ bumpThreadPoll(); loadThread(false); } }
+});
 
 /* ---------- start ---------- */
 /* the loading screen stays at least 2 seconds, then fades away */
