@@ -248,8 +248,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .mem b{display:block}
 .mem span.s{display:block;font-size:.85rem;color:var(--muted)}
 .pf{padding:0;overflow:hidden}
-.cover{height:170px;background:linear-gradient(120deg,#BFDDEB,#E7EFD9 60%,#F4E7BE);position:relative}
-.cover>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover{height:auto;aspect-ratio:5/2;min-height:170px;max-height:440px;background:linear-gradient(120deg,#BFDDEB,#E7EFD9 60%,#F4E7BE);position:relative}
+.cover>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;cursor:zoom-in}
 .pf-av{position:absolute;left:18px;bottom:0;transform:translateY(50%);z-index:2}
 .pf-main{position:relative;padding:14px 18px 4px}
 .pf-id{padding:0 0 4px 132px;min-height:48px}
@@ -488,7 +488,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 @media (max-width:480px){
   .page-head h1{font-size:1.6rem}
-  .cover{height:120px}
+  .cover{min-height:0;aspect-ratio:2/1}
   .pf-id h1{font-size:1.6rem}
   .av.xl{width:88px;height:88px}
 }
@@ -2214,10 +2214,10 @@ function renderProfile(){
   const mine2 = files.filter(isPersonal), shared = files.filter(f => !isPersonal(f));
   const pAlbums = albumList(mine2), loose = mine2.filter(f => !albumOf(f)).sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
   if (S.galFor !== id){ S.galFor = id; S.galLimit = 24; }
-  const cover = p.cover ? imgUrl(p.cover, 1200) : '';
+  const cover = p.cover ? imgUrl(p.cover, 1600) : '';
   keepInputs(slot, () => {
     slot.innerHTML = `<section class="card pf">
-      <div class="cover">${cover ? `<img src="${cover}" alt="">` : ''}<span class="pf-av">${av(id, 'xl')}</span></div>
+      <div class="cover">${cover ? `<img src="${cover}" alt="Cover photo" data-act="zoom">` : ''}<span class="pf-av">${av(id, 'xl')}</span></div>
       <div class="pf-main"><div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
         ${!own ? `<div class="pf-btns">${S.uid && S.msgOn !== false && p.access !== 'roll' && !isDead(p) ? `<button class="btn primary" data-act="opendm" data-uid="${esc(id)}" data-title="${esc(p.name)}">${icon('chat')}Message</button>` : ''}${S.canMem ? `<button class="btn" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button>` : ''}</div>` : ''}
         ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${(pushConfigured() ? osOn() : notifOn()) ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
@@ -2302,7 +2302,7 @@ function openProfileModal(uid){
       }
       const af = $('#pAv', m).files[0], cf = $('#pCover', m).files[0];
       if (af) body.avatar = await shrink(af, {w:240, h:240, crop:true, q:.82, maxChars:300000});
-      if (cf) body.cover = await shrink(cf, {w:1200, h:400, crop:true, q:.78, maxChars:900000});
+      if (cf) body.cover = await shrink(cf, {w:1500, h:600, crop:true, q:.8, maxChars:900000});
       await api(self ? 'saveProfile' : 'adminSaveMember', body); await sync();
       closeModal(); if (S.route === 'profile') renderProfile(); toast(self ? 'Profile saved.' : 'Member saved.');
     } catch (err){ fail(errMsg(err)); }
