@@ -861,7 +861,7 @@ const S = {
   route:'home', profileId:null, filter:'all', libCat:'all', libQ:'', memQ:'', memSt:'all', limit:30,
   token:'', uid:null, isAdmin:false, offline:false, rev:'',
   posts:[], comments:[], reactions:[], profiles:{}, files:[], settings:{}, program:[],
-  loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}, posting:false, chatInit:false
+  loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, pub:false, video:null}, posting:false, chatInit:false
 };
 
 /* ---------- small utilities ---------- */
@@ -1014,7 +1014,7 @@ async function api(action, data = {}){
 }
 function applySync(j){
   S.program = j.program || [];
-  S.rev = j.rev; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin'; S.lv = j.me.access; S.canPost = S.isAdmin || S.lv === 'editor'; S.canMem = S.isAdmin || S.lv === 'clerk'; S.canAttend = S.canPost || S.canMem; S.groups = j.groups || []; S.newVisitors = j.newVisitors || 0; S.newPrayers = j.newPrayers || 0;
+  S.rev = j.rev; S.newsOK = !!j.newsOK; S.uid = j.me.id; S.me = j.me; S.sms = j.sms || null; S.isAdmin = j.me.access === 'admin'; S.lv = j.me.access; S.canPost = S.isAdmin || S.lv === 'editor'; S.canMem = S.isAdmin || S.lv === 'clerk'; S.canAttend = S.canPost || S.canMem; S.groups = j.groups || []; S.newVisitors = j.newVisitors || 0; S.newPrayers = j.newPrayers || 0;
   S.settings = j.settings || {}; if (applySite()) setTimeout(() => { renderChrome(); mount(); }, 0); S.posts = j.posts; S.comments = j.comments; S.reactions = j.reactions; S.files = j.files;
   S.events = j.events || [];
   S.waiting = j.members.filter(m => m.access === 'pending');
@@ -1412,7 +1412,7 @@ async function authSubmit(kind, form){
   } catch (e){ err.textContent = errMsg(e); btn.disabled = false; btn.textContent = old; }
 }
 function resetData(){
-  Object.assign(S, {uid:null, isAdmin:false, canPost:false, canMem:false, canAttend:false, lv:'', groups:[], pending:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], events:[], waiting:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, video:null}});
+  Object.assign(S, {uid:null, isAdmin:false, canPost:false, canMem:false, canAttend:false, lv:'', groups:[], pending:false, rev:'', posts:[], comments:[], reactions:[], profiles:{}, files:[], events:[], waiting:[], loaded:{}, open:new Set(), draft:{text:'', cat:'share', photos:[], pin:false, pub:false, video:null}});
 }
 function forceSignOut(msg){
   clearInterval(pollTimer); S.token = ''; saveToken(); clearCache(); resetData(); closeModal();
@@ -2030,6 +2030,7 @@ function buildComposer(){
       <button class="btn" type="button" data-act="attachvid">${icon('file')}Video</button>
       <input type="file" id="cVid" accept="video/*" hidden>
       <label class="pin-opt" id="cPinWrap" hidden><input type="checkbox" id="cPin"> Pin to top</label>
+      <label class="pin-opt" id="cPubWrap" hidden title="Also show this announcement on the Isabel–Merida district page"><input type="checkbox" id="cPub"> Share on district page</label>
       <button class="btn primary" type="button" id="cPost" data-act="post">Post</button>
     </div></section>`;
   const ta = $('#cText');
@@ -2038,6 +2039,7 @@ function buildComposer(){
   $('#cFile').addEventListener('change', onPickPhotos);
   $('#cVid').addEventListener('change', onPickVideo);
   $('#cPin').addEventListener('change', e => { S.draft.pin = e.target.checked; });
+  $('#cPub').addEventListener('change', e => { S.draft.pub = e.target.checked; });
   grow(); composerBits();
 }
 function composerBits(){
@@ -2049,6 +2051,8 @@ function composerBits(){
     + (S.draft.video ? `<div class="pv vfile">${icon('file')}<span>${esc(S.draft.video.name)} · ${fmtSize(S.draft.video.size)}</span><button type="button" data-act="rmvid" aria-label="Remove video">${icon('x')}</button></div>` : '');
   $('#cPinWrap').hidden = !S.canPost;
   $('#cPin').checked = !!S.draft.pin;
+  $('#cPubWrap').hidden = !(S.canPost && S.newsOK && S.draft.cat === 'announcement');
+  $('#cPub').checked = !!S.draft.pub;
   const btn = $('#cPost'); btn.disabled = S.posting || (!S.draft.text.trim() && !S.draft.photos.length && !S.draft.video);
   btn.textContent = S.posting ? 'Posting…' : 'Post';
 }
@@ -2074,15 +2078,15 @@ async function prepPhoto(f){
   try { return await shrink(f, {w:3840, q:.9, maxChars:12000000}); }
   catch (e){ return readDataUrl(f); }
 }
-async function sendPost(cat, text, list, pinned){
+async function sendPost(cat, text, list, pinned, pub){
   const files = list.map(x => x.file);
   let photos = await Promise.all(files.map(prepPhoto));
-  try { return await api('post', {cat, text, photos, pinned}); }
+  try { return await api('post', {cat, text, photos, pinned, pub: !!pub}); }
   catch (e){
     if (e.code !== 'bad_image' || !files.length) throw e;
     toast('The church server needs its update to post full-size photos. Posting smaller copies for now.');
     photos = []; for (const f of files) photos.push(await shrink(f, {w:1600, q:.85, maxChars:2800000}));
-    return await api('post', {cat, text, photos, pinned});
+    return await api('post', {cat, text, photos, pinned, pub: !!pub});
   }
 }
 function onPickVideo(e){
@@ -2095,11 +2099,11 @@ function onPickVideo(e){
 function postWithVideo(){
   if (S.posting || !guard()) return;
   const f = S.draft.video, d = S.draft, text = d.text.trim();
-  S.draft = {text:'', cat:d.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
+  S.draft = {text:'', cat:d.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, pub:false, video:null};
   const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
   composerBits();
   toast('Video upload started. Keep this page open.');
-  enqueueUploads([{file:f, title:(text || f.name).slice(0, 100), cat:'media', desc:'[[profile]]', post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.canPost && d.pin)}}]);
+  enqueueUploads([{file:f, title:(text || f.name).slice(0, 100), cat:'media', desc:'[[profile]]', post:{cat:d.cat, text, photos:d.photos.slice(), pinned:!!(S.canPost && d.pin), pub:!!(S.canPost && S.newsOK && d.cat === 'announcement' && d.pub)}}]);
 }
 async function submitPost(){
   if (S.draft.video) return postWithVideo();
@@ -2108,8 +2112,8 @@ async function submitPost(){
   if (!text && !S.draft.photos.length) return;
   S.posting = true; composerBits();
   try {
-    await sendPost(S.draft.cat, text, S.draft.photos, !!(S.canPost && S.draft.pin)); await sync();
-    S.draft = {text:'', cat:S.draft.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, video:null};
+    await sendPost(S.draft.cat, text, S.draft.photos, !!(S.canPost && S.draft.pin), !!(S.canPost && S.newsOK && S.draft.cat === 'announcement' && S.draft.pub)); await sync();
+    S.draft = {text:'', cat:S.draft.cat === 'announcement' ? 'announcement' : 'share', photos:[], pin:false, pub:false, video:null};
     const ta = $('#cText'); if (ta){ ta.value = ''; ta.style.height = 'auto'; }
   } catch (err){ toast(errMsg(err)); }
   S.posting = false; composerBits();
@@ -2469,7 +2473,7 @@ async function runUpload(job){
       }
       if (!id) throw new Error('The video is saved in the Library, but it could not be added to the post. Post it again with its link.');
       const p = job.post, link = driveUrl(id);
-      await sendPost(p.cat, (p.text ? p.text + '\n\n' : '') + link, p.photos, p.pinned);
+      await sendPost(p.cat, (p.text ? p.text + '\n\n' : '') + link, p.photos, p.pinned, p.pub);
       job.posted = true;
       await sync();
     }

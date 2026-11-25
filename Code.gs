@@ -9,7 +9,7 @@
 
 const SCHEMA = {
   Members:   ['id', 'name', 'username', 'hash', 'salt', 'access', 'createdAt', 'title', 'ministries', 'since', 'bio', 'verse', 'avatar', 'cover', 'phone', 'sms', 'bday', 'mstatus', 'mstatusDate', 'mstatusNote', 'baptDate', 'baptBy', 'baptPlace', 'household', 'groups', 'anniv', 'consent'],
-  Posts:     ['id', 'authorId', 'cat', 'text', 'photos', 'pinned', 'createdAt', 'sms', 'svc', 'grp'],
+  Posts:     ['id', 'authorId', 'cat', 'text', 'photos', 'pinned', 'createdAt', 'sms', 'svc', 'grp', 'pub'],
   Comments:  ['id', 'postId', 'authorId', 'text', 'createdAt'],
   Reactions: ['id', 'postId', 'uid', 'createdAt'],
   Files:     ['id', 'title', 'cat', 'desc', 'driveId', 'name', 'mime', 'size', 'authorId', 'createdAt'],
@@ -321,7 +321,7 @@ function doPost(e) {
   return json_(out);
 }
 
-const OPEN = { ping: true, publicInfo: true, register: true, login: true, visitorCard: true, prayerRequest: true };
+const OPEN = { ping: true, publicInfo: true, publicNews: true, register: true, login: true, visitorCard: true, prayerRequest: true };
 /* what a new member may do while waiting for approval */
 const PENDING_OK = { sync: true, logout: true, ping: true };
 /* these change no shared data, so they must not make everyone reload (and must not throw away the saved copy) */
@@ -343,6 +343,15 @@ const ACTIONS = {
 
   publicInfo: function () {
     return { rev: rev_(), church: { churchName: getSetting_('churchName') || 'Tubod SDA Church', tagline: getSetting_('tagline') || '', bgId: getSetting_('bgId') || '' } };
+  },
+
+  /* announcements the church leaders chose to share on the district page: text only, nothing private */
+  publicNews: function () {
+    const rows = readAll_('Posts').filter(function (p) { return p.cat === 'announcement' && String(p.pub) === '1' && !p.grp; })
+      .sort(function (a, b) { return Number(b.createdAt) - Number(a.createdAt); }).slice(0, 5);
+    return { church: getSetting_('churchName') || '', news: rows.map(function (p) {
+      return { id: p.id, text: String(p.text || '').slice(0, 600), createdAt: Number(p.createdAt) || 0, pinned: String(p.pinned) === '1' };
+    }) };
   },
 
   /* a first-time visitor introduces themselves without needing an account */
@@ -464,6 +473,7 @@ const ACTIONS = {
       cachePutBig_(key, JSON.stringify(body), 3600);
     }
     body.me = { id: me.id, access: me.access, name: me.name, phone: me.phone, sms: me.sms === '1' };
+    body.newsOK = true;
     return body;
   },
 
@@ -490,7 +500,7 @@ const ACTIONS = {
       if (sv) svc = sv.id + '|' + (r.svcDate && validSvcDate_(sv, r.svcDate, nowMs_()) ? r.svcDate : openDate_(sv, nowMs_()));
     }
     const id = id_('p');
-    append_('Posts', { id: id, authorId: me.id, cat: cat, text: text, photos: ids.join(','), pinned: (canPost_(me) && r.pinned) ? '1' : '', createdAt: String(Date.now()), svc: svc, grp: grp });
+    append_('Posts', { id: id, authorId: me.id, cat: cat, text: text, photos: ids.join(','), pinned: (canPost_(me) && r.pinned) ? '1' : '', createdAt: String(Date.now()), svc: svc, grp: grp, pub: (cat === 'announcement' && !grp && canPost_(me) && r.pub) ? '1' : '' });
     activity_(me, 'post', (grp ? 'Group post' : cat === 'announcement' ? 'Announcement' : cat) + (text ? ': ' + text.slice(0, 60) : '') + (ids.length ? ' · ' + ids.length + ' photo' + (ids.length > 1 ? 's' : '') : ''));
     if (cat === 'announcement' && !grp) osPush_(getSetting_('churchName') || 'Tubod SDA Church', text);
     return { id: id };
