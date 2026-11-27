@@ -12,6 +12,11 @@ if (path.indexOf('/tubod-sda') >= 0) code = 'TBD';
 else { const m = /\/churches\/([a-z-]+)\//.exec(path); if (m && CODES[m[1]]) code = CODES[m[1]]; }
 if (window.DISTRICT_CHURCH_CODE) code = window.DISTRICT_CHURCH_CODE;
 const $ = s => document.querySelector(s);
+/* Bisaya for this card's own words. The church's text layer is told to leave the card alone (data-notr). */
+const BIS = { 'From the district': 'Gikan sa Distrito', 'District events': 'Mga Panghitabo sa Distrito', 'Add to my calendar': 'Idugang sa akong kalendaryo', 'Share': 'Ipaambit',
+  'All district news': 'Tanang balita sa distrito', 'All district events': 'Tanang panghitabo sa distrito', 'Pinned': 'Gi-pin', 'this church': 'kining simbahan',
+  'Copied. Paste in Messenger or Facebook.': 'Nakopya. I-paste sa Messenger o Facebook.' };
+const L = k => (document.documentElement.lang === 'ceb' && BIS[k]) || k;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let items = null, events = [];
 
@@ -44,21 +49,21 @@ function mount() {
   const side = $('#side'); if (!side || side.hidden || !items) return;
   const anchor = side.querySelector('#votd') || side.querySelector('#sabbathCard'); if (!anchor) return;
   const list = mine(), evl = mineEv();
-  put(side, anchor, 'dnews', list.length ? '<h3>From the district</h3>' + list.map((x, i) =>
-    '<div class="dn"><b>' + (x.pinned ? '<span class="pin">Pinned</span>' : '') + esc(x.title) + '</b><small>' + esc(fmtDate(x.date)) + (x.church ? ' · this church' : '') + '</small>' +
-    (x.body ? '<p>' + esc(x.body) + '</p>' : '') + '<button type="button" class="bt" data-dshare="n' + i + '">Share</button></div>').join('') +
-    '<a class="more-l" href="' + DISTRICT_URL + '#news" target="_blank" rel="noopener">All district news</a>' : '');
+  put(side, anchor, 'dnews', list.length ? '<h3>' + L('From the district') + '</h3>' + list.map((x, i) =>
+    '<div class="dn"><b>' + (x.pinned ? '<span class="pin">' + L('Pinned') + '</span>' : '') + esc(x.title) + '</b><small>' + esc(fmtDate(x.date)) + (x.church ? ' · ' + L('this church') : '') + '</small>' +
+    (x.body ? '<p>' + esc(x.body) + '</p>' : '') + '<button type="button" class="bt" data-dshare="n' + i + '">' + L('Share') + '</button></div>').join('') +
+    '<a class="more-l" href="' + DISTRICT_URL + '#news" target="_blank" rel="noopener">' + L('All district news') + '</a>' : '');
   const first = side.querySelector('#dnews') || anchor;
-  put(side, first, 'devents', evl.length ? '<h3>District events</h3>' + evl.map((e, i) =>
-    '<div class="dn"><b>' + esc(e.title) + '</b><small>' + esc(evLine(e)) + (e.church ? ' · this church' : '') + '</small>' + (e.description ? '<p>' + esc(e.description) + '</p>' : '') +
-    '<button type="button" class="bt" data-dcal="' + i + '">Add to my calendar</button><button type="button" class="bt" data-dshare="e' + i + '">Share</button></div>').join('') +
-    '<a class="more-l" href="' + DISTRICT_URL + '#events" target="_blank" rel="noopener">All district events</a>' : '');
+  put(side, first, 'devents', evl.length ? '<h3>' + L('District events') + '</h3>' + evl.map((e, i) =>
+    '<div class="dn"><b>' + esc(e.title) + '</b><small>' + esc(evLine(e)) + (e.church ? ' · ' + L('this church') : '') + '</small>' + (e.description ? '<p>' + esc(e.description) + '</p>' : '') +
+    '<button type="button" class="bt" data-dcal="' + i + '">' + L('Add to my calendar') + '</button><button type="button" class="bt" data-dshare="e' + i + '">' + L('Share') + '</button></div>').join('') +
+    '<a class="more-l" href="' + DISTRICT_URL + '#events" target="_blank" rel="noopener">' + L('All district events') + '</a>' : '');
 }
 function put(side, anchor, id, html) {
   const have = side.querySelector('#' + id);
   if (!html) { if (have) have.remove(); return; }
   if (have) { if (have.dataset.h !== html) { have.innerHTML = html; have.dataset.h = html; } return; }
-  const d = document.createElement('div'); d.className = 'card dnews'; d.id = id; d.dataset.h = html; d.innerHTML = html;
+  const d = document.createElement('div'); d.className = 'card dnews'; d.id = id; d.setAttribute('data-notr', ''); d.dataset.h = html; d.innerHTML = html;
   anchor.insertAdjacentElement('afterend', d);
 }
 document.addEventListener('click', async ev => {
@@ -71,7 +76,7 @@ document.addEventListener('click', async ev => {
     const url = DISTRICT_URL + (k[0] === 'n' ? (it.id ? '#a-' + it.id : '#news') : '#events');
     if (navigator.share) { try { await navigator.share({ title: it.title, text, url }); return; } catch (er) { if (er && er.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(text + '\n' + url); } catch (er) {}
-    const old = sh.textContent; sh.textContent = 'Copied. Paste in Messenger or Facebook.'; setTimeout(() => { sh.textContent = old; }, 2600);
+    const old = sh.textContent; sh.textContent = L('Copied. Paste in Messenger or Facebook.'); setTimeout(() => { sh.textContent = old; }, 2600);
   }
 });
 
@@ -90,6 +95,7 @@ function init() {
   load().then(mount);
   const side = $('#side'); if (!side) return;
   new MutationObserver(tick).observe(side, { childList: true });
+  new MutationObserver(tick).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
