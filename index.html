@@ -659,6 +659,7 @@ body:has(#auth) .fabs{display:none!important}
 .convo-top b{font-size:.95rem}
 .convo-time{font-size:.72rem;color:var(--muted);flex:none}
 .convo-pre{font-size:.85rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg.msgtabs{grid-template-columns:1fr 1fr;margin:8px 8px 4px}.seg.msgtabs button{display:flex;align-items:center;justify-content:center;gap:6px}.convo-badge.sm{min-width:17px;height:17px;font-size:.66rem;padding:0 5px}
 .convo-badge{flex:none;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
 .msg-review{margin:8px 0;width:100%}
 .msg-review-note{font-size:.85rem;margin-bottom:6px}
@@ -3382,16 +3383,33 @@ function showConvoList(){
 }
 function renderConvoList(){
   const list = $('#msgList'); if (!list) return;
-  const cs = S.convos || [];
+  const all = S.convos || [];
   const review = S.isAdmin ? '<button class="btn sm quiet msg-review" data-act="msgreview">Review all messages (safeguarding)</button>' : '';
-  if (!cs.length){ list.innerHTML = review + '<p class="muted" style="padding:14px">No conversations yet. Open a member’s profile and tap <b>Message</b>, or open a group and tap <b>Group chat</b>.</p>'; return; }
-  list.innerHTML = review + cs.map(c => {
-    const badge = c.unread ? `<span class="convo-badge">${c.unread > 99 ? '99+' : c.unread}</span>` : '';
-    const ava = c.kind === 'group' ? `<span class="av md convo-grp">${icon('users')}</span>` : av(c.uid, 'md');
-    const pre = c.lastText ? (c.fromMe ? 'You: ' : '') + c.lastText : 'No messages yet';
-    const act = c.kind === 'group' ? `data-act="opengroupchat" data-gid="${esc(c.groupId)}"` : `data-act="opendm" data-uid="${esc(c.uid)}"`;
-    return `<button class="convo-row${c.unread ? ' un' : ''}" ${act} data-title="${esc(c.who)}">${ava}<span class="convo-main"><span class="convo-top"><b>${esc(c.who)}</b>${c.lastTime ? `<span class="convo-time">${esc(ago(c.lastTime))}</span>` : ''}</span><span class="convo-pre">${esc(pre)}</span></span>${badge}</button>`;
-  }).join('');
+  const dms = all.filter(c => c.kind !== 'group');
+  /* every group you belong to is listed, even before its first message */
+  const ids = new Set(all.filter(c => c.kind === 'group').map(c => c.groupId));
+  const gr = (S.groups || []).filter(g => ids.has(g.id) || inGroup(S.uid, g.id) || ((S.me && S.me.groups) || []).includes(g.id)).map(g => {
+    const c = all.find(x => x.kind === 'group' && x.groupId === g.id);
+    return { g, c, t: c && c.lastTime || 0 };
+  }).sort((a, b) => (b.t - a.t) || String(a.g.name).localeCompare(String(b.g.name)));
+  const un = a => a.reduce((n, c) => n + (c && c.unread || 0), 0), uD = un(dms), uG = un(gr.map(x => x.c));
+  if (MSG.tab !== 'dm' && MSG.tab !== 'grp') MSG.tab = (!dms.length && gr.length) ? 'grp' : 'dm';
+  const tb = (t, label, n) => `<button type="button" role="tab" class="${MSG.tab === t ? 'on' : ''}" aria-selected="${MSG.tab === t}" data-act="msgtab" data-t="${t}">${label}${n ? `<span class="convo-badge sm">${n > 99 ? '99+' : n}</span>` : ''}</button>`;
+  const tabs = `<div class="seg msgtabs" role="tablist" aria-label="Chats">${tb('dm', 'Personal', uD)}${tb('grp', 'Groups', uG)}</div>`;
+  const row = (ava, who, c, act) => {
+    const badge = c && c.unread ? `<span class="convo-badge">${c.unread > 99 ? '99+' : c.unread}</span>` : '';
+    const pre = c && c.lastText ? (c.fromMe ? 'You: ' : '') + c.lastText : 'No messages yet';
+    return `<button class="convo-row${c && c.unread ? ' un' : ''}" ${act} data-title="${esc(who)}">${ava}<span class="convo-main"><span class="convo-top"><b>${esc(who)}</b>${c && c.lastTime ? `<span class="convo-time">${esc(ago(c.lastTime))}</span>` : ''}</span><span class="convo-pre">${esc(pre)}</span></span>${badge}</button>`;
+  };
+  let body;
+  if (MSG.tab === 'grp') {
+    body = gr.length ? gr.map(x => row(`<span class="av md convo-grp">${icon('users')}</span>`, x.g.name, x.c, `data-act="opengroupchat" data-gid="${esc(x.g.id)}"`)).join('')
+      : '<p class="muted" style="padding:14px">You are not in a group yet. Open <b>Groups</b>, join one, and its chat shows up here.</p>';
+  } else {
+    body = dms.length ? dms.map(c => row(av(c.uid, 'md'), c.who, c, `data-act="opendm" data-uid="${esc(c.uid)}"`)).join('')
+      : '<p class="muted" style="padding:14px">No personal chats yet. Open a member’s profile and tap <b>Message</b>.</p>';
+  }
+  list.innerHTML = review + tabs + body;
 }
 function openThreadView(opts){
   ensureMsgModal(); stopThreadPoll(); MSG.conv = opts; MSG.count = 0;
@@ -3487,8 +3505,9 @@ document.addEventListener('click', e => {
     case 'me': if (S.uid) go('profile', S.uid); break;
     case 'profile': go('profile', el.dataset.uid); break;
     case 'messages': openMessages(); break;
-    case 'opendm': openThreadView({ to: el.dataset.uid, title: el.dataset.title }); break;
-    case 'opengroupchat': openThreadView({ groupId: el.dataset.gid, title: el.dataset.title }); break;
+    case 'msgtab': MSG.tab = el.dataset.t; renderConvoList(); break;
+    case 'opendm': MSG.tab = 'dm'; openThreadView({ to: el.dataset.uid, title: el.dataset.title }); break;
+    case 'opengroupchat': MSG.tab = 'grp'; openThreadView({ groupId: el.dataset.gid, title: el.dataset.title }); break;
     case 'msgback': showConvoList(); break;
     case 'msgretry': showConvoList(); break;
     case 'msgreview': if (S.isAdmin) openMsgReview(); break;
@@ -3758,7 +3777,7 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   'Church officers':'Mga opisyal sa simbahan', 'Add officers':'Idugang ang mga opisyal', 'Add a position':'Idugang og posisyon', 'Position':'Posisyon', 'Church officers saved.':'Na-save ang mga opisyal sa simbahan.',
   "List this year's elected officers so the church family knows who serves where.":'Ilista ang mga napiling opisyal karong tuiga aron mahibaw-an sa pamilya sa simbahan kon kinsa ang nag-alagad.', 'Officers':'Mga opisyal', 'Year':'Tuig',
   'Leader tools':'Mga gamit sa lider', 'Records and history':'Mga rekord ug kasaysayan', 'Download member list':'I-download ang lista sa miyembro', 'Attendance':'Pagtambong',
-  'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
+  'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Personal':'Pribado', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
   'Church admin':'Admin sa simbahan', 'Clerk / pastor':'Klerk / pastor', 'Announcements and program':'Pahibalo ug programa', 'No account':'Walay account',
   'Status records':'Mga rekord sa kahimtang', 'All changes':'Tanang kausaban', 'Now':'Karon', 'History of status changes':'Kasaysayan sa kausaban sa kahimtang',
   'All statuses':'Tanang kahimtang', 'All kinds':'Tanang klase', 'All years':'Tanang tuig', 'Download this list':'I-download kini nga lista',
