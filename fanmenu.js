@@ -37,6 +37,9 @@ st.textContent = '.fm{display:none}' +
 '.fm-lb{font:600 .8rem/1 inherit;background:var(--surface,#fff);color:var(--ink,#10233f);border:1px solid var(--line,#d6e4f8);border-radius:999px;padding:7px 11px;white-space:nowrap;box-shadow:0 3px 10px rgba(10,30,60,.2)}' +
 '.fm-ic{position:relative}.fm-bd{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#d64550;color:#fff;font:700 .66rem/18px system-ui,sans-serif;text-align:center}.fm-bd[hidden]{display:none}' +
 '.fm-it.on .fm-ic{background:var(--accent,var(--blue,#1d5fd8));color:#fff}' +
+'.fm-chat{position:fixed;right:14px;width:52px;height:52px;border-radius:50%;border:0;padding:0;background:var(--accent-dark,#2a7d5f);color:#fff;display:none;place-items:center;cursor:pointer;z-index:29;box-shadow:0 6px 18px rgba(10,30,60,.38)}' +
+'@media (max-width:' + BP + 'px){.fm-chat.show{display:grid}.fm.open ~ .fm-chat,body:has(.modal,.lightbox,#auth) .fm-chat{display:none!important}}' +
+'.fm-chat .fm-bd{top:-3px;right:-3px}' +
 '@media (prefers-reduced-motion:reduce){.fm-it,.fm-btn svg,.fm-veil{transition:none!important}}@media print{.fm{display:none!important}}';
 document.head.appendChild(st);
 
@@ -44,6 +47,13 @@ const root = document.createElement('div'); root.className = 'fm'; root.setAttri
 root.innerHTML = '<div class="fm-veil"></div><nav class="fm-list" aria-label="Sections"></nav>' +
   '<button type="button" class="fm-btn" aria-expanded="false" aria-haspopup="true">' + svg('M4 7h16M4 12h16M4 17h16', 24).replace('<svg ', '<svg class="fm-m" ') + svg('M6 6l12 12M18 6L6 18', 24).replace('<svg ', '<svg class="fm-x" ') + '<span class="fm-bd" hidden></span></button>';
 document.body.appendChild(root);
+let chatBtn = null;
+if (church && !game && !bible) {
+  chatBtn = document.createElement('button'); chatBtn.type = 'button'; chatBtn.className = 'fm-chat'; chatBtn.setAttribute('data-notr', '');
+  chatBtn.innerHTML = svg('M4 5h16a1 1 0 011 1v10a1 1 0 01-1 1H10l-5 4v-4H4a1 1 0 01-1-1V6a1 1 0 011-1z', 24) + '<span class="fm-bd" hidden></span>';
+  document.body.appendChild(chatBtn);
+  chatBtn.addEventListener('click', () => { const c = document.querySelector('#fabChat'); if (c) c.click(); });
+}
 const btn = root.querySelector('.fm-btn'), list = root.querySelector('.fm-list'), veil = root.querySelector('.fm-veil');
 const esc2 = x => String(x).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
 const label = () => document.documentElement.lang === 'ceb' ? 'Menu: ablihi ang tanang bahin' : 'Menu: open all sections';
@@ -53,10 +63,20 @@ function geom() {
   const H = innerHeight, btm = bible ? 92 : Math.max(96, Math.min(190, Math.round(H * 0.3)));
   return { btm, bottomC: btm + 26 };
 }
-function place() { btn.style.bottom = geom().btm + 'px'; }
+function place() { btn.style.bottom = geom().btm + 'px'; if (chatBtn) chatBtn.style.bottom = Math.max(14, geom().btm - 64) + 'px'; }
+function chatState() {   /* the Chat button follows the church site's own Chat button: signed in, messaging on, unread count */
+  if (!chatBtn) return;
+  const fabs = document.querySelector('#fabs'), c = document.querySelector('#fabChat'), mb = document.querySelector('#msgBadge');
+  const on = !!(fabs && fabs.classList.contains('on') && c && !c.hidden);
+  chatBtn.classList.toggle('show', on);
+  const lb = document.documentElement.lang === 'ceb' ? 'Mga mensahe' : 'Messages'; chatBtn.setAttribute('aria-label', lb); chatBtn.title = lb;
+  const bg = chatBtn.querySelector('.fm-bd'), t = mb && !mb.hidden ? mb.textContent.trim() : '';
+  bg.hidden = !t; bg.textContent = t;
+}
 function badge() {
   const mb = church && document.querySelector('#msgBadge'), on = !!(mb && !mb.hidden && mb.textContent.trim()), t = on ? mb.textContent.trim() : '';
-  const fb = btn.querySelector('.fm-bd'); fb.hidden = !on; fb.textContent = t; return { on, t };
+  const fb = btn.querySelector('.fm-bd'); if (chatBtn) { fb.hidden = true; return { on: false, t: '' }; }   /* the Chat button carries the count */
+  fb.hidden = !on; fb.textContent = t; return { on, t };
 }
 function pseudo(text, route, from, click) {
   const pa = document.createElement('a'); pa.href = '#' + route; pa.setAttribute('data-route', route);
@@ -77,10 +97,9 @@ function build() {
     return layout([home]);
   }
   const links = [...nav.querySelectorAll('a')];
-  if (church) {   /* Chat and Game used to float on their own. They live here now, so there is one button instead of three. */
-    const fabs = document.querySelector('#fabs'), chat = document.querySelector('#fabChat'), game = document.querySelector('#fabGame');
+  if (church) {   /* Game lives in the menu. Chat keeps its own round button just below the menu button. */
+    const fabs = document.querySelector('#fabs'), game = document.querySelector('#fabGame');
     if (fabs && fabs.classList.contains('on')) {
-      if (chat && !chat.hidden) links.push(pseudo('Chat', 'fmchat', chat, () => chat.click()));
       if (game && !game.hidden) links.push(pseudo(ceb ? 'Dula' : 'Game', 'fmgame', game, () => game.click()));
     }
   }
@@ -102,7 +121,6 @@ function layout(links) {
     const own = (church || a.dataset.route) && a.querySelector('svg');
     it.innerHTML = '<span class="fm-ic">' + (own ? own.outerHTML : svg(ICONS[map[key]] || ICONS.churches, 20)) + '</span><span class="fm-lb"></span>';
     if (own) { const sv = it.querySelector('svg'); sv.setAttribute('width', 20); sv.setAttribute('height', 20); }
-    if (church && key === 'fmchat') { const bg = badge(); if (bg.on) it.querySelector('.fm-ic').insertAdjacentHTML('beforeend', '<span class="fm-bd">' + esc2(bg.t) + '</span>'); }
     it.querySelector('.fm-lb').textContent = (a.querySelector('span') || a).textContent.trim();
     it.addEventListener('click', e => {
       if (church) { e.preventDefault(); close(false); a.click(); return; }   /* the church site's own router does the rest */
@@ -119,6 +137,6 @@ btn.addEventListener('click', () => root.classList.contains('open') ? close() : 
 veil.addEventListener('click', () => close());
 addEventListener('keydown', e => { if (e.key === 'Escape' && root.classList.contains('open')) close(); });
 addEventListener('resize', () => { if (root.classList.contains('open')) { if (innerWidth > BP) close(false); else { place(); build(); root.classList.add('open'); } } else place(); });
-const sync = () => { btn.setAttribute('aria-label', label()); btn.title = label(); root.hidden = !nav.querySelector('a'); place(); badge(); if (root.hidden && root.classList.contains('open')) close(false); };
+const sync = () => { btn.setAttribute('aria-label', label()); btn.title = label(); root.hidden = !nav.querySelector('a'); place(); badge(); chatState(); if (root.hidden && root.classList.contains('open')) close(false); };
 sync(); setInterval(sync, 2000); addEventListener('orientationchange', () => setTimeout(() => { sync(); if (root.classList.contains('open')) { build(); root.classList.add('open'); } }, 250));
 })();
