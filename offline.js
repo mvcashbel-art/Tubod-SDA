@@ -6,9 +6,9 @@ const BASE = 'https://mvcashbel-art.github.io/isabel-merida-district/bible/';
 const KEY = 'offlineSaved:' + location.pathname.replace(/[^/]*$/, '');
 const ceb = () => document.documentElement.lang === 'ceb';
 const TX = {
-  en: { title: 'Use offline', intro: 'Save this app on your phone so it opens even with no internet. Best done on Wi-Fi. It needs about 10 MB, and more with photos.', app: 'The app and all its pages', bible: 'The whole Bible (English and Cebuano)', data: 'Posts, announcements, members and events as they are now', pics: 'Recent photos', drive: 'Documents and videos kept on Google Drive still need internet.',
+  en: { title: 'Use offline', intro: 'This app saves itself on your phone automatically (the full save waits for Wi-Fi), so it opens even with no internet. You can also save it now. About 10 MB, more with photos.', auto: 'Saved on your phone. You can now open this app without internet.', app: 'The app and all its pages', bible: 'The whole Bible (English and Cebuano)', data: 'Posts, announcements, members and events as they are now', pics: 'Recent photos', drive: 'Documents and videos kept on Google Drive still need internet.',
     last: d => 'Last saved: ' + d, never: 'Not saved yet.', go: 'Download now', again: 'Update now', close: 'Close', working: 'Saving…', offline: 'You are offline. Connect to the internet first, then try again.', done: 'All saved. You can open this app without internet.', part: 'Saved, but some parts could not be saved. Try again on a better connection.', stepApp: 'Saving the app…', stepBible: 'Saving the Bible…', stepData: 'Saving posts and members…', stepPics: 'Saving photos…' },
-  ceb: { title: 'Gamita nga walay internet', intro: 'I-save kini nga app sa imong telepono aron mabuksan bisan walay internet. Maayo nga buhaton kung naay Wi-Fi. Mga 10 MB ang kinahanglan, labaw pa kung naay mga litrato.', app: 'Ang app ug tanan niyang panid', bible: 'Ang tibuok Biblia (English ug Cebuano)', data: 'Mga post, pahibalo, miyembro ug panghitabo sa karon', pics: 'Bag-ong mga litrato', drive: 'Ang mga dokumento ug video sa Google Drive nanginahanglan gihapon og internet.',
+  ceb: { title: 'Gamita nga walay internet', intro: 'Kini nga app mag-save sa iyang kaugalingon sa imong telepono (ang tibuok nga save maghulat og Wi-Fi), aron mabuksan bisan walay internet. Pwede usab nimo i-save karon. Mga 10 MB, labaw pa kung naay litrato.', auto: 'Na-save na sa imong telepono. Mabuksan na nimo kini nga app bisan walay internet.', app: 'Ang app ug tanan niyang panid', bible: 'Ang tibuok Biblia (English ug Cebuano)', data: 'Mga post, pahibalo, miyembro ug panghitabo sa karon', pics: 'Bag-ong mga litrato', drive: 'Ang mga dokumento ug video sa Google Drive nanginahanglan gihapon og internet.',
     last: d => 'Ulahing na-save: ' + d, never: 'Wala pa na-save.', go: 'I-download karon', again: 'I-update karon', close: 'Isira', working: 'Gi-save…', offline: 'Wala ka sa internet. Pag-konek una, dayon sulayi pag-usab.', done: 'Na-save na tanan. Mabuksan nimo kini nga app bisan walay internet.', part: 'Na-save na, apan adunay bahin nga wala ma-save. Sulayi pag-usab kung mas lig-on ang koneksyon.', stepApp: 'Gi-save ang app…', stepBible: 'Gi-save ang Biblia…', stepData: 'Gi-save ang mga post ug miyembro…', stepPics: 'Gi-save ang mga litrato…' }
 };
 const T = () => TX[ceb() ? 'ceb' : 'en'];
@@ -25,11 +25,12 @@ const fmt = t => { try { return new Date(t).toLocaleString(ceb() ? 'ceb' : 'en-P
 async function coreList() {
   try { const t = await (await fetch('sw.js', { cache: 'no-cache' })).text(), m = /const CORE = \[([\s\S]*?)\]/.exec(t); return m ? [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]).filter(u => u !== './') : []; } catch (e) { return []; }
 }
-async function run(setP) {
+async function run(setP, light) {
+  setP = setP || (() => {});
   const app = window.__offlineApp || null; let ok = true, done = 0, total = 1; const tick = (label) => { done++; setP(Math.min(100, Math.round(done / total * 100)), label); };
   const pool = async (items, n, fn, label) => { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < items.length) { const k = items[i++]; try { await fn(k); } catch (e) { ok = false; } tick(label); } })); };
   setP(2, T().stepApp);
-  const core = await coreList(), idx = await fetch(BASE + 'index.json').then(r => r.json()).catch(() => null), trs = idx && idx.translations ? idx.translations.map(t => t.id) : [];
+  const core = await coreList(), idx = light ? null : await fetch(BASE + 'index.json').then(r => r.json()).catch(() => null), trs = idx && idx.translations ? idx.translations.map(t => t.id) : [];
   const bfiles = []; trs.forEach(id => { for (let n = 1; n <= 66; n++) bfiles.push(BASE + id + '/' + n + '.json'); });
   total = core.length + bfiles.length + (app && app.sync ? 1 : 0) + 40;
   await pool(core, 4, async u => { const r = await fetch(new URL(u, location.href).href, { cache: 'reload' }); if (!r.ok) throw 0; }, T().stepApp);
@@ -39,11 +40,11 @@ async function run(setP) {
     trs.forEach(id => { try { localStorage.setItem('bibleOff:' + id, '1'); } catch (e) {} });
   } else if (!c) ok = false;
   if (app && app.sync) { try { await app.sync(); } catch (e) { ok = false; } tick(T().stepData); }
-  let pics = []; try { pics = app && app.pics ? app.pics() : []; } catch (e) {}
+  let pics = []; try { pics = !light && app && app.pics ? app.pics() : []; } catch (e) {}
   total = done + pics.length;
   await pool(pics, 4, async u => { await fetch(u, { mode: 'no-cors' }); }, T().stepPics);
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
-  const rec = { t: Date.now(), ok, pics: pics.length }; try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) {}
+  const rec = { t: Date.now(), ok, light: !!light, pics: pics.length }; try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) {}
   return rec;
 }
 function open() {
@@ -61,6 +62,25 @@ function open() {
   });
   document.body.appendChild(o);
 }
+/* Automatic: a few seconds after the page opens, save everything quietly. On mobile data it saves only the light parts (app + church data) and waits for Wi-Fi to save the Bible and photos. */
+function auto() {
+  try {
+    if (navigator.onLine === false || document.visibilityState === 'hidden') return;
+    const c = navigator.connection || {}; if (c.saveData) return;
+    const cell = c.type === 'cellular' || /^(slow-)?2g$|^3g$/.test(c.effectiveType || '');
+    const r = saved(), age = r ? Date.now() - r.t : Infinity;
+    if (r && r.ok && !r.light && age < 6048e5) return;            /* fully saved within a week */
+    if (r && r.ok && r.light && cell && age < 6048e5) return;      /* light save done; wait for Wi-Fi for the rest */
+    if (r && !r.ok && age < 36e5) return;                          /* a failed try: retry after an hour */
+    const lk = parseInt(localStorage.getItem(KEY + ':run') || '0', 10); if (Date.now() - lk < 6e5) return;   /* another tab is already doing it */
+    localStorage.setItem(KEY + ':run', String(Date.now()));
+    run(null, cell).then(rec => { try { localStorage.removeItem(KEY + ':run'); } catch (e) {} if (rec.ok && !rec.light && !r) toast(T().auto); }).catch(() => { try { localStorage.removeItem(KEY + ':run'); } catch (e) {} });
+  } catch (e) {}
+}
+function toast(m) { const d = document.createElement('div'); d.setAttribute('data-notr', ''); d.setAttribute('role', 'status'); d.textContent = m; d.style.cssText = 'position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;background:#17324D;color:#fff;padding:10px 16px;border-radius:99px;font:600 .86rem system-ui,sans-serif;max-width:90vw;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.25)'; document.body.appendChild(d); setTimeout(() => d.remove(), 4500); }
+const startAuto = () => setTimeout(auto, 8000);
+if (document.readyState === 'complete') startAuto(); else window.addEventListener('load', startAuto);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(auto, 3000); });
 document.addEventListener('click', e => { if (e.target.closest('[data-offline]')) { e.preventDefault(); open(); } });
 window.__offline = { open };
 })();
