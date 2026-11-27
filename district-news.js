@@ -90,7 +90,7 @@ async function load() {
 }
 
 let q = false;
-function tick() { if (q) return; q = true; requestAnimationFrame(() => { q = false; mount(); }); }
+function tick() { if (q) return; q = true; setTimeout(() => { q = false; mount(); }, 60); }
 function init() {
   load().then(mount);
   const side = $('#side'); if (!side) return;
