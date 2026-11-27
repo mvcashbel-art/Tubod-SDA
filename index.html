@@ -779,6 +779,7 @@ const imgUrl = (id, w) => idOk(id) ? `https://lh3.googleusercontent.com/d/${id}=
 const driveUrl = id => idOk(id) ? `https://drive.google.com/file/d/${id}/view` : '';
 
 const ICONS = {
+  bible:'M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h12M12 7.5v6M9.5 10h5',
   share:'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4',
   home:'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',
   bell:'M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',
@@ -813,7 +814,7 @@ const CATS = {
 };
 const DEF_LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
 const DEF_ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
-const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['groups','Groups','heart',null,'notabs'],['game','Game','book','bible-game.html'],['me','My profile','user']];
+const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['groups','Groups','heart',null,'notabs'],['bible','Bible','bible','bible.html'],['game','Game','book','bible-game.html'],['me','My profile','user']];
 let LIB_CATS = DEF_LIB_CATS, ROLES = DEF_ROLES, NAV = DEF_NAV, NAV_BIS = {}, NAV_HIDE = {};
 /* what admins changed on the Edit the site page */
 let SITE = {texts:{}, color:'blue', tabs:[], roles:[], libCats:[]}, siteSig = '';
@@ -1441,8 +1442,8 @@ function fromHash(){
   if (['home','news','library','members','groups'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !NAV_HIDE[n[0]] && !n[3] && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[4])).map(([r, label0, ic, href]) => {
-    const bisL = LANG === 'ceb' && NAV_BIS[r], label = bisL || label0, nt = bisL ? ' data-notr' : '';
+  return NAV.filter(n => !NAV_HIDE[n[0]] && (!n[3] || n[0] === 'bible') && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[4])).map(([r, label0, ic, href]) => {
+    const bisL = LANG === 'ceb' && (NAV_BIS[r] || (r === 'bible' ? 'Biblia' : '')), label = bisL || label0, nt = bisL ? ' data-notr' : '';
     if (href) return `<a href="${href}"${nt}>${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : r === 'groups' ? (S.route === 'groups' || S.route === 'group') : S.route === r);
     const shortTab = kind === 'tabs' && (label === 'Announcements' ? ['Announcements', 'News'] : (r === 'me' && label === 'My profile') ? ['My profile', 'Profile'] : null);

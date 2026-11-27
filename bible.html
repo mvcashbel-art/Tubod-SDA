@@ -78,7 +78,7 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
 (() => {
 'use strict';
 const BASE = 'https://mvcashbel-art.github.io/isabel-merida-district/bible/';
-const KEY = 'tubod';
+const KEY = 'tubod', LANGKEY = 'tubodLang';
 const INDEX = {"translations":[{"id":"ceb","name":"Ang Bag-ong Maayong Balita Biblia","short":"Maayong Balita","lang":"ceb","rights":"© 1999 Philippine Bible Society"}],"books":[{"n":1,"en":"Genesis","ceb":"Genesis","ch":50,"ot":true},{"n":2,"en":"Exodus","ceb":"Exodo","ch":40,"ot":true},{"n":3,"en":"Leviticus","ceb":"Levitico","ch":27,"ot":true},{"n":4,"en":"Numbers","ceb":"Numeros","ch":36,"ot":true},{"n":5,"en":"Deuteronomy","ceb":"Deuteronomio","ch":34,"ot":true},{"n":6,"en":"Joshua","ceb":"Josue","ch":24,"ot":true},{"n":7,"en":"Judges","ceb":"Mga Maghuhukom","ch":21,"ot":true},{"n":8,"en":"Ruth","ceb":"Rut","ch":4,"ot":true},{"n":9,"en":"1 Samuel","ceb":"1 Samuel","ch":31,"ot":true},{"n":10,"en":"2 Samuel","ceb":"2 Samuel","ch":24,"ot":true},{"n":11,"en":"1 Kings","ceb":"1 Hari","ch":22,"ot":true},{"n":12,"en":"2 Kings","ceb":"2 Hari","ch":25,"ot":true},{"n":13,"en":"1 Chronicles","ceb":"1 Cronica","ch":29,"ot":true},{"n":14,"en":"2 Chronicles","ceb":"2 Cronica","ch":36,"ot":true},{"n":15,"en":"Ezra","ceb":"Esdras","ch":10,"ot":true},{"n":16,"en":"Nehemiah","ceb":"Nehemias","ch":13,"ot":true},{"n":17,"en":"Esther","ceb":"Ester","ch":10,"ot":true},{"n":18,"en":"Job","ceb":"Job","ch":42,"ot":true},{"n":19,"en":"Psalms","ceb":"Salmo","ch":150,"ot":true},{"n":20,"en":"Proverbs","ceb":"Proverbio","ch":31,"ot":true},{"n":21,"en":"Ecclesiastes","ceb":"Magwawali","ch":12,"ot":true},{"n":22,"en":"Song of Solomon","ceb":"Awit ni Solomon","ch":8,"ot":true},{"n":23,"en":"Isaiah","ceb":"Isaias","ch":66,"ot":true},{"n":24,"en":"Jeremiah","ceb":"Jeremias","ch":52,"ot":true},{"n":25,"en":"Lamentations","ceb":"Panaghoy","ch":5,"ot":true},{"n":26,"en":"Ezekiel","ceb":"Ezekiel","ch":48,"ot":true},{"n":27,"en":"Daniel","ceb":"Daniel","ch":12,"ot":true},{"n":28,"en":"Hosea","ceb":"Oseas","ch":14,"ot":true},{"n":29,"en":"Joel","ceb":"Joel","ch":3,"ot":true},{"n":30,"en":"Amos","ceb":"Amos","ch":9,"ot":true},{"n":31,"en":"Obadiah","ceb":"Obadias","ch":1,"ot":true},{"n":32,"en":"Jonah","ceb":"Jonas","ch":4,"ot":true},{"n":33,"en":"Micah","ceb":"Miqueas","ch":7,"ot":true},{"n":34,"en":"Nahum","ceb":"Nahum","ch":3,"ot":true},{"n":35,"en":"Habakkuk","ceb":"Habacuc","ch":3,"ot":true},{"n":36,"en":"Zephaniah","ceb":"Sofonias","ch":3,"ot":true},{"n":37,"en":"Haggai","ceb":"Ageo","ch":2,"ot":true},{"n":38,"en":"Zechariah","ceb":"Zacarias","ch":14,"ot":true},{"n":39,"en":"Malachi","ceb":"Malaquias","ch":4,"ot":true},{"n":40,"en":"Matthew","ceb":"Mateo","ch":28,"ot":false},{"n":41,"en":"Mark","ceb":"Marcos","ch":16,"ot":false},{"n":42,"en":"Luke","ceb":"Lucas","ch":24,"ot":false},{"n":43,"en":"John","ceb":"Juan","ch":21,"ot":false},{"n":44,"en":"Acts","ceb":"Mga Buhat","ch":28,"ot":false},{"n":45,"en":"Romans","ceb":"Roma","ch":16,"ot":false},{"n":46,"en":"1 Corinthians","ceb":"1 Corinto","ch":16,"ot":false},{"n":47,"en":"2 Corinthians","ceb":"2 Corinto","ch":13,"ot":false},{"n":48,"en":"Galatians","ceb":"Galacia","ch":6,"ot":false},{"n":49,"en":"Ephesians","ceb":"Efeso","ch":6,"ot":false},{"n":50,"en":"Philippians","ceb":"Filipos","ch":4,"ot":false},{"n":51,"en":"Colossians","ceb":"Colosas","ch":4,"ot":false},{"n":52,"en":"1 Thessalonians","ceb":"1 Tesalonica","ch":5,"ot":false},{"n":53,"en":"2 Thessalonians","ceb":"2 Tesalonica","ch":3,"ot":false},{"n":54,"en":"1 Timothy","ceb":"1 Timoteo","ch":6,"ot":false},{"n":55,"en":"2 Timothy","ceb":"2 Timoteo","ch":4,"ot":false},{"n":56,"en":"Titus","ceb":"Tito","ch":3,"ot":false},{"n":57,"en":"Philemon","ceb":"Filemon","ch":1,"ot":false},{"n":58,"en":"Hebrews","ceb":"Hebreo","ch":13,"ot":false},{"n":59,"en":"James","ceb":"Santiago","ch":5,"ot":false},{"n":60,"en":"1 Peter","ceb":"1 Pedro","ch":5,"ot":false},{"n":61,"en":"2 Peter","ceb":"2 Pedro","ch":3,"ot":false},{"n":62,"en":"1 John","ceb":"1 Juan","ch":5,"ot":false},{"n":63,"en":"2 John","ceb":"2 Juan","ch":1,"ot":false},{"n":64,"en":"3 John","ceb":"3 Juan","ch":1,"ot":false},{"n":65,"en":"Jude","ceb":"Judas","ch":1,"ot":false},{"n":66,"en":"Revelation","ceb":"Pinadayag","ch":22,"ot":false}]};
 const BOOKS = INDEX.books, TRS = INDEX.translations;
 const $ = s => document.querySelector(s), app = $('#app');
@@ -92,9 +92,10 @@ const TX = {
   ceb: { title: 'Biblia', sub: 'Basaha, pangitaa ug ipaambit ang Pulong.', ph: 'Pangitag pulong o bersikulo, sama sa Juan 3:16', go: 'Pangita', cont: 'Padayon sa pagbasa', ot: 'Daang Tugon', nt: 'Bag-ong Tugon', chap: 'Kapitulo', prev: 'Nauna', next: 'Sunod', chs: 'Mga kapitulo', copy: 'I-copy', share: 'Ipaambit', copied: 'Na-copy na', none: 'Walay nakit-an. Sulayi ang lain nga pulong.', found: n => n + ' ka bersikulo ang nakit-an', more: 'Gipakita ang unang 150. Dugangi og pulong aron paliton.',
     load: 'Gikarga ang Biblia para sa pagpangita…', err: 'Wala maablihi kini. Susiha ang internet ug sulayi pag-usab.', off: 'I-save ang tibuok Biblia para mabasa bisan walay internet', offp: 'Gi-save… ', offd: 'Na-save na ang tibuok Biblia niining telepono. Mabasa nimo bisan walay internet.', offn: 'Mga 4 MB ang kinahanglan. Sa kini nga device ra kini ma-save.', ver: 'Bersyon', home: 'Tanang libro', sz: 'Gidak-on sa letra' }
 };
-let UI = ls.get('bibleUi', 'en') === 'ceb' ? 'ceb' : 'en';
+let UI = (() => { const u = ls.get('bibleUi', null); if (u === 'ceb' || u === 'en') return u; try { return localStorage.getItem(LANGKEY) === 'ceb' ? 'ceb' : 'en'; } catch (e) { return 'en'; } })();
 const T = k => TX[UI][k];
 const bname = b => UI === 'ceb' ? b.ceb : b.en;
+const tname = b => (TRS.find(t => t.id === TR) || TRS[0]).lang === 'ceb' ? b.ceb : b.en;
 
 /* ---------- look ---------- */
 (() => {
@@ -109,7 +110,7 @@ function chrome() {
   $('#selCopy').textContent = T('copy'); $('#selShare').textContent = T('share'); $('#szDn').title = $('#szUp').title = T('sz');
   document.title = T('title') + ' · Tubod SDA Church';
 }
-$('#lng').addEventListener('click', () => { UI = UI === 'ceb' ? 'en' : 'ceb'; ls.set('bibleUi', UI); chrome(); route(); });
+$('#lng').addEventListener('click', () => { UI = UI === 'ceb' ? 'en' : 'ceb'; ls.set('bibleUi', UI); try { localStorage.setItem(LANGKEY, UI); } catch (e) {} chrome(); route(); });
 $('#thm').addEventListener('click', () => { const d = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = d; ls.set('bibleTheme', d); chrome(); });
 $('#szUp').addEventListener('click', () => { FS = Math.min(2, +(FS + .1).toFixed(2)); ls.set('bibleFs', FS); applyFs(); });
 $('#szDn').addEventListener('click', () => { FS = Math.max(.9, +(FS - .1).toFixed(2)); ls.set('bibleFs', FS); applyFs(); });
@@ -201,7 +202,7 @@ function showSel() {
   const rows = [...sel].sort((x, y) => x - y).map(i => cur.vl[i]);
   let parts = [], s = rows[0].a, e = rows[0].b;
   for (let i = 1; i < rows.length; i++) { if (rows[i].a <= e + 1) e = Math.max(e, rows[i].b); else { parts.push([s, e]); s = rows[i].a; e = rows[i].b; } } parts.push([s, e]);
-  const ref = bname(BOOKS[cur.n - 1]) + ' ' + cur.c + ':' + parts.map(p => p[0] === p[1] ? p[0] : p[0] + '–' + p[1]).join(', ');
+  const ref = tname(BOOKS[cur.n - 1]) + ' ' + cur.c + ':' + parts.map(p => p[0] === p[1] ? p[0] : p[0] + '–' + p[1]).join(', ');
   $('#selref').textContent = ref; bar.classList.add('on'); bar.dataset.ref = ref;
 }
 const selText = () => {

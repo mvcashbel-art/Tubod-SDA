@@ -16,6 +16,7 @@ const ICONS = {
   leaders: 'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6L12 16.8 6.7 19.6l1-6L3.3 9.4l6-.9z',
   prayer: 'M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z',
   verify: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4',
+  bible: 'M5 4h12a2 2 0 012 2v14H7a2 2 0 01-2-2zM5 18a2 2 0 012-2h12M12 7.5v6M9.5 10h5',
   me: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 0116 0v1',
   contact: 'M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z'
 };
@@ -89,7 +90,7 @@ function layout(links) {
     const key = church ? (a.getAttribute('data-route') || (a.getAttribute('href') || '').replace(/\W/g, '')) : (a.getAttribute('href') || '').replace('#', ''), yy = (i - half) * p, xx = Math.sqrt(Math.max(0, R * R - yy * yy));
     const it = document.createElement('a'); it.className = 'fm-it' + (a.classList.contains('on') ? ' on' : ''); it.href = a.getAttribute('href');
     it.style.right = (40 + xx - 20) + 'px'; it.style.bottom = (bottomC - yy - 20) + 'px'; it.style.transitionDelay = (i * 18) + 'ms';
-    const map = { news: 'news', churches: 'churches', events: 'events', gallery: 'gallery', ministries: 'ministries', leaders: 'leaders', prayer: 'prayer', verify: 'verify', contact: 'contact', me: 'me' };
+    const map = { 'bible.html': 'bible', news: 'news', churches: 'churches', events: 'events', gallery: 'gallery', ministries: 'ministries', leaders: 'leaders', prayer: 'prayer', verify: 'verify', contact: 'contact', me: 'me' };
     const own = (church || a.dataset.route) && a.querySelector('svg');
     it.innerHTML = '<span class="fm-ic">' + (own ? own.outerHTML : svg(ICONS[map[key]] || ICONS.churches, 20)) + '</span><span class="fm-lb"></span>';
     if (own) { const sv = it.querySelector('svg'); sv.setAttribute('width', 20); sv.setAttribute('height', 20); }
