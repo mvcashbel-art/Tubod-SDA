@@ -19,7 +19,7 @@ const ICONS = {
 const svg = (d, w) => '<svg viewBox="0 0 24 24" width="' + w + '" height="' + w + '" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
 const st = document.createElement('style');
 st.textContent = '.fm{display:none}' +
-'@media (max-width:' + BP + 'px){' + (church ? '.fabs{display:none!important}' : 'nav.links{display:none}html{scroll-padding-top:76px}') + '.fm{display:block}.fm[hidden]{display:none}body:has(.modal,.lightbox) .fm:not(.open){display:none}}' +
+'@media (max-width:' + BP + 'px){' + (church ? '.fabs{display:none!important}.tabs{display:none!important}.shell{padding-bottom:40px!important}#toast{bottom:24px!important}' : 'nav.links{display:none}html{scroll-padding-top:76px}') + '.fm{display:block}.fm[hidden]{display:none}body:has(.modal,.lightbox) .fm:not(.open){display:none}}' +
 '.fm-veil{position:fixed;inset:0;background:rgba(5,12,30,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:70}' +
 '.fm.open .fm-veil{opacity:1;pointer-events:auto}' +
 '.fm-btn{position:fixed;right:14px;bottom:calc(190px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;border:0;padding:0;background:var(--accent,var(--blue,#1d5fd8));color:#fff;display:grid;place-items:center;cursor:pointer;z-index:30;box-shadow:0 6px 18px rgba(10,30,60,.38)}' +

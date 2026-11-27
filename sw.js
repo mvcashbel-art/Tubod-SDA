@@ -2,7 +2,7 @@
    Put this file next to index.html on GitHub. The site registers it by itself. */
 /* OneSignal push (only does anything once an App ID is set in config.js and you have subscribed). Guarded so the site still works offline if it cannot load. */
 try { self.importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch (e) { /* offline or not configured: the site still works */ }
-const VERSION = 'tubod-v23';
+const VERSION = 'tubod-v25';
 const CORE = ['./', './index.html', './config.js', './manifest.json', './fanmenu.js', './totop.js', './district-news.js', './logo-mark.png', './icon-192.png', './icon-512.png', './bible-game.html', './anim.css', './anim.js'];
 const PICS = 'tubod-pics-v1';
 const MAX_PICS = 250;
