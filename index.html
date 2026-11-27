@@ -1954,6 +1954,7 @@ async function shareOut(title, text, url){
     try { await navigator.share({title, text, url}); return; }
     catch (e){ if (e && e.name === 'AbortError') return; }
   }
+  if (window.__shareBox) { window.__shareBox(title, text, url); return; }
   const all = text + (url ? '\n' + url : '');
   try { await navigator.clipboard.writeText(all); toast('Copied. Paste it into Messenger or a text message.'); }
   catch (e){
@@ -3942,5 +3943,6 @@ boot();
 <script src="totop.js" defer></script>
 <script src="fanmenu.js" defer></script>
 <script src="cool.js" defer></script>
+<script src="sharebox.js" defer></script>
 </body>
 </html>

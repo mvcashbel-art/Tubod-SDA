@@ -85,6 +85,7 @@ document.addEventListener('click', async ev => {
     const text = it.title + '\n' + (k[0] === 'n' ? (it.body || '') : evLine(it) + (it.description ? '\n' + it.description : ''));
     const url = DISTRICT_URL + (k[0] === 'n' ? (it.id ? '#a-' + it.id : '#news') : '#events');
     if (navigator.share) { try { await navigator.share({ title: it.title, text, url }); return; } catch (er) { if (er && er.name === 'AbortError') return; } }
+    if (window.__shareBox) { window.__shareBox(it.title, text, url); return; }
     try { await navigator.clipboard.writeText(text + '\n' + url); } catch (er) {}
     const old = sh.textContent; sh.textContent = L('Copied. Paste in Messenger or Facebook.'); setTimeout(() => { sh.textContent = old; }, 2600);
   }
