@@ -399,8 +399,8 @@ async function drawPic(look, text, ref, tname2) {
   try { await Promise.all([document.fonts.load('500 56px Alegreya'), document.fonts.load('700 40px Alegreya'), document.fonts.load('600 30px "Public Sans"')]); } catch (e) {}
   const gr = g.createLinearGradient(0, 0, W * .6, H); gr.addColorStop(0, L.c1); gr.addColorStop(1, L.c2); g.fillStyle = gr; g.fillRect(0, 0, W, H);
   g.fillStyle = L.bar; g.fillRect(96, 110, 120, 10);
-  g.fillStyle = L.q; g.font = '700 420px Alegreya, Georgia, serif'; g.textBaseline = 'alphabetic'; g.fillText('“', 70, 520);
-  const box = { x: 96, y: 200, w: W - 192, h: 800 }; let size = 70, lines = [];
+  g.fillStyle = L.q; g.font = '700 300px Alegreya, Georgia, serif'; g.textBaseline = 'alphabetic'; g.fillText('“', 84, 400);
+  const box = { x: 96, y: 370, w: W - 192, h: 660 }; let size = 70, lines = [];
   const wrap = sz => { g.font = '500 ' + sz + 'px Alegreya, Georgia, serif'; const out = []; let line = ''; text.split(/\s+/).forEach(w => { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > box.w && line) { out.push(line); line = w; } else line = t; }); if (line) out.push(line); return out; };
   for (; size >= 30; size -= 2) { lines = wrap(size); if (lines.length * size * 1.38 <= box.h) break; }
   g.fillStyle = L.ink; g.textAlign = 'left'; const lh = size * 1.38, top = box.y + (box.h - lines.length * lh) / 2 + size;
