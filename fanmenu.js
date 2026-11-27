@@ -77,10 +77,9 @@ function build() {
     return layout([home]);
   }
   const links = [...nav.querySelectorAll('a')];
-  if (church) {   /* Chat and Game used to float on their own. They live here now, so there is one button instead of three. */
+  if (church) {   /* Game used to float on its own. It lives here now, and Chat is a page in the menu. */
     const fabs = document.querySelector('#fabs'), chat = document.querySelector('#fabChat'), game = document.querySelector('#fabGame');
     if (fabs && fabs.classList.contains('on')) {
-      if (chat && !chat.hidden) links.push(pseudo('Chat', 'fmchat', chat, () => chat.click()));
       if (game && !game.hidden) links.push(pseudo(ceb ? 'Dula' : 'Game', 'fmgame', game, () => game.click()));
     }
   }
@@ -102,7 +101,7 @@ function layout(links) {
     const own = (church || a.dataset.route) && a.querySelector('svg');
     it.innerHTML = '<span class="fm-ic">' + (own ? own.outerHTML : svg(ICONS[map[key]] || ICONS.churches, 20)) + '</span><span class="fm-lb"></span>';
     if (own) { const sv = it.querySelector('svg'); sv.setAttribute('width', 20); sv.setAttribute('height', 20); }
-    if (church && key === 'fmchat') { const bg = badge(); if (bg.on) it.querySelector('.fm-ic').insertAdjacentHTML('beforeend', '<span class="fm-bd">' + esc2(bg.t) + '</span>'); }
+    if (church && key === 'messages') { const bg = badge(); if (bg.on) it.querySelector('.fm-ic').insertAdjacentHTML('beforeend', '<span class="fm-bd">' + esc2(bg.t) + '</span>'); }
     it.querySelector('.fm-lb').textContent = (a.querySelector('span') || a).textContent.trim();
     it.addEventListener('click', e => {
       if (church) { e.preventDefault(); close(false); a.click(); return; }   /* the church site's own router does the rest */
