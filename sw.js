@@ -2,8 +2,8 @@
    Put this file next to index.html on GitHub. The site registers it by itself. */
 /* OneSignal push (only does anything once an App ID is set in config.js and you have subscribed). Guarded so the site still works offline if it cannot load. */
 try { self.importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch (e) { /* offline or not configured: the site still works */ }
-const VERSION = 'tubod-v33';
-const CORE = ['./', './index.html', './config.js', './manifest.json', './sharebox.js', './cool.css', './cool.js', './fanmenu.js', './totop.js', './district-news.js', './logo-mark.png', './icon-192.png', './icon-512.png', './bible-game.html', './anim.css', './anim.js'];
+const VERSION = 'tubod-v34';
+const CORE = ['./', './index.html', './bible.html', './config.js', './manifest.json', './sharebox.js', './cool.css', './cool.js', './fanmenu.js', './totop.js', './district-news.js', './logo-mark.png', './icon-192.png', './icon-512.png', './bible-game.html', './anim.css', './anim.js'];
 const PICS = 'tubod-pics-v1';
 const MAX_PICS = 250;
 
@@ -12,7 +12,7 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== PICS).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== PICS && !k.startsWith('bible-')).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 /* the page and config: try the internet first (so updates show at once), use the saved copy when offline */
@@ -53,6 +53,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (url.pathname.indexOf('/bible/') !== -1 && /\.json$/.test(url.pathname)) return; // the Bible files are saved by the Bible page itself
   // never touch the church server or uploads to Google Drive
   if (url.hostname.endsWith('script.google.com') || url.hostname.endsWith('script.googleusercontent.com') || url.hostname === 'www.googleapis.com') return;
   if (url.origin === self.location.origin){
