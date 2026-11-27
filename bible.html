@@ -44,6 +44,9 @@ h1,h2,h3{font-family:'Alegreya',Georgia,serif;margin:0}
 .vs{font-family:'Alegreya',Georgia,serif;font-size:var(--fs);line-height:1.75}
 .v{cursor:pointer;border-radius:4px;padding:1px 0;transition:background .2s}
 .v sup{font:700 .62em 'Public Sans',sans-serif;color:var(--accent-d);margin:0 3px 0 5px;vertical-align:super}
+.v[data-hl=y]{background:#fff3a8}.v[data-hl=g]{background:#cdeccb}.v[data-hl=b]{background:#cfe6fa}.v[data-hl=p]{background:#f9d4e4}
+html[data-theme=dark] .v[data-hl=y]{background:#5a4a12}html[data-theme=dark] .v[data-hl=g]{background:#2b4a2d}html[data-theme=dark] .v[data-hl=b]{background:#1f4256}html[data-theme=dark] .v[data-hl=p]{background:#5a2a40}
+.v[data-bm]::before{content:'\2605';color:#e3a72b;font-size:.7em;margin-right:2px}.v[data-note]::after{content:'\270E';color:var(--accent-d);font-size:.7em;margin-left:3px}
 .v.sel{background:var(--sel);box-shadow:0 0 0 2px var(--sel)}
 .v.flash{background:var(--hl);box-shadow:0 0 0 2px var(--hl)}
 .pn{display:flex;gap:8px;margin-top:16px}.pn button{flex:1;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:700}
@@ -54,12 +57,27 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
 .note{color:var(--muted);font-size:.88rem;line-height:1.5;margin:10px 2px}
 .prog{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:10px 0}.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
 .selbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(10,30,60,.18);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));transform:translateY(110%);transition:transform .2s}
-.selbar.on{transform:none}.selbar-in{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:center}
-.selbar .ref{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.selbar .btn{height:42px;padding:0 14px;border-radius:10px}
+.selbar.on{transform:none}.selbar-in{max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.selbar .ref{flex:1 0 100%;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.selbar .btn{height:42px;padding:0 10px;border-radius:10px;flex:1 1 0;min-width:0;font-size:.9rem;white-space:nowrap}.selbar .btn#selClear{flex:0 0 42px;padding:0}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
 .toast.on{opacity:1}
 .empty{text-align:center;color:var(--muted);padding:30px 10px}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(5,12,30,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);color:var(--ink);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:92dvh;overflow:auto}
+.sheet h3{font-size:1.4rem;margin:0 0 2px}.sheet .sub{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+.sw{display:flex;gap:10px;align-items:center;margin:6px 0 12px;flex-wrap:wrap}
+.sw button{width:42px;height:42px;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px var(--line)}.sw button.on{border-color:var(--ink)}
+.sw .y{background:#ffe66b}.sw .g{background:#a9dca6}.sw .b{background:#9ccbf2}.sw .p{background:#f4a9c9}.sw .n{background:var(--card);font-size:1.1rem;font-weight:700;color:var(--muted)}
+.sw .bmk{width:auto;border-radius:12px;padding:0 14px;border:1px solid var(--line);background:var(--card);font-weight:700;color:var(--muted)}.sw .bmk.on{background:var(--soft);color:var(--accent-d);border-color:var(--accent)}
+.sheet textarea{width:100%;min-height:90px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 12px;font:inherit;resize:vertical}
+.sheet .acts{display:flex;gap:8px;margin-top:12px}.sheet .acts .btn{flex:1}.sheet .acts .btn.danger{background:#fff;color:#b3382c;border:1px solid #e3b2ac;flex:0 0 auto;padding:0 14px}
+.pvimg{display:block;max-width:100%;max-height:58dvh;margin:0 auto 12px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.looks{display:flex;gap:8px;justify-content:center;margin-bottom:12px}.looks button{height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-weight:700}.looks button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mrow{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin:0 0 8px}
+.mrow:hover{border-color:var(--accent)}.mrow b{display:flex;gap:8px;align-items:center;color:var(--accent-d);font-size:.9rem}.mrow .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.mrow .tx{display:block;font-family:'Alegreya',serif;font-size:1.05rem;line-height:1.5;margin-top:3px}.mrow .nt{display:block;margin-top:6px;padding:6px 10px;border-left:3px solid var(--accent);background:var(--soft);border-radius:0 8px 8px 0;font-size:.92rem}
+.chips2{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.chips2 button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:.88rem}.chips2 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .cont.plan-c{background:var(--card);color:var(--ink);border:1px solid var(--line)}.cont.plan-c small{color:var(--muted);opacity:1}
 .plan{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 10px}
 .plan:hover{border-color:var(--accent)}.plan b{display:block;font-family:'Alegreya',serif;font-size:1.3rem}.plan small{display:block;color:var(--muted);font-size:.86rem;margin-top:2px}
@@ -90,7 +108,7 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
   <button class="ib" id="lng" type="button" aria-label="Language"></button>
 </div></header>
 <main class="wrap" id="app"></main>
-<div class="selbar" id="selbar" role="region" aria-label="Selected verses"><div class="selbar-in"><span class="ref" id="selref"></span><button class="btn q" id="selCopy" type="button"></button><button class="btn" id="selShare" type="button"></button><button class="btn q" id="selClear" type="button" aria-label="Clear">&#10005;</button></div></div>
+<div class="selbar" id="selbar" role="region" aria-label="Selected verses"><div class="selbar-in"><span class="ref" id="selref"></span><button class="btn q" id="selCopy" type="button"></button><button class="btn q" id="selPic" type="button"></button><button class="btn q" id="selMark" type="button"></button><button class="btn" id="selShare" type="button"></button><button class="btn q" id="selClear" type="button" aria-label="Clear">&#10005;</button></div></div>
 <div class="toast" id="toast" role="status"></div>
 <script>
 (() => {
@@ -125,7 +143,7 @@ let FS = ls.get('bibleFs', 1.18); const applyFs = () => document.documentElement
 function chrome() {
   document.documentElement.lang = UI === 'ceb' ? 'ceb' : 'en';
   $('#lng').textContent = UI === 'ceb' ? 'BIS' : 'EN'; $('#thm').textContent = document.documentElement.dataset.theme === 'dark' ? '☀' : '☾';
-  $('#selCopy').textContent = T('copy'); $('#selShare').textContent = T('share'); $('#szDn').title = $('#szUp').title = T('sz');
+  $('#selCopy').textContent = T('copy'); $('#selShare').textContent = T('share'); $('#selPic').textContent = M('pic'); $('#selMark').textContent = M('mark'); $('#szDn').title = $('#szUp').title = T('sz');
   const vb = $('#ver'); vb.hidden = TRS.length < 2; vb.textContent = tr1().short.replace('Maayong Balita', 'MB'); vb.title = tr1().name;
   document.title = T('title') + ' · Tubod SDA Church';
 }
@@ -185,7 +203,7 @@ function viewBooks() {
   const grp = (ot) => `<div class="grid">${BOOKS.filter(b => b.ot === ot).map(b => `<button class="bk" type="button" data-bk="${b.n}">${esc(bname(b))}</button>`).join('')}</div>`;
   app.innerHTML = head(T('title'), T('sub')) +
     `<form class="srch" id="sf" role="search"><input id="q" type="search" placeholder="${esc(T('ph'))}" aria-label="${esc(T('ph'))}" autocomplete="off"><button class="btn" type="submit">${esc(T('go'))}</button></form>` +
-    planCard() +
+    planCard() + notesCard() +
     (lb ? `<button class="cont" type="button" data-go="#/${last.n}/${last.c}"><span><small>${esc(T('cont'))}</small><b>${esc(refLabel(last.n, last.c))}</b></span><span class="go">&#8250;</span></button>` : '') +
     `<div class="sec">${esc(T('ot'))}</div>${grp(true)}<div class="sec">${esc(T('nt'))}</div>${grp(false)}` +
     `<div class="sec">&nbsp;</div><button class="btn q" id="offBtn" type="button" style="width:100%">${esc(T('off'))}</button><div class="prog" id="offP" hidden><i></i></div><p class="note" id="offN">${esc(ls.get('bibleOff:' + TR, 0) ? T('offd') : T('offn'))}</p>` + versionPick();
@@ -208,7 +226,7 @@ async function viewRead(n, c, v) {
   ls.set('bibleLast', { n, c });
   const hasPrev = !(n === 1 && c === 1), hasNext = !(n === 66 && c === BOOKS[65].ch);
   app.innerHTML = `<div class="crumb"><button class="btn q" type="button" data-go="#/${n}" style="height:38px">&#8249; ${esc(bname(b))}</button><button class="btn q" type="button" data-go="#" style="height:38px">${esc(T('home'))}</button></div>
-    <article class="read"><h2>${esc(bname(b))} ${c}</h2><div class="vs">${vl.map(x => `<span class="v" data-a="${x.a}" data-b="${x.b}"><sup>${x.a === x.b ? x.a : x.a + '–' + x.b}</sup>${esc(x.t)} </span>`).join('')}</div></article>
+    <article class="read"><h2>${esc(bname(b))} ${c}</h2><div class="vs">${vl.map(x => `<span class="v" data-a="${x.a}" data-b="${x.b}"${markAttrs(n, c, x.a)}><sup>${x.a === x.b ? x.a : x.a + '–' + x.b}</sup>${esc(x.t)} </span>`).join('')}</div></article>
     <div class="pn"><button type="button" id="pv" ${hasPrev ? '' : 'disabled'}>&#8249; ${esc(T('prev'))}</button><button type="button" data-go="#/${n}">${esc(T('chs'))}</button><button type="button" id="nx" ${hasNext ? '' : 'disabled'}>${esc(T('next'))} &#8250;</button></div>
     ${planBar(n, c)}<p class="note">${esc(tr1().name)} · ${esc(tr1().rights || '')}</p>`;
   const step = d => { let nn = n, cc = c + d; if (cc < 1) { nn = n - 1; if (nn < 1) return; cc = BOOKS[nn - 1].ch; } else if (cc > b.ch) { nn = n + 1; if (nn > 66) return; cc = 1; } go('#/' + nn + '/' + cc); };
@@ -343,6 +361,121 @@ function planClick(e) {
   return false;
 }
 
+/* ---------- verse picture, highlights, bookmarks and notes ---------- */
+const B2 = {
+  en: { pic: 'Picture', mark: 'Mark', picTitle: 'Verse picture', soft: 'Soft', dark: 'Dark', accent: 'Color', save: 'Save picture', saved: 'Picture saved', tooLong: 'Pick fewer verses for a picture.', busy: 'Making the picture…',
+    mkTitle: 'Mark these verses', hl: 'Highlight', none: 'No highlight', bm: 'Bookmark', noteL: 'Note', noteP: 'Write a short note', noteFirst: 'The note is saved on the first verse.', save2: 'Save', cancel: 'Cancel', remove: 'Remove', marked: 'Saved', removed: 'Removed',
+    myTitle: 'My notes', mySub: 'Your highlights, bookmarks and notes. They are saved on this phone only.', fAll: 'All', fHl: 'Highlights', fBm: 'Bookmarks', fNote: 'Notes', empty: 'Nothing marked yet. Tap a verse, then Mark.', copyAll: 'Copy all', card: 'My notes', cardN: n => n ? n + ' marked verse' + (n === 1 ? '' : 's') : 'Highlights, bookmarks and notes' },
+  ceb: { pic: 'Hulagway', mark: 'Markahi', picTitle: 'Hulagway sa bersikulo', soft: 'Humok', dark: 'Ngitngit', accent: 'Kolor', save: 'I-save ang hulagway', saved: 'Na-save ang hulagway', tooLong: 'Pagpili og mas gamay nga mga bersikulo alang sa hulagway.', busy: 'Gihimo ang hulagway…',
+    mkTitle: 'Markahi kini nga mga bersikulo', hl: 'Highlight', none: 'Walay highlight', bm: 'Bookmark', noteL: 'Nota', noteP: 'Pagsulat og mubo nga nota', noteFirst: 'Ma-save ang nota sa unang bersikulo.', save2: 'I-save', cancel: 'Kanselahon', remove: 'Tangtanga', marked: 'Na-save', removed: 'Natangtang',
+    myTitle: 'Akong mga nota', mySub: 'Ang imong mga highlight, bookmark ug nota. Sa kini nga telepono ra kini ma-save.', fAll: 'Tanan', fHl: 'Mga highlight', fBm: 'Mga bookmark', fNote: 'Mga nota', empty: 'Wala pay namarkahan. I-tap ang bersikulo, dayon Markahi.', copyAll: 'I-copy tanan', card: 'Akong mga nota', cardN: n => n ? n + ' ka bersikulo ang namarkahan' : 'Mga highlight, bookmark ug nota' }
+};
+const M = k => B2[UI][k];
+const HL = ['y', 'g', 'b', 'p'], HLC = { y: '#ffe66b', g: '#a9dca6', b: '#9ccbf2', p: '#f4a9c9' };
+const marks = () => ls.get('bibleMarks', {}); const mkey = (n, c, a) => n + ':' + c + ':' + a;
+const putMarks = m => ls.set('bibleMarks', m);
+function markAttrs(n, c, a) {
+  const m = marks()[mkey(n, c, a)]; if (!m) return '';
+  return (m.h ? ' data-hl="' + m.h + '"' : '') + (m.bm ? ' data-bm="1"' : '') + (m.note ? ' data-note="1"' : '');
+}
+function paintMarks() {
+  if (!cur) return; const all = marks();
+  [...app.querySelectorAll('.v')].forEach((el, i) => { const x = cur.vl[i], m = x && all[mkey(cur.n, cur.c, x.a)]; ['hl', 'bm', 'note'].forEach(k => el.removeAttribute('data-' + k)); if (m) { if (m.h) el.dataset.hl = m.h; if (m.bm) el.dataset.bm = 1; if (m.note) el.dataset.note = 1; } });
+}
+const selRows = () => [...sel].sort((x, y) => x - y).map(i => cur.vl[i]);
+function openOv(inner, onClose) {
+  const o = document.createElement('div'); o.className = 'ov'; o.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + inner + '</div>';
+  const close = () => { o.remove(); if (onClose) onClose(); };
+  o.addEventListener('click', e => { if (e.target === o) close(); }); document.body.appendChild(o); return { o, close };
+}
+/* the picture */
+const mixHex = (hex, to, t) => { const a = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)), b = [1, 3, 5].map(i => parseInt(to.slice(i, i + 2), 16)); return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+async function drawPic(look, text, ref, tname2) {
+  const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  let ac = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); if (!/^#[0-9a-f]{6}$/i.test(ac)) ac = '#1D6A8A';
+  const L = { soft: { c1: mixHex(ac, '#ffffff', .93), c2: mixHex(ac, '#ffffff', .8), ink: '#17324D', mute: mixHex(ac, '#17324D', .45), bar: ac, q: mixHex(ac, '#ffffff', .65) },
+    dark: { c1: '#0f1a24', c2: mixHex(ac, '#0f1a24', .6), ink: '#f1f6fa', mute: '#b8c8d6', bar: '#e3a72b', q: mixHex(ac, '#0f1a24', .35) },
+    accent: { c1: ac, c2: mixHex(ac, '#000000', .4), ink: '#ffffff', mute: 'rgba(255,255,255,.82)', bar: '#e3a72b', q: 'rgba(255,255,255,.18)' } }[look] || null;
+  try { await Promise.all([document.fonts.load('500 56px Alegreya'), document.fonts.load('700 40px Alegreya'), document.fonts.load('600 30px "Public Sans"')]); } catch (e) {}
+  const gr = g.createLinearGradient(0, 0, W * .6, H); gr.addColorStop(0, L.c1); gr.addColorStop(1, L.c2); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  g.fillStyle = L.bar; g.fillRect(96, 110, 120, 10);
+  g.fillStyle = L.q; g.font = '700 420px Alegreya, Georgia, serif'; g.textBaseline = 'alphabetic'; g.fillText('“', 70, 520);
+  const box = { x: 96, y: 200, w: W - 192, h: 800 }; let size = 70, lines = [];
+  const wrap = sz => { g.font = '500 ' + sz + 'px Alegreya, Georgia, serif'; const out = []; let line = ''; text.split(/\s+/).forEach(w => { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > box.w && line) { out.push(line); line = w; } else line = t; }); if (line) out.push(line); return out; };
+  for (; size >= 30; size -= 2) { lines = wrap(size); if (lines.length * size * 1.38 <= box.h) break; }
+  g.fillStyle = L.ink; g.textAlign = 'left'; const lh = size * 1.38, top = box.y + (box.h - lines.length * lh) / 2 + size;
+  lines.forEach((ln, i) => g.fillText(ln, box.x, top + i * lh));
+  g.fillStyle = L.ink; g.font = '700 46px Alegreya, Georgia, serif'; g.fillText(ref, 96, 1100);
+  g.fillStyle = L.mute; g.font = '600 28px "Public Sans", system-ui, sans-serif'; g.fillText(tname2, 96, 1146);
+  g.fillStyle = L.bar; g.fillRect(96, 1214, W - 192, 3);
+  g.fillStyle = L.ink; g.font = '600 32px "Public Sans", system-ui, sans-serif'; g.fillText('Tubod SDA Church', 96, 1272);
+  return new Promise(res => cv.toBlob(b => res(b), 'image/png'));
+}
+async function openPic() {
+  if (!sel.size || !cur) return; const rows = selRows(), text = rows.map(r => r.t).join(' ').replace(/\s+/g, ' ').trim();
+  if (text.length > 900) { toast(M('tooLong')); return; }
+  const ref = selText().ref.replace(/ \(.*\)$/, ''), tn = tr1().name; let look = ls.get('biblePicLook', 'soft'), blob = null, url = null;
+  const ov = openOv(`<h3>${esc(M('picTitle'))}</h3><p class="sub">${esc(ref)}</p><img class="pvimg" id="pvImg" alt="${esc(ref)}"><div class="looks" id="pvLooks">${['soft', 'dark', 'accent'].map(k => `<button type="button" data-l="${k}">${esc(M(k))}</button>`).join('')}</div><div class="acts"><button class="btn" id="pvShare" type="button">${esc(T('share'))}</button><button class="btn q" id="pvSave" type="button">${esc(M('save'))}</button><button class="btn q" id="pvX" type="button" aria-label="Close" style="flex:0 0 46px;padding:0">&#10005;</button></div>`, () => { if (url) URL.revokeObjectURL(url); });
+  const img = ov.o.querySelector('#pvImg'), looks = ov.o.querySelector('#pvLooks');
+  const render = async () => { looks.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === look)); img.style.opacity = .4; blob = await drawPic(look, text, ref, tn); if (url) URL.revokeObjectURL(url); url = URL.createObjectURL(blob); img.src = url; img.style.opacity = 1; };
+  looks.addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (!b) return; look = b.dataset.l; ls.set('biblePicLook', look); render(); });
+  ov.o.querySelector('#pvX').addEventListener('click', ov.close);
+  const file = () => new File([blob], ref.replace(/[^\w]+/g, '-') + '.png', { type: 'image/png' });
+  const download = () => { const a = document.createElement('a'); a.href = url; a.download = file().name; document.body.appendChild(a); a.click(); a.remove(); toast(M('saved')); };
+  ov.o.querySelector('#pvSave').addEventListener('click', () => { if (blob) download(); });
+  ov.o.querySelector('#pvShare').addEventListener('click', async () => {
+    if (!blob) return; const f = file();
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: ref, text: ref + ' · Tubod SDA Church' }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    download();
+  });
+  render();
+}
+$('#selPic').addEventListener('click', openPic);
+/* highlight, bookmark and note */
+function openMark() {
+  if (!sel.size || !cur) return; const rows = selRows(), all = marks(), ms = rows.map(r => all[mkey(cur.n, cur.c, r.a)] || {});
+  const same = f => ms.every(m => (m[f] || '') === (ms[0][f] || '')) ? (ms[0][f] || '') : null;
+  let hl = same('h'), hlT = false, bm = ms.every(m => m.bm) ? 1 : 0, bmT = false, noteT = false; const note0 = ms[0].note || '';
+  const ref = selText().ref.replace(/ \(.*\)$/, ''), has = ms.some(m => m.h || m.bm || m.note);
+  const ov = openOv(`<h3>${esc(M('mkTitle'))}</h3><p class="sub">${esc(ref)}</p><div class="sw" id="mkSw">${HL.map(k => `<button type="button" class="${k}" data-h="${k}" aria-label="${esc(M('hl'))}"></button>`).join('')}<button type="button" class="n" data-h="" aria-label="${esc(M('none'))}">&#8856;</button><button type="button" class="bmk" id="mkBm">&#9733; ${esc(M('bm'))}</button></div>
+    <label class="note" for="mkNote" style="margin:0 0 4px;display:block">${esc(M('noteL'))}${rows.length > 1 ? ' · ' + esc(M('noteFirst')) : ''}</label><textarea id="mkNote" maxlength="400" placeholder="${esc(M('noteP'))}">${esc(note0)}</textarea>
+    <div class="acts">${has ? `<button class="btn danger" id="mkDel" type="button">${esc(M('remove'))}</button>` : ''}<button class="btn q" id="mkNo" type="button">${esc(M('cancel'))}</button><button class="btn" id="mkOk" type="button">${esc(M('save2'))}</button></div>`);
+  const sw = ov.o.querySelector('#mkSw'), bmb = ov.o.querySelector('#mkBm');
+  const paint = () => { sw.querySelectorAll('[data-h]').forEach(b => b.classList.toggle('on', hl !== null && b.dataset.h === hl && (hl !== '' || hlT))); bmb.classList.toggle('on', !!bm); };
+  paint();
+  sw.addEventListener('click', e => { const b = e.target.closest('[data-h]'); if (!b) return; hl = b.dataset.h; hlT = true; paint(); });
+  bmb.addEventListener('click', () => { bm = bm ? 0 : 1; bmT = true; paint(); });
+  const ta = ov.o.querySelector('#mkNote'); ta.addEventListener('input', () => { noteT = true; });
+  ov.o.querySelector('#mkNo').addEventListener('click', ov.close);
+  const done = msg => { putMarks(all); paintMarks(); ov.close(); clearSel(); toast(msg); };
+  ov.o.querySelector('#mkOk').addEventListener('click', () => {
+    rows.forEach((r, i) => { const k = mkey(cur.n, cur.c, r.a), m = Object.assign({}, all[k] || {});
+      if (hlT) { if (hl) m.h = hl; else delete m.h; }
+      if (bmT) { if (bm) m.bm = 1; else delete m.bm; }
+      if (noteT && i === 0) { const t = ta.value.trim(); if (t) m.note = t; else delete m.note; }
+      if (m.h || m.bm || m.note) { m.t = Date.now(); all[k] = m; } else delete all[k]; });
+    done(M('marked'));
+  });
+  const del = ov.o.querySelector('#mkDel'); if (del) del.addEventListener('click', () => { rows.forEach(r => { delete all[mkey(cur.n, cur.c, r.a)]; }); done(M('removed')); });
+}
+$('#selMark').addEventListener('click', openMark);
+/* My notes */
+function notesCard() { const n = Object.keys(marks()).length; return `<button class="cont plan-c" type="button" data-go="#/m"><span><small>${esc(M('card'))}</small><b>${esc(M('cardN')(n))}</b></span><span class="go">&#8250;</span></button>`; }
+let mFilter = 'all';
+async function viewNotes() {
+  const all = marks(), keys = Object.keys(all).sort((a, b) => (all[b].t || 0) - (all[a].t || 0));
+  const pass = k => mFilter === 'all' || (mFilter === 'hl' && all[k].h) || (mFilter === 'bm' && all[k].bm) || (mFilter === 'nt' && all[k].note);
+  const list = keys.filter(pass);
+  app.innerHTML = pcrumb('#') + head(M('myTitle'), M('mySub')) + (keys.length ? `<div class="chips2" id="mf">${[['all', 'fAll'], ['hl', 'fHl'], ['bm', 'fBm'], ['nt', 'fNote']].map(([k, l]) => `<button type="button" data-f="${k}" class="${mFilter === k ? 'on' : ''}">${esc(M(l))}</button>`).join('')}</div><div id="ml"><div class="empty">…</div></div><p class="note"><button class="btn q" id="mCopy" type="button" style="height:40px">${esc(M('copyAll'))}</button></p>` : `<div class="empty">${esc(M('empty'))}</div>`);
+  window.scrollTo(0, 0); if (!keys.length) return;
+  $('#mf').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { mFilter = b.dataset.f; viewNotes(); } });
+  const need = [...new Set(keys.map(k => +k.split(':')[0]))]; try { await Promise.all(need.map(n => getBook(n))); } catch (e) { $('#ml').innerHTML = `<div class="empty">${esc(T('err'))}</div>`; return; }
+  const txt = k => { const [n, c, a] = k.split(':').map(Number), bk = memo[TR + ':' + n]; return (bk && bk.v[c - 1] && bk.v[c - 1][a - 1]) || ''; };
+  const lab = k => { const [n, c, a] = k.split(':').map(Number); return refLabel(n, c, a); };
+  $('#ml').innerHTML = list.length ? list.map(k => { const m = all[k], [n, c, a] = k.split(':'); return `<button class="mrow" type="button" data-go="#/${n}/${c}/${a}"><b>${m.h ? `<span class="dot" style="background:${HLC[m.h]}"></span>` : ''}${m.bm ? '<span style="color:#e3a72b">&#9733;</span>' : ''}${esc(lab(k))}</b><span class="tx">${esc(txt(k).slice(0, 160))}</span>${m.note ? `<span class="nt">${esc(m.note)}</span>` : ''}</button>`; }).join('') : `<div class="empty">${esc(M('empty'))}</div>`;
+  $('#mCopy').addEventListener('click', async () => { const t = keys.map(k => lab(k) + ' (' + tr1().short + '): “' + txt(k) + '”' + (all[k].note ? '\n' + all[k].note : '')).join('\n\n'); try { await navigator.clipboard.writeText(t); toast(T('copied')); } catch (e) {} });
+}
+
 /* ---------- routing ---------- */
 function route() {
   chrome(); clearSel(); cur = null;
@@ -350,6 +483,7 @@ function route() {
   if (!h) return viewBooks();
   if (parts[0] === 's') return viewSearch(parts.slice(1).join('/'));
   if (parts[0] === 'p') return parts[1] ? viewPlan(parts[1]) : viewPlans();
+  if (parts[0] === 'm') return viewNotes();
   const n = +parts[0], c = +parts[1], v = +parts[2];
   if (!n) return viewBooks(); if (!c) return viewChapters(n); return viewRead(n, c, v || 0);
 }
