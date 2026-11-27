@@ -2,9 +2,10 @@
 (() => {
 'use strict';
 const game = /bible-game\.html$/.test(location.pathname);        /* the Bible game page has no menu of its own: the button offers a way back Home */
-const church = game || !document.querySelector('nav.links');     /* church sites keep their menu in #dnav */
+const bible = /\/bible\.html$/.test(location.pathname);       /* the Bible reader: Home and All books */
+const church = game || bible || !document.querySelector('nav.links');     /* church sites keep their menu in #dnav */
 let nav = document.querySelector('nav.links') || document.querySelector('#dnav');
-if (game) { nav = document.createElement('nav'); nav.hidden = true; nav.innerHTML = '<a href="index.html" data-route="home"><span>Home</span></a>'; }
+if (game || bible) { nav = document.createElement('nav'); nav.hidden = true; nav.innerHTML = '<a href="index.html" data-route="home"><span>Home</span></a>'; }
 if (!nav) return;
 const BP = church ? 900 : 859;
 const ICONS = {
@@ -23,7 +24,7 @@ const ICONS = {
 const svg = (d, w) => '<svg viewBox="0 0 24 24" width="' + w + '" height="' + w + '" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
 const st = document.createElement('style');
 st.textContent = '.fm{display:none}' +
-'@media (max-width:' + BP + 'px){' + (game ? '' : church ? '.fabs{display:none!important}.tabs{display:none!important}.shell{padding-bottom:40px!important}#toast{bottom:24px!important}' : 'nav.links{display:none}html{scroll-padding-top:76px}') + '.fm{display:block}.fm[hidden]{display:none}body:has(.modal,.lightbox) .fm:not(.open){display:none}}' +
+'@media (max-width:' + BP + 'px){' + (game || bible ? (bible ? '.fm-btn{width:44px;height:44px;opacity:.9}' : '') : church ? '.fabs{display:none!important}.tabs{display:none!important}.shell{padding-bottom:40px!important}#toast{bottom:24px!important}' : 'nav.links{display:none}html{scroll-padding-top:76px}') + '.fm{display:block}.fm[hidden]{display:none}body:has(.modal,.lightbox) .fm:not(.open){display:none}}' +
 '.fm-veil{position:fixed;inset:0;background:rgba(5,12,30,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:70}' +
 '.fm.open .fm-veil{opacity:1;pointer-events:auto}' +
 '.fm-btn{position:fixed;right:14px;bottom:calc(190px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;border:0;padding:0;background:var(--accent,var(--blue,#1d5fd8));color:#fff;display:grid;place-items:center;cursor:pointer;z-index:30;box-shadow:0 6px 18px rgba(10,30,60,.38)}' +
@@ -49,7 +50,7 @@ const label = () => document.documentElement.lang === 'ceb' ? 'Menu: ablihi ang 
 
 /* the button sits higher on tall screens and lower on short or sideways ones, so the whole arc always fits */
 function geom() {
-  const H = innerHeight, btm = Math.max(96, Math.min(190, Math.round(H * 0.3)));
+  const H = innerHeight, btm = bible ? 92 : Math.max(96, Math.min(190, Math.round(H * 0.3)));
   return { btm, bottomC: btm + 26 };
 }
 function place() { btn.style.bottom = geom().btm + 'px'; }
@@ -63,6 +64,13 @@ function pseudo(text, route, from, click) {
 }
 function build() {
   const ceb = document.documentElement.lang === 'ceb';
+  if (bible) {
+    const home = pseudo(ceb ? 'Balay' : 'Home', 'home', null, () => { location.href = 'index.html'; });
+    home.innerHTML = svg('M3 11l9-8 9 8M5 10v10h14V10M10 20v-6h4v6', 20) + '<span>' + (ceb ? 'Balay' : 'Home') + '</span>'; home.setAttribute('href', 'index.html');
+    const bks = pseudo(ceb ? 'Tanang libro' : 'All books', 'books', null, () => { if (location.hash && location.hash !== '#') location.hash = ''; window.scrollTo(0, 0); });
+    bks.innerHTML = svg(ICONS.bible, 20) + '<span>' + (ceb ? 'Tanang libro' : 'All books') + '</span>'; bks.setAttribute('href', '#');
+    return layout([home, bks]);
+  }
   if (game) {
     const home = pseudo(ceb ? 'Balay' : 'Home', 'home', null, () => { location.href = 'index.html'; });
     home.innerHTML = svg('M3 11l9-8 9 8M5 10v10h14V10M10 20v-6h4v6', 20) + '<span>' + (ceb ? 'Balay' : 'Home') + '</span>'; home.setAttribute('href', 'index.html');
