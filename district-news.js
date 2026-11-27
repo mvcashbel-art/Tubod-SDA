@@ -15,7 +15,8 @@ const $ = s => document.querySelector(s);
 /* Bisaya for this card's own words. The church's text layer is told to leave the card alone (data-notr). */
 const BIS = { 'From the district': 'Gikan sa Distrito', 'District events': 'Mga Panghitabo sa Distrito', 'Add to my calendar': 'Idugang sa akong kalendaryo', 'Share': 'Ipaambit',
   'All district news': 'Tanang balita sa distrito', 'All district events': 'Tanang panghitabo sa distrito', 'Pinned': 'Gi-pin', 'this church': 'kining simbahan',
-  'Copied. Paste in Messenger or Facebook.': 'Nakopya. I-paste sa Messenger o Facebook.' };
+  'Copied. Paste in Messenger or Facebook.': 'Nakopya. I-paste sa Messenger o Facebook.',
+  'Today': 'Karon', 'Tomorrow': 'Ugma', 'This Sabbath': 'Kini nga Igpapahulay', 'This week': 'Kini nga semana' };
 const L = k => (document.documentElement.lang === 'ceb' && BIS[k]) || k;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let items = null, events = [];
@@ -24,6 +25,7 @@ const css = document.createElement('style');
 css.textContent = '.dnews h3{margin:0 0 8px}.dnews .dn{padding:9px 0;border-top:1px solid var(--line,#D9E4EA)}.dnews .dn:first-of-type{border-top:0;padding-top:0}' +
   '.dnews .dn b{display:block;line-height:1.3}.dnews .dn small{color:var(--muted,#5B7083)}.dnews .dn p{margin:4px 0 0;white-space:pre-line;overflow-wrap:anywhere}' +
   '.dnews .pin{display:inline-block;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--gold-soft,#FBF1D9);color:#8a5a00;margin-right:6px;vertical-align:1px}' +
+  '.dnews .soon{display:inline-block;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--accent,#1D6A8A);color:#fff;margin-right:6px;vertical-align:1px}' +
   '.dnews .more-l{display:inline-block;margin-top:8px;font-weight:600}' +
   '.dnews .dn .bt{display:inline-block;margin:6px 6px 0 0;padding:3px 11px;border:1px solid var(--line,#D9E4EA);background:transparent;color:var(--accent,#1D6A8A);border-radius:99px;font:600 .8rem/1.4 inherit;cursor:pointer}';
 document.head.appendChild(css);
@@ -32,6 +34,14 @@ function fmtDate(s) { const d = /^(\d{4})-(\d\d)-(\d\d)$/.exec(s || ''); if (!d)
 function mine() { return (items || []).filter(x => !x.church || x.church === code).slice(0, 3); }
 function mineEv() { const t = new Date(); const td = t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
   return (events || []).filter(x => (!x.church || x.church === code) && x.date >= td).slice(0, 3); }
+function soon(e) {
+  const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(e.date || ''); if (!m) return '';
+  const t = new Date(), a = new Date(t.getFullYear(), t.getMonth(), t.getDate()), b = new Date(+m[1], +m[2] - 1, +m[3]);
+  const n = Math.round((b - a) / 86400000);
+  if (n < 0 || n > 7) return '';
+  const w = n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : b.getDay() === 6 ? 'This Sabbath' : 'This week';
+  return '<span class="soon">' + L(w) + '</span>';
+}
 function evLine(e) { return [fmtDate(e.date), e.time, e.place].filter(Boolean).join(' · '); }
 function icsFor(e) {
   const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(e.date || ''); if (!m) return '';
@@ -55,7 +65,7 @@ function mount() {
     '<a class="more-l" href="' + DISTRICT_URL + '#news" target="_blank" rel="noopener">' + L('All district news') + '</a>' : '');
   const first = side.querySelector('#dnews') || anchor;
   put(side, first, 'devents', evl.length ? '<h3>' + L('District events') + '</h3>' + evl.map((e, i) =>
-    '<div class="dn"><b>' + esc(e.title) + '</b><small>' + esc(evLine(e)) + (e.church ? ' · ' + L('this church') : '') + '</small>' + (e.description ? '<p>' + esc(e.description) + '</p>' : '') +
+    '<div class="dn"><b>' + soon(e) + esc(e.title) + '</b><small>' + esc(evLine(e)) + (e.church ? ' · ' + L('this church') : '') + '</small>' + (e.description ? '<p>' + esc(e.description) + '</p>' : '') +
     '<button type="button" class="bt" data-dcal="' + i + '">' + L('Add to my calendar') + '</button><button type="button" class="bt" data-dshare="e' + i + '">' + L('Share') + '</button></div>').join('') +
     '<a class="more-l" href="' + DISTRICT_URL + '#events" target="_blank" rel="noopener">' + L('All district events') + '</a>' : '');
 }
