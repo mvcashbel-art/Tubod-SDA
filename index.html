@@ -3388,7 +3388,7 @@ function renderConvoList(){
   const dms = all.filter(c => c.kind !== 'group');
   /* every group you belong to is listed, even before its first message */
   const ids = new Set(all.filter(c => c.kind === 'group').map(c => c.groupId));
-  const gr = (S.groups || []).filter(g => ids.has(g.id) || inGroup(S.uid, g.id) || ((S.me && S.me.groups) || []).includes(g.id)).map(g => {
+  const gr = (S.groups || []).filter(g => S.isAdmin || ids.has(g.id) || inGroup(S.uid, g.id) || ((S.me && S.me.groups) || []).includes(g.id)).map(g => {
     const c = all.find(x => x.kind === 'group' && x.groupId === g.id);
     return { g, c, t: c && c.lastTime || 0 };
   }).sort((a, b) => (b.t - a.t) || String(a.g.name).localeCompare(String(b.g.name)));
@@ -3404,7 +3404,7 @@ function renderConvoList(){
   let body;
   if (MSG.tab === 'grp') {
     body = gr.length ? gr.map(x => row(`<span class="av md convo-grp">${icon('users')}</span>`, x.g.name, x.c, `data-act="opengroupchat" data-gid="${esc(x.g.id)}"`)).join('')
-      : '<p class="muted" style="padding:14px">You are not in a group yet. Open <b>Groups</b>, join one, and its chat shows up here.</p>';
+      : (S.groups || []).length ? '<p class="muted" style="padding:14px">You are not in a group yet. Open <b>Groups</b>, join one, and its chat shows up here.</p>' : '<p class="muted" style="padding:14px">There are no groups yet. A church leader can start one in <b>Groups</b>.</p>';
   } else {
     body = dms.length ? dms.map(c => row(av(c.uid, 'md'), c.who, c, `data-act="opendm" data-uid="${esc(c.uid)}"`)).join('')
       : '<p class="muted" style="padding:14px">No personal chats yet. Open a member’s profile and tap <b>Message</b>.</p>';
