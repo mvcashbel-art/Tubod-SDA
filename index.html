@@ -779,6 +779,7 @@ const imgUrl = (id, w) => idOk(id) ? `https://lh3.googleusercontent.com/d/${id}=
 const driveUrl = id => idOk(id) ? `https://drive.google.com/file/d/${id}/view` : '';
 
 const ICONS = {
+  share:'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4',
   home:'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',
   bell:'M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',
   folder:'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
@@ -1851,7 +1852,7 @@ function msgHTML(p){
       <div class="m-info"><span>${t}</span>
         <button data-act="react" data-id="${esc(p.id)}" class="${iReact ? 'on' : ''}" aria-pressed="${!!iReact}">${icon('heart')}Amen${rx.length ? ' · ' + rx.length : ''}</button>
         <button data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}Reply${cms.length ? ' · ' + cms.length : ''}</button>
-        <button data-act="shareann" data-id="${esc(p.id)}">Share</button><button data-act="copyann" data-id="${esc(p.id)}">Copy</button>
+        <button data-act="shareann" data-id="${esc(p.id)}">${icon('share')}Share</button><button data-act="copyann" data-id="${esc(p.id)}">Copy</button>
         ${smsPart(p)}
         ${mine(p.authorId) ? `<button data-act="delpost" data-id="${esc(p.id)}">Delete</button>` : ''}</div>
       ${open ? `<div class="reps">${cms.map(c => `<div class="rep">${av(c.authorId, 'sm')}<div class="rb"><b>${esc(nameOf(c.authorId))}</b>${esc(c.text)}</div>${mine(c.authorId) ? `<button class="x" data-act="delcm" data-id="${esc(c.id)}" aria-label="Delete reply">${icon('x')}</button>` : ''}</div>`).join('')}
@@ -2006,7 +2007,7 @@ function postHTML(p){
     <div class="acts">
       <button class="btn quiet ${iReact ? 'on' : ''}" data-act="react" data-id="${esc(p.id)}" aria-pressed="${!!iReact}">${icon('heart')}${CATS[cat].react}${rx.length ? ' · ' + rx.length : ''}</button>
       <button class="btn quiet" data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}${cms.length ? cms.length + (cms.length === 1 ? ' comment' : ' comments') : 'Comment'}</button>
-      ${cat !== 'prayer' ? `<button class="btn quiet" data-act="sharepost" data-id="${esc(p.id)}">Share</button>` : ''}
+      ${cat !== 'prayer' ? `<button class="btn quiet" data-act="sharepost" data-id="${esc(p.id)}">${icon('share')}Share</button>` : ''}
     </div>
     ${open ? `<div class="comments">${cms.map(c => `<div class="cm">${av(c.authorId, 'sm')}<div class="cm-b"><b>${esc(nameOf(c.authorId))}</b> <span class="meta">${ago(c.createdAt)}</span><p>${esc(c.text)}</p></div>${mine(c.authorId) ? `<button class="x" data-act="delcm" data-id="${esc(c.id)}" aria-label="Delete comment">${icon('x')}</button>` : ''}</div>`).join('')}
       <form class="c-form" data-comment="${esc(p.id)}"><input id="cin-${esc(p.id)}" type="text" maxlength="500" placeholder="Write a comment" aria-label="Write a comment" autocomplete="off"><button class="btn primary sm" type="submit">Send</button></form></div>` : ''}
