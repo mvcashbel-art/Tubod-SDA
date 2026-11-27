@@ -16,6 +16,7 @@ function place() {
   let extra = 0; const tabs = document.querySelector('#tabs');
   if (tabs) { const cs = getComputedStyle(tabs); if (cs.display !== 'none' && cs.position === 'fixed') extra = tabs.offsetHeight; }
   b.style.bottom = (extra + 16) + 'px';
+  if (tabs) { b.style.right = 'auto'; b.style.left = '14px'; } /* church sites keep Chat and Game buttons on the right */
   b.classList.toggle('on', (window.scrollY || document.documentElement.scrollTop) > 480);
 }
 let pend = false;
