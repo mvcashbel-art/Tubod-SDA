@@ -83,7 +83,7 @@ function layout(links) {
   const n = links.length;
   const H = innerHeight, bottomC = geom().bottomC, half = (n - 1) / 2;
   /* rows are spaced evenly down the screen and bulge out along a circle, so nothing bunches up at the ends */
-  const avail = Math.min(bottomC - 14, H - bottomC - 70), p = Math.max(26, Math.min(42, avail / half)), R = half * p + 16;
+  const avail = Math.min(bottomC - 14, H - bottomC - 70), p = Math.max(26, Math.min(42, avail / half)), R = Math.max(56, half * p + 16);
   list.innerHTML = '';
   links.forEach((a, i) => {
     const key = church ? (a.getAttribute('data-route') || (a.getAttribute('href') || '').replace(/\W/g, '')) : (a.getAttribute('href') || '').replace('#', ''), yy = (i - half) * p, xx = Math.sqrt(Math.max(0, R * R - yy * yy));
