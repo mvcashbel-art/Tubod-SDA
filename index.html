@@ -640,10 +640,7 @@ body:has(#auth) .fabs{display:none!important}
 .chat-head-dot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font-size:.64rem;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;border:2px solid var(--bg,#fff)}
 @keyframes headpop{from{opacity:0;transform:scale(.4) translateY(8px)}to{opacity:1;transform:none}}
 /* messaging */
-#msgPane{display:flex;flex-direction:column;min-height:360px;height:calc(100dvh - 300px)}
-.chatpage{padding:12px 14px}
-.nbd{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--danger,#d64550);color:#fff;font:700 .66rem/18px system-ui,sans-serif;text-align:center;margin-left:4px;display:inline-block}
-#fabChat{display:none!important}
+#msgPane{display:flex;flex-direction:column;min-height:0;height:min(68vh,560px)}
 .convo-list{overflow-y:auto;display:flex;flex-direction:column;margin:0 -4px}
 .convo-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 8px;cursor:pointer;color:inherit;font:inherit}
 .convo-row:hover{background:#F2F7F9}
@@ -817,7 +814,7 @@ const CATS = {
 };
 const DEF_LIB_CATS = [['sermons','Sermons & audio'],['sabbath-school','Sabbath School'],['music','Hymns & music'],['documents','Documents'],['media','Photos & videos'],['other','Other']];
 const DEF_ROLES = ['Member','Pastor','Elder','Deacon','Deaconess','Church clerk','Treasurer','Sabbath School teacher','Pathfinder leader','Adventist Youth leader','Music ministry','Health ministries','Community services','Children’s ministries'];
-const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['groups','Groups','heart',null,'notabs'],['messages','Chat','chat'],['bible','Bible','bible','bible.html'],['game','Game','book','bible-game.html'],['me','My profile','user']];
+const DEF_NAV = [['home','Home','home'],['news','Announcements','bell'],['library','Library','folder'],['members','Members','users'],['groups','Groups','heart',null,'notabs'],['bible','Bible','bible','bible.html'],['game','Game','book','bible-game.html'],['me','My profile','user']];
 let LIB_CATS = DEF_LIB_CATS, ROLES = DEF_ROLES, NAV = DEF_NAV, NAV_BIS = {}, NAV_HIDE = {};
 /* what admins changed on the Edit the site page */
 let SITE = {texts:{}, color:'blue', tabs:[], roles:[], libCats:[]}, siteSig = '';
@@ -1440,17 +1437,17 @@ function go(route, id){
 }
 function fromHash(){
   const h = (location.hash || '').slice(1);
-  if (h === 'messages'){ setTimeout(() => { if (S.uid && S.msgOn !== false && S.route !== 'messages') go('messages'); }, 50); return; }
+  if (h === 'messages'){ try { history.replaceState(null, '', location.pathname + location.search + '#home'); } catch (e) {} if (S.uid && S.msgOn !== false) setTimeout(openMessages, 50); return; }
   if (h === 'me'){ if (S.uid) return go('profile', S.uid); return; }
   if (['home','news','library','members','groups'].includes(h) && h !== S.route) go(h);
 }
 function navHTML(kind){
-  return NAV.filter(n => !NAV_HIDE[n[0]] && (!n[3] || n[0] === 'bible') && !(n[0] === 'messages' && (!S.uid || S.msgOn === false)) && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[4])).map(([r, label0, ic, href]) => {
+  return NAV.filter(n => !NAV_HIDE[n[0]] && (!n[3] || n[0] === 'bible') && !(kind === 'top' && n[0] === 'me') && !(kind === 'tabs' && n[4])).map(([r, label0, ic, href]) => {
     const bisL = LANG === 'ceb' && (NAV_BIS[r] || (r === 'bible' ? 'Biblia' : '')), label = bisL || label0, nt = bisL ? ' data-notr' : '';
     if (href) return `<a href="${href}"${nt}>${icon(ic)}<span>${esc(label)}</span></a>`;
     const on = (r === 'me' ? (S.route === 'profile' && S.profileId === S.uid) : r === 'groups' ? (S.route === 'groups' || S.route === 'group') : S.route === r);
     const shortTab = kind === 'tabs' && (label === 'Announcements' ? ['Announcements', 'News'] : (r === 'me' && label === 'My profile') ? ['My profile', 'Profile'] : null);
-    return `<a href="#${r}"${nt} data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${shortTab ? `<span class="lg">${esc(shortTab[0])}</span><span class="sh">${esc(shortTab[1])}</span>` : `<span>${esc(label)}</span>`}${r === 'messages' && S.msgUnread ? `<span class="nbd">${S.msgUnread > 99 ? '99+' : S.msgUnread}</span>` : ''}</a>`;
+    return `<a href="#${r}"${nt} data-route="${r}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}>${icon(ic)}${shortTab ? `<span class="lg">${esc(shortTab[0])}</span><span class="sh">${esc(shortTab[1])}</span>` : `<span>${esc(label)}</span>`}</a>`;
   }).join('');
 }
 
@@ -1782,7 +1779,6 @@ function renderStrip(){
 /* ---------- views ---------- */
 function mount(){
   const v = $('#view');
-  if (S.route !== 'messages'){ stopThreadPoll(); MSG.conv = null; }
   const bannerHTML = '<div id="banner"></div>';
   if (S.route === 'home'){
     v.innerHTML = `${bannerHTML}<div id="composerSlot"></div><div class="filters" id="filters" role="group" aria-label="Filter posts"></div><div id="feedSlot">${S.token && !S.uid ? '<div class="card empty">Loading the church page…</div>' : ''}</div>`;
@@ -1801,9 +1797,6 @@ function mount(){
       ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; smsNote(); });
       ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches){ e.preventDefault(); sendAnn(); } });
     }
-  } else if (S.route === 'messages'){
-    v.innerHTML = `${bannerHTML}<div class="page-head"><h1 id="mTitle">Messages</h1><p>Private messages with members and your ministry group chats.</p></div><section class="card chatpage" aria-label="Messages"><div id="msgPane"></div></section>`;
-    setTimeout(() => { if (S.route === 'messages' && !MSG.conv) showConvoList(); }, 0);
   } else if (S.route === 'library'){
     v.innerHTML = `${bannerHTML}<div class="page-head"><h1>Church library</h1><p>Sermons, Sabbath School lessons, hymns and documents kept for the whole church family.</p>${S.token ? `<button class="btn primary" data-act="upload">${icon('upload')}Add files or album</button>` : ''}</div>
       <div class="tools"><input type="search" id="libQ" placeholder="Search the library" aria-label="Search the library" value="${esc(S.libQ)}"></div>
@@ -1828,7 +1821,6 @@ function refresh(){
   else if (S.route === 'news'){ renderChat(); const nc = $('#newsCards'); if (nc) nc.innerHTML = thisSabbathCard() + lessonCard() + rosterCard() + eventsCard(); }
   else if (S.route === 'library') renderLibrary();
   else if (S.route === 'members'){ renderOfficers(); renderMembers(); }
-  else if (S.route === 'messages'){ /* the chat page draws itself */ }
   else renderProfile();
 }
 const schedule = (() => { let t = 0; return () => { if (!t) t = requestAnimationFrame(() => { t = 0; if (!$('#auth')) refresh(); }); }; })();
@@ -3313,10 +3305,7 @@ async function addComment(pid, input){
 let msgPoll = 0; const MSG = { conv: null, count: 0 };
 function msgClock(ms){ const d = new Date(ms + TZ * 36e5); let h = d.getUTCHours(); const mn = String(d.getUTCMinutes()).padStart(2, '0'); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + mn + ' ' + ap; }
 function msgDay(ms){ const iso = phISO(ms); if (iso === phISO()) return 'Today'; if (iso === phISO(Date.now() - 864e5)) return 'Yesterday'; const [Y, M, D] = iso.split('-').map(Number); return MONTHS[M - 1] + ' ' + D + (Y !== phNow().getUTCFullYear() ? ' ' + Y : ''); }
-function paintMsgBadge(){
-  const n = S.msgUnread || 0, b = $('#msgBadge'); if (b){ b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; } renderChatHeads();
-  document.querySelectorAll('a[data-route="messages"]').forEach(a => { let t = a.querySelector('.nbd'); if (!n){ if (t) t.remove(); return; } if (!t){ t = document.createElement('span'); t.className = 'nbd'; a.appendChild(t); } t.textContent = n > 99 ? '99+' : String(n); });
-}
+function paintMsgBadge(){ const b = $('#msgBadge'); if (b){ const n = S.msgUnread || 0; b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n; } renderChatHeads(); }
 function renderChatHeads(){
   const box = $('#chatHeads'); if (!box) return;
   if (S.msgOn === false){ box.innerHTML = ''; return; }
@@ -3356,7 +3345,7 @@ async function refreshConvos(){
   if (!S.uid) return;
   try { const j = await api('convos'); S.convos = j.convos || []; S.msgUnread = j.unread || 0; S.msgOn = true; paintMsgBadge(); const b = $('#fabChat'); if (b) b.hidden = false; notifyChat(j.convos || []); if ($('#msgList') && !MSG.conv) renderConvoList(); }
   catch (e){
-    if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#fabChat'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); renderChrome(); return; }
+    if (e.code === 'bad_action'){ S.msgOn = false; const b = $('#fabChat'); if (b) b.hidden = true; if ($('#modal') && $('#msgPane')) closeModal(); return; }
     /* slow server or weak signal: don't leave the panel stuck on "Loading…" */
     const list = $('#msgList');
     if (list && !MSG.conv && !(S.convos && S.convos.length)){
@@ -3364,9 +3353,12 @@ async function refreshConvos(){
     }
   }
 }
-function ensureMsgModal(){   /* Chat is a page now, not a pop-up */
-  if (S.route !== 'messages') go('messages');
-  return $('#msgPane');
+function ensureMsgModal(){
+  if ($('#msgPane')) return $('#modal');
+  const m = openModal('Messages', '<div id="msgPane"></div>', true);
+  const mo = new MutationObserver(() => { if (!document.body.contains(m)){ stopThreadPoll(); MSG.conv = null; mo.disconnect(); } });
+  mo.observe(document.body, { childList: true });
+  return m;
 }
 function openMessages(){ ensureMsgModal(); showConvoList(); }
 function showConvoList(){
