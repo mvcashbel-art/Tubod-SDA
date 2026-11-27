@@ -60,6 +60,23 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
 .toast.on{opacity:1}
 .empty{text-align:center;color:var(--muted);padding:30px 10px}
+.cont.plan-c{background:var(--card);color:var(--ink);border:1px solid var(--line)}.cont.plan-c small{color:var(--muted);opacity:1}
+.plan{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 10px}
+.plan:hover{border-color:var(--accent)}.plan b{display:block;font-family:'Alegreya',serif;font-size:1.3rem}.plan small{display:block;color:var(--muted);font-size:.86rem;margin-top:2px}
+.plan-today{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;border-radius:16px;padding:14px 16px;margin:10px 0 14px}
+.plan-today small{opacity:.85}.plan-today b{display:block;font-family:'Alegreya',serif;font-size:1.5rem;margin:2px 0 10px}
+.plan-today .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.plan-today .chips .btn{height:36px;padding:0 12px;font-size:.88rem}
+.plan-today .rowb{display:flex;gap:8px}.plan-today .rowb .btn{flex:1}
+.plan-today .btn{background:#fff;color:var(--accent-d)}.plan-today .btn.q{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.7)}
+.plan-today.done{background:var(--soft);color:var(--ink)}.plan-today.done b{margin:0}
+.days{display:flex;flex-direction:column;gap:6px}
+.drow{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px 6px 6px}
+.drow.on{background:var(--soft)}.drow .chk{width:36px;height:36px;border-radius:10px;border:2px solid var(--line);background:var(--card);font-weight:800;color:#fff;font-size:1.05rem;flex:none}
+.drow.on .chk{background:var(--accent);border-color:var(--accent)}
+.drow .dl{flex:1;min-width:0;text-align:left;background:none;border:0;padding:4px 2px;display:flex;flex-direction:column}
+.drow .dl b{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.drow .dl span{font-weight:600}
+.planbar{display:flex;align-items:center;gap:10px;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:12px}
+.planbar small{flex:1;color:var(--muted);font-weight:600}.planbar .btn{height:42px;padding:0 14px;border-radius:10px}
 @media print{.bar,.selbar,.pn,.srch{display:none}.wrap{padding:0}.read{border:0}}
 </style>
 </head>
@@ -168,6 +185,7 @@ function viewBooks() {
   const grp = (ot) => `<div class="grid">${BOOKS.filter(b => b.ot === ot).map(b => `<button class="bk" type="button" data-bk="${b.n}">${esc(bname(b))}</button>`).join('')}</div>`;
   app.innerHTML = head(T('title'), T('sub')) +
     `<form class="srch" id="sf" role="search"><input id="q" type="search" placeholder="${esc(T('ph'))}" aria-label="${esc(T('ph'))}" autocomplete="off"><button class="btn" type="submit">${esc(T('go'))}</button></form>` +
+    planCard() +
     (lb ? `<button class="cont" type="button" data-go="#/${last.n}/${last.c}"><span><small>${esc(T('cont'))}</small><b>${esc(refLabel(last.n, last.c))}</b></span><span class="go">&#8250;</span></button>` : '') +
     `<div class="sec">${esc(T('ot'))}</div>${grp(true)}<div class="sec">${esc(T('nt'))}</div>${grp(false)}` +
     `<div class="sec">&nbsp;</div><button class="btn q" id="offBtn" type="button" style="width:100%">${esc(T('off'))}</button><div class="prog" id="offP" hidden><i></i></div><p class="note" id="offN">${esc(ls.get('bibleOff:' + TR, 0) ? T('offd') : T('offn'))}</p>` + versionPick();
@@ -192,7 +210,7 @@ async function viewRead(n, c, v) {
   app.innerHTML = `<div class="crumb"><button class="btn q" type="button" data-go="#/${n}" style="height:38px">&#8249; ${esc(bname(b))}</button><button class="btn q" type="button" data-go="#" style="height:38px">${esc(T('home'))}</button></div>
     <article class="read"><h2>${esc(bname(b))} ${c}</h2><div class="vs">${vl.map(x => `<span class="v" data-a="${x.a}" data-b="${x.b}"><sup>${x.a === x.b ? x.a : x.a + '–' + x.b}</sup>${esc(x.t)} </span>`).join('')}</div></article>
     <div class="pn"><button type="button" id="pv" ${hasPrev ? '' : 'disabled'}>&#8249; ${esc(T('prev'))}</button><button type="button" data-go="#/${n}">${esc(T('chs'))}</button><button type="button" id="nx" ${hasNext ? '' : 'disabled'}>${esc(T('next'))} &#8250;</button></div>
-    <p class="note">${esc(tr1().name)} · ${esc(tr1().rights || '')}</p>`;
+    ${planBar(n, c)}<p class="note">${esc(tr1().name)} · ${esc(tr1().rights || '')}</p>`;
   const step = d => { let nn = n, cc = c + d; if (cc < 1) { nn = n - 1; if (nn < 1) return; cc = BOOKS[nn - 1].ch; } else if (cc > b.ch) { nn = n + 1; if (nn > 66) return; cc = 1; } go('#/' + nn + '/' + cc); };
   $('#pv').addEventListener('click', () => step(-1)); $('#nx').addEventListener('click', () => step(1)); viewRead.step = step;
   if (v) { const el = [...app.querySelectorAll('.v')].find(e => +e.dataset.a <= v && v <= +e.dataset.b); if (el) { el.classList.add('flash'); setTimeout(() => el.scrollIntoView({ block: 'center' }), 60); setTimeout(() => el.classList.remove('flash'), 3500); } else window.scrollTo(0, 0); }
@@ -216,6 +234,7 @@ const selText = () => {
 app.addEventListener('click', e => {
   const sp = e.target.closest('.v');
   if (sp && cur) { const i = [...app.querySelectorAll('.v')].indexOf(sp); if (sel.has(i)) { sel.delete(i); sp.classList.remove('sel'); } else { sel.add(i); sp.classList.add('sel'); } showSel(); return; }
+  if (planClick(e)) return;
   const g = e.target.closest('[data-go]'); if (g) { go(g.dataset.go); return; }
   const bk = e.target.closest('[data-bk]'); if (bk) { go('#/' + bk.dataset.bk); return; }
   if (e.target.closest('[data-retry]')) route();
@@ -265,12 +284,72 @@ async function saveOffline() {
   p.hidden = true; btn.disabled = false;
 }
 
+/* ---------- reading plans: a few days at a time, checked off on this phone ---------- */
+const PLANS = [
+  { id: 'gospels', days: 30, books: [40, 41, 42, 43] },
+  { id: 'psalms', days: 30, books: [19] },
+  { id: 'nt', days: 90, books: Array.from({ length: 27 }, (_, i) => 40 + i) }
+];
+const PT = {
+  en: { title: 'Reading plans', sub: 'Read a little each day and check off each day as you go.', cta: 'Gospels in 30 days and more', today: 'Today', day: 'Day', read: 'Read', mark: 'Mark day done', all: 'All days', prog: (n, t) => n + ' of ' + t + ' days done', notstarted: 'Not started yet', reset: 'Start over', reset2: 'Tap again to start over', complete: 'Plan complete. Well done!', finish: 'Finish today’s reading', done2: 'Day done', nextch: 'Next chapter', saved: 'Day checked off', pace: 'Go at your own pace. Missed a day? Just carry on where you stopped.',
+    gospelsN: 'Gospels in 30 days', gospelsD: 'Matthew, Mark, Luke and John, about 3 chapters a day.', psalmsN: 'Psalms in 30 days', psalmsD: 'The whole book of Psalms, 5 psalms a day.', ntN: 'New Testament in 90 days', ntD: 'From Matthew to Revelation, about 3 chapters a day.' },
+  ceb: { title: 'Mga plano sa pagbasa', sub: 'Basaha ang diyutay matag adlaw ug markahi ang matag adlaw nga nahuman na.', cta: 'Mga Ebanghelyo sa 30 ka adlaw ug uban pa', today: 'Karon', day: 'Adlaw', read: 'Basaha', mark: 'Markahi nga human na ang adlaw', all: 'Tanang adlaw', prog: (n, t) => n + ' sa ' + t + ' ka adlaw ang nahuman', notstarted: 'Wala pa nasugdi', reset: 'Sugdi pag-usab', reset2: 'I-tap pag-usab aron masugdan pag-usab', complete: 'Human na ang plano. Maayong buhat!', finish: 'Humana ang pagbasa karon', done2: 'Human na ang adlaw', nextch: 'Sunod nga kapitulo', saved: 'Namarkahan na ang adlaw', pace: 'Sunda ang imong kaugalingong pas. Nakalimot og usa ka adlaw? Padayon lang diin ka mihunong.',
+    gospelsN: 'Mga Ebanghelyo sa 30 ka adlaw', gospelsD: 'Mateo, Marcos, Lucas ug Juan, mga 3 ka kapitulo kada adlaw.', psalmsN: 'Mga Salmo sa 30 ka adlaw', psalmsD: 'Ang tibuok basahon sa mga Salmo, 5 ka salmo kada adlaw.', ntN: 'Bag-ong Tugon sa 90 ka adlaw', ntD: 'Gikan sa Mateo hangtod sa Pinadayag, mga 3 ka kapitulo kada adlaw.' }
+};
+const P = k => PT[UI][k];
+const planChaps = p => { const o = []; p.books.forEach(n => { for (let c = 1; c <= BOOKS[n - 1].ch; c++) o.push([n, c]); }); return o; };
+const planDay = (p, d) => { const all = planChaps(p), a = Math.floor(d * all.length / p.days), b = Math.floor((d + 1) * all.length / p.days); return all.slice(a, b); };   /* d counts from 0 */
+const dayLabel = chs => { const out = []; chs.forEach(([n, c]) => { const l = out[out.length - 1]; if (l && l.n === n && l.b === c - 1) l.b = c; else out.push({ n, a: c, b: c }); }); return out.map(x => bname(BOOKS[x.n - 1]) + ' ' + (x.a === x.b ? x.a : x.a + '–' + x.b)).join('; '); };
+const pst = id => { const s = ls.get('biblePlan:' + id, null); return s && Array.isArray(s.done) ? s : { done: [] }; };
+const psave = (id, s) => { ls.set('biblePlan:' + id, s); ls.set('biblePlanLast', id); };
+const pNext = (p, s) => { for (let d = 0; d < p.days; d++) if (!s.done.includes(d)) return d; return -1; };
+const pcrumb = h => `<div class="crumb"><button class="btn q" type="button" data-go="${h}" style="height:38px">&#8249; ${esc(h === '#' ? T('home') : P('title'))}</button></div>`;
+function planCard() {
+  const p = PLANS.find(q => q.id === ls.get('biblePlanLast', null)), nx = p ? pNext(p, pst(p.id)) : -1;
+  return `<button class="cont plan-c" type="button" data-go="#/p${nx >= 0 ? '/' + p.id : ''}"><span><small>${esc(nx >= 0 ? P('today') + ' · ' + P('day') + ' ' + (nx + 1) : P('title'))}</small><b>${esc(nx >= 0 ? dayLabel(planDay(p, nx)) : P('cta'))}</b></span><span class="go">&#8250;</span></button>`;
+}
+function viewPlans() {
+  app.innerHTML = pcrumb('#') + head(P('title'), P('sub')) + PLANS.map(p => { const n = pst(p.id).done.length;
+    return `<button class="plan" type="button" data-go="#/p/${p.id}"><b>${esc(P(p.id + 'N'))}</b><small>${esc(P(p.id + 'D'))}</small><span class="prog"><i style="width:${Math.round(n / p.days * 100)}%"></i></span><small>${esc(n ? P('prog')(n, p.days) : P('notstarted'))}</small></button>`; }).join('');
+  window.scrollTo(0, 0);
+}
+function viewPlan(id, keepY) {
+  const p = PLANS.find(x => x.id === id); if (!p) return go('#/p');
+  const s = pst(id), nx = pNext(p, s), n = s.done.length;
+  const today = nx < 0 ? `<div class="plan-today done"><b>${esc(P('complete'))}</b></div>` : (() => { const chs = planDay(p, nx);
+    return `<div class="plan-today"><small>${esc(P('today'))} · ${esc(P('day'))} ${nx + 1}</small><b>${esc(dayLabel(chs))}</b><div class="chips">${chs.map(([bn, c]) => `<button class="btn q" type="button" data-pread="${id}:${nx}:${bn}:${c}">${esc(bname(BOOKS[bn - 1]))} ${c}</button>`).join('')}</div><div class="rowb"><button class="btn" type="button" data-pread="${id}:${nx}:${chs[0][0]}:${chs[0][1]}">${esc(P('read'))}</button><button class="btn q" type="button" data-pmark="${id}:${nx}">${esc(P('mark'))}</button></div></div>`; })();
+  app.innerHTML = pcrumb('#/p') + `<h2 style="font-size:2rem;margin:4px 2px 4px">${esc(P(id + 'N'))}</h2><p class="note" style="margin-top:0">${esc(P(id + 'D'))}</p><div class="prog"><i style="width:${Math.round(n / p.days * 100)}%"></i></div><p class="note" style="margin-top:0">${esc(P('prog')(n, p.days))}</p>` + today +
+    `<p class="note">${esc(P('pace'))}</p><div class="sec">${esc(P('all'))}</div><div class="days">${Array.from({ length: p.days }, (_, d) => { const ch = planDay(p, d), on = s.done.includes(d);
+      return `<div class="drow${on ? ' on' : ''}"><button type="button" class="chk" role="checkbox" aria-checked="${on}" aria-label="${esc(P('day') + ' ' + (d + 1))}" data-pmark="${id}:${d}">${on ? '&#10003;' : ''}</button><button type="button" class="dl" data-pread="${id}:${d}:${ch[0][0]}:${ch[0][1]}"><b>${esc(P('day'))} ${d + 1}</b><span>${esc(dayLabel(ch))}</span></button></div>`; }).join('')}</div>` +
+    `<p class="note"><button class="btn q" type="button" data-preset="${id}" style="height:38px">${esc(P('reset'))}</button></p>`;
+  window.scrollTo(0, keepY || 0);
+}
+function planBar(n, c) {   /* inside a chapter that belongs to the day being read */
+  const x = ls.get('biblePctx', null), p = x && PLANS.find(q => q.id === x.id); if (!p) return '';
+  const chs = planDay(p, x.d), i = chs.findIndex(q => q[0] === n && q[1] === c); if (i < 0) return '';
+  const last = i === chs.length - 1, done = pst(p.id).done.includes(x.d);
+  return `<div class="planbar"><small>${esc(P(p.id + 'N'))} · ${esc(P('day'))} ${x.d + 1} · ${i + 1}/${chs.length}</small>` +
+    (last ? `<button class="btn" type="button" data-pdone="${p.id}:${x.d}">${esc(done ? P('done2') : P('finish'))} &#10003;</button>` : `<button class="btn" type="button" data-go="#/${chs[i + 1][0]}/${chs[i + 1][1]}">${esc(P('nextch'))} &#8250;</button>`) + `</div>`;
+}
+function planClick(e) {
+  const rd = e.target.closest('[data-pread]');
+  if (rd) { const [id, d, n, c] = rd.dataset.pread.split(':'); ls.set('biblePctx', { id, d: +d }); ls.set('biblePlanLast', id); go('#/' + n + '/' + c); return true; }
+  const mk = e.target.closest('[data-pmark]');
+  if (mk) { const [id, d] = mk.dataset.pmark.split(':'), s = pst(id), i = s.done.indexOf(+d); if (i < 0) s.done.push(+d); else s.done.splice(i, 1); psave(id, s); viewPlan(id, window.scrollY); return true; }
+  const dn = e.target.closest('[data-pdone]');
+  if (dn) { const [id, d] = dn.dataset.pdone.split(':'), s = pst(id); if (!s.done.includes(+d)) s.done.push(+d); psave(id, s); ls.set('biblePctx', null); toast(P('saved')); go('#/p/' + id); return true; }
+  const rs = e.target.closest('[data-preset]');
+  if (rs) { if (rs.dataset.armed) { psave(rs.dataset.preset, { done: [] }); ls.set('biblePctx', null); viewPlan(rs.dataset.preset); } else { rs.dataset.armed = '1'; rs.textContent = P('reset2'); setTimeout(() => { if (rs.isConnected) { delete rs.dataset.armed; rs.textContent = P('reset'); } }, 4000); } return true; }
+  return false;
+}
+
 /* ---------- routing ---------- */
 function route() {
   chrome(); clearSel(); cur = null;
   let h = (location.hash || '').replace(/^#\/?/, ''); try { h = decodeURIComponent(h); } catch (e) {} const parts = h.split('/');
   if (!h) return viewBooks();
   if (parts[0] === 's') return viewSearch(parts.slice(1).join('/'));
+  if (parts[0] === 'p') return parts[1] ? viewPlan(parts[1]) : viewPlans();
   const n = +parts[0], c = +parts[1], v = +parts[2];
   if (!n) return viewBooks(); if (!c) return viewChapters(n); return viewRead(n, c, v || 0);
 }
@@ -281,5 +360,6 @@ route();
 </script>
 <script src="sharebox.js" defer></script>
 <script src="fanmenu.js" defer></script>
+<script src="updatebar.js" defer></script>
 </body>
 </html>

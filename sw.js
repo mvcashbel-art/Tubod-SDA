@@ -2,8 +2,8 @@
    Put this file next to index.html on GitHub. The site registers it by itself. */
 /* OneSignal push (only does anything once an App ID is set in config.js and you have subscribed). Guarded so the site still works offline if it cannot load. */
 try { self.importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch (e) { /* offline or not configured: the site still works */ }
-const VERSION = 'tubod-v47';
-const CORE = ['./', './index.html', './bible.html', './config.js', './manifest.json', './sharebox.js', './cool.css', './cool.js', './fanmenu.js', './totop.js', './district-news.js', './logo-mark.png', './icon-192.png', './icon-512.png', './bible-game.html', './anim.css', './anim.js'];
+const VERSION = 'tubod-v49';
+const CORE = ['./', './index.html', './bible.html', './config.js', './manifest.json', './sharebox.js', './cool.css', './cool.js', './fanmenu.js', './updatebar.js', './totop.js', './district-news.js', './logo-mark.png', './icon-192.png', './icon-512.png', './bible-game.html', './anim.css', './anim.js'];
 const PICS = 'tubod-pics-v1';
 const MAX_PICS = 250;
 
@@ -21,7 +21,7 @@ function networkFirst(req){
     let done = false;
     const fallback = () => caches.match(req, {ignoreSearch: true}).then(r => r || caches.match('./index.html'));
     const timer = setTimeout(() => { if (!done) fallback().then(r => { if (r && !done){ done = true; resolve(r); } }); }, 6000);
-    fetch(req).then(res => {
+    fetch(req, {cache: 'no-cache'}).then(res => {
       if (res && res.ok){ const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       if (!done){ done = true; clearTimeout(timer); resolve(res); }
     }).catch(() => fallback().then(r => { if (!done){ done = true; clearTimeout(timer); resolve(r || Response.error()); } }));
