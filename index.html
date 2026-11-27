@@ -1966,6 +1966,11 @@ function shareAnn(id){
   const name = S.settings.churchName || 'Tubod SDA Church';
   shareOut(name, name + ' announcement:\n' + (p.text || '') + shareParticipants(p), siteUrl() + '#news');
 }
+function sharePost(id){
+  const p = S.posts.find(x => x.id === id); if (!p || p.cat === 'prayer') return;
+  const name = S.settings.churchName || document.title.replace(/ \u00b7.*$/, '');
+  shareOut(name, name + (p.cat === 'testimony' ? ' testimony' : ' post') + ':\n' + (p.text || ''), siteUrl());
+}
 function shareInvite(){
   const name = S.settings.churchName || 'Tubod SDA Church';
   const code = S.isAdmin && S.settings.joinCode ? `\nJoin code: ${S.settings.joinCode}` : '';
@@ -2000,6 +2005,7 @@ function postHTML(p){
     <div class="acts">
       <button class="btn quiet ${iReact ? 'on' : ''}" data-act="react" data-id="${esc(p.id)}" aria-pressed="${!!iReact}">${icon('heart')}${CATS[cat].react}${rx.length ? ' · ' + rx.length : ''}</button>
       <button class="btn quiet" data-act="togglecm" data-id="${esc(p.id)}" aria-expanded="${open}">${icon('chat')}${cms.length ? cms.length + (cms.length === 1 ? ' comment' : ' comments') : 'Comment'}</button>
+      ${cat !== 'prayer' ? `<button class="btn quiet" data-act="sharepost" data-id="${esc(p.id)}">Share</button>` : ''}
     </div>
     ${open ? `<div class="comments">${cms.map(c => `<div class="cm">${av(c.authorId, 'sm')}<div class="cm-b"><b>${esc(nameOf(c.authorId))}</b> <span class="meta">${ago(c.createdAt)}</span><p>${esc(c.text)}</p></div>${mine(c.authorId) ? `<button class="x" data-act="delcm" data-id="${esc(c.id)}" aria-label="Delete comment">${icon('x')}</button>` : ''}</div>`).join('')}
       <form class="c-form" data-comment="${esc(p.id)}"><input id="cin-${esc(p.id)}" type="text" maxlength="500" placeholder="Write a comment" aria-label="Write a comment" autocomplete="off"><button class="btn primary sm" type="submit">Send</button></form></div>` : ''}
@@ -3550,6 +3556,7 @@ document.addEventListener('click', e => {
     case 'upretry': if (upJob && upJob.error && upJob.decide) upJob.decide('retry'); break;
     case 'copytext': copyFrom(el.dataset.target); break;
     case 'shareann': shareAnn(id); break;
+    case 'sharepost': sharePost(id); break;
     case 'invite': shareInvite(); break;
     case 'authtab': showAuth(el.dataset.t); break;
     case 'retry': bootSession(); break;
