@@ -26,7 +26,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
-<style>
+<style>.ev-cal{margin-top:6px}
+
 :root{--pageW:1100px;
   /* Layout idea: sticky top bar, one feed column beside a Sabbath sidebar; bottom tabs on phones.
      Light lake-blue and paper white, Sabbath gold only where the Sabbath is concerned. */
@@ -1518,10 +1519,45 @@ function openSabbathModal(){
   });
 }
 const upcomingEvents = () => (S.events || []).filter(e => e.date >= phISO());
+/* add an event to the phone calendar: a .ics file (with reminders) or a Google Calendar link */
+const icsEsc = t => String(t || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+const icsFold = l => { const o = []; while (l.length > 74){ o.push(l.slice(0, 74)); l = ' ' + l.slice(74); } o.push(l); return o.join('\r\n'); };
+function evTimes(e){
+  const [y, mo, d] = String(e.date).split('-').map(Number), pad = ms => new Date(ms).toISOString();
+  if (e.time && /^\d{1,2}:\d{2}/.test(e.time)){
+    const [h, mi] = e.time.split(':').map(Number), st = Date.UTC(y, mo - 1, d, h - TZ, mi), en = st + 2 * 36e5, f = ms => pad(ms).replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+    return { s: f(st), e: f(en), all: false };
+  }
+  const f = ms => pad(ms).slice(0, 10).replace(/-/g, ''), st = Date.UTC(y, mo - 1, d); return { s: f(st), e: f(st + 864e5), all: true };
+}
+function evIcs(e){
+  const t = evTimes(e), now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Church site//EN', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:' + (e.id || e.date + e.title) + '@church', 'DTSTAMP:' + now,
+    t.all ? 'DTSTART;VALUE=DATE:' + t.s : 'DTSTART:' + t.s, t.all ? 'DTEND;VALUE=DATE:' + t.e : 'DTEND:' + t.e, 'SUMMARY:' + icsEsc(e.title)];
+  if (e.place) L.push('LOCATION:' + icsEsc(e.place));
+  if (e.desc) L.push('DESCRIPTION:' + icsEsc(e.desc));
+  L.push('BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(e.title), 'END:VALARM', 'BEGIN:VALARM', 'TRIGGER:-PT1H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(e.title), 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR');
+  return L.map(icsFold).join('\r\n') + '\r\n';
+}
+function evGoogle(e){
+  const t = evTimes(e);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(e.title || '') + '&dates=' + t.s + '/' + t.e + '&details=' + encodeURIComponent(e.desc || '') + '&location=' + encodeURIComponent(e.place || '');
+}
+function openAddCal(id){
+  const e = (S.events || []).find(x => x.id === id); if (!e) return;
+  openModal('Add to calendar', `<div class="m-body"><p><b>${esc(e.title)}</b><br><span class="muted">${esc(evItemWhen(e))}</span></p><p class="muted">Pick where to save this event. You will get a reminder the day before and one hour before.</p>
+    <div class="m-actions" style="flex-wrap:wrap"><button class="btn primary" type="button" data-act="calics" data-id="${esc(e.id)}">Phone calendar</button><a class="btn" href="${esc(evGoogle(e))}" target="_blank" rel="noopener">Google Calendar</a><button class="btn" type="button" data-act="closemodal">Close</button></div></div>`);
+}
+function evItemWhen(e){ const [y, mo, d] = String(e.date).split('-').map(Number); return [DAYS[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()] + ', ' + MONTHS[mo - 1] + ' ' + d, e.time ? time12(e.time) : '', e.place].filter(Boolean).join(' · '); }
+function downloadIcs(id){
+  const e = (S.events || []).find(x => x.id === id); if (!e) return;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([evIcs(e)], { type: 'text/calendar' })); a.download = String(e.title || 'event').replace(/[^\w]+/g, '-').slice(0, 40) + '.ics';
+  document.body.appendChild(a); a.click(); a.remove(); toast('Saved. Open the file to add it to your calendar.');
+}
 function evItem(e, full){
   const [y, mo, d] = e.date.split('-').map(Number);
   const sub = [e.date === phISO() ? 'Today' : e.date === phISO(Date.now() + 864e5) ? 'Tomorrow' : DAYS[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()], e.time ? time12(e.time) : '', e.place].filter(Boolean).join(' · ');
-  return `<li class="ev"><div class="ev-d"><small>${MONTHS[mo - 1].slice(0, 3)}</small><b>${d}</b></div><div class="ev-b"><b>${esc(e.title)}</b><span>${esc(sub)}</span>${full && e.desc ? `<p>${esc(e.desc)}</p>` : ''}
+  return `<li class="ev"><div class="ev-d"><small>${MONTHS[mo - 1].slice(0, 3)}</small><b>${d}</b></div><div class="ev-b"><b>${esc(e.title)}</b><span>${esc(sub)}</span>${full && e.desc ? `<p>${esc(e.desc)}</p>` : ''}<button type="button" class="btn sm quiet ev-cal" data-act="addcal" data-id="${esc(e.id)}">Add to calendar</button>
     ${full && S.canPost ? `<div class="ev-act"><button class="btn sm" data-act="editev" data-id="${esc(e.id)}">Edit</button><button class="btn sm danger" data-act="delev" data-id="${esc(e.id)}">Remove</button></div>` : ''}</div></li>`;
 }
 function eventsCard(){
@@ -3549,6 +3585,8 @@ document.addEventListener('click', e => {
     case 'privacy': openPrivacyModal(); break;
     case 'editlesson': if (S.canPost) openLessonModal(); break;
     case 'calendar': openCalendarModal(); break;
+    case 'addcal': openAddCal(el.dataset.id); break;
+    case 'calics': downloadIcs(el.dataset.id); break;
     case 'offerings': if (S.isAdmin) openOfferingsModal(); break;
     case 'offdel': if (S.isAdmin) offeringAction(el); break;
     case 'transfers': if (S.canMem) openTransfersModal(); break;
@@ -3777,7 +3815,7 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   'Church officers':'Mga opisyal sa simbahan', 'Add officers':'Idugang ang mga opisyal', 'Add a position':'Idugang og posisyon', 'Position':'Posisyon', 'Church officers saved.':'Na-save ang mga opisyal sa simbahan.',
   "List this year's elected officers so the church family knows who serves where.":'Ilista ang mga napiling opisyal karong tuiga aron mahibaw-an sa pamilya sa simbahan kon kinsa ang nag-alagad.', 'Officers':'Mga opisyal', 'Year':'Tuig',
   'Leader tools':'Mga gamit sa lider', 'Records and history':'Mga rekord ug kasaysayan', 'Download member list':'I-download ang lista sa miyembro', 'Attendance':'Pagtambong',
-  'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Personal':'Pribado', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
+  'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Add to calendar':'Idugang sa kalendaryo', 'Phone calendar':'Kalendaryo sa telepono', 'Pick where to save this event. You will get a reminder the day before and one hour before.':'Pilia kung asa i-save kini nga kalihokan. Makadawat ka og pahimangno usa ka adlaw ug usa ka oras sa wala pa.', 'Saved. Open the file to add it to your calendar.':'Na-save. Ablihi ang file aron madugang sa imong kalendaryo.', 'Personal':'Pribado', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
   'Church admin':'Admin sa simbahan', 'Clerk / pastor':'Klerk / pastor', 'Announcements and program':'Pahibalo ug programa', 'No account':'Walay account',
   'Status records':'Mga rekord sa kahimtang', 'All changes':'Tanang kausaban', 'Now':'Karon', 'History of status changes':'Kasaysayan sa kausaban sa kahimtang',
   'All statuses':'Tanang kahimtang', 'All kinds':'Tanang klase', 'All years':'Tanang tuig', 'Download this list':'I-download kini nga lista',
