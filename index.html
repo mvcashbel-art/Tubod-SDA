@@ -1003,6 +1003,14 @@ function openVideoLightbox(opts){
   stage.appendChild(v);
   const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
 }
+window.__offlineApp = { sync: () => sync(), pics: () => {   /* what "Use offline" saves besides the pages: the church data and recent pictures */
+  const u = [], seen = new Set(), add = (id, w) => { const x = imgUrl(id, w); if (x && !seen.has(x)){ seen.add(x); u.push(x); } };
+  if (S.settings && S.settings.logoId) add(S.settings.logoId, 400);
+  Object.values(S.profiles || {}).forEach(p => { if (p && p.avatar) add(p.avatar, 200); });
+  (S.posts || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 25).forEach(p => (Array.isArray(p.photos) ? p.photos.slice(0, 10) : []).forEach(id => add(id, 1600)));
+  (S.files || []).filter(f => /^image\//.test(String(f.mime || ''))).sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0)).slice(0, 30).forEach(f => { add(f.driveId, 400); add(f.driveId, 700); });
+  return u.slice(0, 220);
+} };
 const photoImg = id => { const u = imgUrl(id, 1600); return u ? `<img src="${u}" alt="" loading="lazy">` : ''; };
 
 /* ---------- talking to the church server ---------- */
@@ -2285,7 +2293,7 @@ function renderProfile(){
       <div class="cover">${cover ? `<img src="${cover}" alt="Cover photo" data-act="zoom">` : ''}<span class="pf-av">${av(id, 'xl')}</span></div>
       <div class="pf-main"><div class="pf-id"><h1>${esc(p.name)}</h1><p class="role">${esc(p.role || (p.access === 'admin' ? 'Church admin' : 'Member'))}</p>${stPill(p)}</div>
         ${!own ? `<div class="pf-btns">${S.uid && S.msgOn !== false && p.access !== 'roll' && !isDead(p) ? `<button class="btn primary" data-act="opendm" data-uid="${esc(id)}" data-title="${esc(p.name)}">${icon('chat')}Message</button>` : ''}${S.canMem ? `<button class="btn" data-act="medit" data-uid="${esc(id)}">Edit member</button><button class="btn" data-act="mstatus" data-uid="${esc(id)}">Change status</button>` : ''}</div>` : ''}
-        ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${(pushConfigured() ? osOn() : notifOn()) ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
+        ${own ? `<div class="pf-btns"><button class="btn" data-act="editprofile">Edit profile</button><button class="btn quiet" data-act="notif">${(pushConfigured() ? osOn() : notifOn()) ? 'Notifications: on' : 'Notifications'}</button><button class="btn quiet" data-offline>Use offline</button><button class="btn quiet" data-act="chpw">Password</button><button class="btn quiet" data-act="signout">Sign out</button></div>` : ''}</div>
       <div class="pf-body">
         ${stOf(p) !== 'active' ? `<div class="st-box st-${stOf(p)}"><h3>${isDead(p) ? 'In loving memory' : 'Status: ' + mstLabel(stOf(p))}</h3>${p.statusDate ? `<p>${isDead(p) ? 'Passed away' : 'Since'} <b>${esc(stDate(p.statusDate))}</b></p>` : ''}${p.statusNote ? `<p data-notr>${esc(p.statusNote)}</p>` : ''}</div>` : ''}
         ${p.access === 'roll' ? `<p class="muted"><span>Listed by the church.</span>${isDead(p) ? '' : ' <span>This person does not have an account on the site yet.</span>'}</p>` : ''}
@@ -3815,7 +3823,7 @@ const BIS = Object.assign({}, BIS_DAYS, BIS_MONTHS, BIS_MON3, {
   'Church officers':'Mga opisyal sa simbahan', 'Add officers':'Idugang ang mga opisyal', 'Add a position':'Idugang og posisyon', 'Position':'Posisyon', 'Church officers saved.':'Na-save ang mga opisyal sa simbahan.',
   "List this year's elected officers so the church family knows who serves where.":'Ilista ang mga napiling opisyal karong tuiga aron mahibaw-an sa pamilya sa simbahan kon kinsa ang nag-alagad.', 'Officers':'Mga opisyal', 'Year':'Tuig',
   'Leader tools':'Mga gamit sa lider', 'Records and history':'Mga rekord ug kasaysayan', 'Download member list':'I-download ang lista sa miyembro', 'Attendance':'Pagtambong',
-  'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Add to calendar':'Idugang sa kalendaryo', 'Phone calendar':'Kalendaryo sa telepono', 'Pick where to save this event. You will get a reminder the day before and one hour before.':'Pilia kung asa i-save kini nga kalihokan. Makadawat ka og pahimangno usa ka adlaw ug usa ka oras sa wala pa.', 'Saved. Open the file to add it to your calendar.':'Na-save. Ablihi ang file aron madugang sa imong kalendaryo.', 'Personal':'Pribado', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
+  'Ministry groups':'Mga grupo sa ministeryo', 'Groups':'Mga grupo', 'Use offline':'Gamita nga walay internet', 'Add to calendar':'Idugang sa kalendaryo', 'Phone calendar':'Kalendaryo sa telepono', 'Pick where to save this event. You will get a reminder the day before and one hour before.':'Pilia kung asa i-save kini nga kalihokan. Makadawat ka og pahimangno usa ka adlaw ug usa ka oras sa wala pa.', 'Saved. Open the file to add it to your calendar.':'Na-save. Ablihi ang file aron madugang sa imong kalendaryo.', 'Personal':'Pribado', 'Manage members':'Atimana ang mga miyembro', 'What each role can do':'Unsa ang mahimo sa matag papel',
   'Church admin':'Admin sa simbahan', 'Clerk / pastor':'Klerk / pastor', 'Announcements and program':'Pahibalo ug programa', 'No account':'Walay account',
   'Status records':'Mga rekord sa kahimtang', 'All changes':'Tanang kausaban', 'Now':'Karon', 'History of status changes':'Kasaysayan sa kausaban sa kahimtang',
   'All statuses':'Tanang kahimtang', 'All kinds':'Tanang klase', 'All years':'Tanang tuig', 'Download this list':'I-download kini nga lista',
@@ -4017,5 +4025,6 @@ boot();
 <script src="sharebox.js" defer></script>
 <script src="updatebar.js" defer></script>
 <script src="installtip.js" defer></script>
+<script src="offline.js" defer></script>
 </body>
 </html>
