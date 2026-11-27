@@ -185,6 +185,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .ann-strip .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.94rem;overflow-wrap:anywhere}
 .ann-strip .more{margin-left:auto;font-size:.8rem;font-weight:600;color:#7A5A12;white-space:nowrap}
 
+.sab-w{display:none}
+@media (max-width:900px){.sab-w{display:block;margin-top:6px;padding-top:6px;border-top:1px solid #EBD59B;font-size:.88rem;color:#5E4710}.sab-w b{font-weight:700;color:#3d2f08}}
+.annline{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--ink);background:var(--gold-soft);border:1px solid #EBD59B;border-radius:12px;padding:6px 12px;min-width:0}
+.annline .iw{width:26px;height:26px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;flex:none}.annline .iw .ic{width:15px;height:15px}
+.annline .al{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem}.annline .al b{font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:#7A5A12;margin-right:4px}
+.annline .more{font-size:.78rem;font-weight:600;color:#7A5A12;white-space:nowrap}
+#annSlot:empty{display:none}
 /* announcements as a chat thread */
 .chat{display:flex;flex-direction:column;padding:0;overflow:hidden;height:calc(100dvh - 190px);min-height:440px}
 .chat-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:#fff}
@@ -1223,7 +1230,7 @@ function phTime(ms){
   return h + ':' + String(mi).padStart(2, '0') + ' ' + ap;
 }
 const phDay = ms => new Date(ms + TZ * 36e5).toLocaleDateString('en-PH', {weekday:'long', month:'long', day:'numeric', timeZone:'UTC'});
-function sabbathCard(){
+function sabbathCard(opts){
   const s = sabbathSpan(); if (!s) return '';
   const now = Date.now();
   let head, line;
@@ -1236,7 +1243,8 @@ function sabbathCard(){
     head = 'Sabbath begins in ' + (dd ? `${dd} day${dd > 1 ? 's' : ''} ${hh} hr` : hh ? `${hh} hr ${mm} min` : `${mm} min`);
     line = `${phDay(s.start)}, at about ${phTime(s.start)}.`;
   }
-  return `<div class="eyebrow">${s.on ? 'Sabbath hours' : 'Next Sabbath'}</div><h2>${head}</h2><p>${line}</p><p style="margin-top:6px;font-size:.78rem;opacity:.8">Sunset estimate for Tubod. Check your local time.</p>`;
+  const nw0 = nextWorships()[0], wl = nw0 && opts && opts.worship ? `<p class="sab-w"><b>${esc(nw0.sv.name)}</b> \u00b7 ${esc(whenText(nw0))}${nw0.on ? ' \u00b7 Happening now' : ''}</p>` : '';
+  return `<div class="eyebrow">${s.on ? 'Sabbath hours' : 'Next Sabbath'}</div><h2>${head}</h2><p>${line}</p>${wl}<p style="margin-top:6px;font-size:.78rem;opacity:.8">Sunset estimate for Tubod. Check your local time.</p>`;
 }
 
 /* ---------- modal, confirm, photo viewer ---------- */
@@ -1632,10 +1640,11 @@ function renderSide(){
   const st = S.settings, n = Object.values(S.profiles).filter(p => !isDead(p)).length;
   const sched = scheduleCard();
   const verse = st.verse ? `<div class="card more"><h3>Verse of the week</h3><p class="verse">${esc(st.verse)}</p></div>` : '';
-  side.innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard()}</div>${birthdaysCard()}${sched}${verse}
+  side.innerHTML = `<div class="card sabbath" id="sabbathCard">${sabbathCard({worship: true})}</div><div id="annSlot"></div>${birthdaysCard()}${sched}${verse}
     <div class="card more mob-hide"><h3>Invite your family</h3><p class="muted">Send the church page to Messenger, Facebook or a text.</p><p style="margin-top:8px"><button class="btn primary sm" data-act="invite">Share the page</button></p><p class="muted" style="margin-top:8px;font-size:.8rem">Tip: on your phone, open the browser menu and choose Add to Home screen to keep it like an app.</p></div>
     <div class="card more mob-hide"><h3>Our church family</h3><p class="muted">${n} member${n === 1 ? '' : 's'}<br>${S.posts.length} post${S.posts.length === 1 ? '' : 's'} shared</p></div>`;
-}
+
+  renderStrip();}
 function renderBanner(){
   const b = $('#banner'); if (!b) return;
   const wait = S.isAdmin && S.waiting && S.waiting.length ? `<div class="note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between"><span><b>${S.waiting.length}</b> new ${S.waiting.length === 1 ? 'person is' : 'people are'} waiting for your approval.</span><button class="btn sm primary" data-act="members">Review</button></div>` : '';
@@ -1762,13 +1771,16 @@ function scheduleCard(){
 /* top of every page: the nearest worship, then the newest announcement */
 function renderStrip(){
   const el = $('#annStrip'); if (!el) return;
-  const list = livePosts().filter(p => p.cat === 'announcement').sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const ph = matchMedia('(max-width:900px)').matches;   /* on a phone the worship time sits in the Sabbath card and the announcement is one line under it */
+  const list = livePosts().filter(p => p.cat === 'announcement' && Date.now() - (p.createdAt || 0) < 7 * 864e5).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));   /* older announcements stay in the Announcements page */
   const nw = nextWorships(), w = nw[0];
   let rows = '';
   const live = liveNow();
   if (live) rows += `<a class="live-row" href="${esc(live.url)}" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span><span class="grow">LIVE now${live.name ? ' · ' + esc(live.name) : ''} · Tap to watch</span>${S.canPost && live.manual ? '<button type="button" data-act="endlive">End</button>' : ''}</a>`;
-  if (w) rows += `<div class="wr" role="status"><span class="iw">${LOGO}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
-  if (list.length && S.route === 'home'){
+  if (w && !ph) rows += `<div class="wr" role="status"><span class="iw">${LOGO}</span><span class="line"><b>Next</b>${esc(w.sv.name)} \u00b7 ${esc(whenText(w))}</span><span class="cd">${esc(countdown(w))}</span></div>`;
+  const slot = $('#annSlot');
+  if (slot) slot.innerHTML = ph && list.length && S.route === 'home' ? `<a class="annline" href="#news" data-route="news" aria-label="Open announcements"><span class="iw">${icon('bell')}</span><span class="al"><b>${ago(list[0].createdAt)}</b> ${esc(list[0].text || 'Photo announcement')}</span>${list.length > 1 ? `<span class="more">+${list.length - 1}</span>` : '<span class="more">Read</span>'}</a>` : '';
+  if (list.length && S.route === 'home' && !ph){
     const p = list[0];
     rows += `<a href="#news" data-route="news" aria-label="Open announcements"><span class="iw">${icon('bell')}</span><span class="bd"><b>Announcement \u00b7 ${ago(p.createdAt)}</b><span class="t">${esc(p.text || 'Photo announcement')}</span></span>${list.length > 1 ? `<span class="more">+${list.length - 1} more</span>` : ''}</a>`;
   }
@@ -3928,7 +3940,7 @@ function boot(){
   if (['home','news','library','members','groups'].includes(h)) S.route = h;
   S.token = loadToken();
   mount();
-  setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard(); if (S.uid) renderStrip(); }, 60000);
+  setInterval(() => { const c = $('#sabbathCard'); if (c) c.innerHTML = sabbathCard({worship: true}); if (S.uid) renderStrip(); }, 60000);
   window.addEventListener('online', () => { renderBanner(); if (S.uid) sync().catch(() => {}); });
   if ('serviceWorker' in navigator){
     if (pushConfigured()) window.addEventListener('load', osLoad);
