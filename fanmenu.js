@@ -1,8 +1,11 @@
 /* Phone menu: one round button on the right edge opens a half circle with every section. Tap again to close. */
 (() => {
 'use strict';
-const church = !document.querySelector('nav.links');             /* church sites keep their menu in #dnav */
-const nav = document.querySelector('nav.links') || document.querySelector('#dnav'); if (!nav) return;
+const game = /bible-game\.html$/.test(location.pathname);        /* the Bible game page has no menu of its own: the button offers a way back Home */
+const church = game || !document.querySelector('nav.links');     /* church sites keep their menu in #dnav */
+let nav = document.querySelector('nav.links') || document.querySelector('#dnav');
+if (game) { nav = document.createElement('nav'); nav.hidden = true; nav.innerHTML = '<a href="index.html" data-route="home"><span>Home</span></a>'; }
+if (!nav) return;
 const BP = church ? 900 : 859;
 const ICONS = {
   churches: 'M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6M12 5V2',
@@ -19,7 +22,7 @@ const ICONS = {
 const svg = (d, w) => '<svg viewBox="0 0 24 24" width="' + w + '" height="' + w + '" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
 const st = document.createElement('style');
 st.textContent = '.fm{display:none}' +
-'@media (max-width:' + BP + 'px){' + (church ? '.fabs{display:none!important}.tabs{display:none!important}.shell{padding-bottom:40px!important}#toast{bottom:24px!important}' : 'nav.links{display:none}html{scroll-padding-top:76px}') + '.fm{display:block}.fm[hidden]{display:none}body:has(.modal,.lightbox) .fm:not(.open){display:none}}' +
+'@media (max-width:' + BP + 'px){' + (game ? '' : church ? '.fabs{display:none!important}.tabs{display:none!important}.shell{padding-bottom:40px!important}#toast{bottom:24px!important}' : 'nav.links{display:none}html{scroll-padding-top:76px}') + '.fm{display:block}.fm[hidden]{display:none}body:has(.modal,.lightbox) .fm:not(.open){display:none}}' +
 '.fm-veil{position:fixed;inset:0;background:rgba(5,12,30,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:70}' +
 '.fm.open .fm-veil{opacity:1;pointer-events:auto}' +
 '.fm-btn{position:fixed;right:14px;bottom:calc(190px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;border:0;padding:0;background:var(--accent,var(--blue,#1d5fd8));color:#fff;display:grid;place-items:center;cursor:pointer;z-index:30;box-shadow:0 6px 18px rgba(10,30,60,.38)}' +
@@ -59,6 +62,11 @@ function pseudo(text, route, from, click) {
 }
 function build() {
   const ceb = document.documentElement.lang === 'ceb';
+  if (game) {
+    const home = pseudo(ceb ? 'Balay' : 'Home', 'home', null, () => { location.href = 'index.html'; });
+    home.innerHTML = svg('M3 11l9-8 9 8M5 10v10h14V10M10 20v-6h4v6', 20) + '<span>' + (ceb ? 'Balay' : 'Home') + '</span>'; home.setAttribute('href', 'index.html');
+    return layout([home]);
+  }
   const links = [...nav.querySelectorAll('a')];
   if (church) {   /* Chat and Game used to float on their own. They live here now, so there is one button instead of three. */
     const fabs = document.querySelector('#fabs'), chat = document.querySelector('#fabChat'), game = document.querySelector('#fabGame');
@@ -69,6 +77,9 @@ function build() {
   }
   const meBtn = church && document.querySelector('#meBtn');
   if (meBtn && !meBtn.hidden) links.push(pseudo(ceb ? 'Akong profile' : 'My profile', 'me', null, () => meBtn.click()));
+  layout(links);
+}
+function layout(links) {
   const n = links.length;
   const H = innerHeight, bottomC = geom().bottomC, half = (n - 1) / 2;
   /* rows are spaced evenly down the screen and bulge out along a circle, so nothing bunches up at the ends */
